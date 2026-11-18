@@ -30,7 +30,7 @@ test('Core signs preprovisioned Mesh identity, refuses missing or mismatched key
   await assert.rejects(identity(root),/identity_key_mismatch/);
   await writeFile(file,JSON.stringify(owner));
   assert.equal((await existingIdentity(root)).id,owner.id);
-  assert.equal((await readFile(file,'utf8')).includes(owner.privateKey),true);
+  assert.equal(JSON.parse(await readFile(file,'utf8')).privateKey,owner.privateKey);
  }finally{
   if(oldLocal===undefined)delete process.env.LOCALAPPDATA;else process.env.LOCALAPPDATA=oldLocal;
   if(oldOverride===undefined)delete process.env.ADA_MESH_IDENTITY_DIR;else process.env.ADA_MESH_IDENTITY_DIR=oldOverride;
