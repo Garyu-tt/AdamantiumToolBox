@@ -2,7 +2,7 @@
   "mas": "1.0",
   "id": "mcp_bridge",
   "name": "Adamantium MCP Mesh Bridge",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "icon": "mcp_bridge",
   "lifecycle": "independent",
   "service": {
