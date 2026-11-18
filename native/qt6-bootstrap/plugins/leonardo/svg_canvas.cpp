@@ -94,7 +94,8 @@ void SvgCanvas::renderScene(QPainter& p) {
  p.setRenderHint(QPainter::Antialiasing,true);
  p.scale(width()/logicalWidth_,height()/logicalHeight_);
  for(const auto& value:scene_){
-  const auto item=value.toObject(),kind=item.value("type").toString();
+  const auto item=value.toObject();
+  const auto kind=item.value("type").toString();
   const auto num=[&](const char* key,double fallback=0){return item.value(key).toDouble(fallback);};
   const auto fillName=item.value("fill").toString();
   const auto fill=fillName.isEmpty()?palette().text().color():QColor(fillName);
