@@ -14,5 +14,14 @@ export function validateFrankAddon(m,language,id){
   !Array.isArray(m.permissions)||m.permissions.length>64||
   !m.permissions.every(value=>typeof value==='string'&&capability.test(value))||
   m.lifecycle!=='independent')return false;
+ if(m.actions!==undefined){
+  if(!Array.isArray(m.actions)||m.actions.length>64)return false;
+  const ids=new Set();
+  for(const action of m.actions){
+   if(!action||!validSlug(action.id)||ids.has(action.id)||
+    typeof action.title!=='string'||!action.title||action.title.length>80)return false;
+   ids.add(action.id);
+  }
+ }
  return true;
 }
