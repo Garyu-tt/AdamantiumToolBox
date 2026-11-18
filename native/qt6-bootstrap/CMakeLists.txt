@@ -34,3 +34,19 @@ add_test(NAME graph_events_stream COMMAND mechanicus_graph_events_test)
 add_executable(mechanicus_graph_client_test tests/graph_client_test.cpp)
 target_link_libraries(mechanicus_graph_client_test PRIVATE mechanicus_graph Qt6::Test)
 add_test(NAME graph_client_hotplug COMMAND mechanicus_graph_client_test)
+
+# Each native UI capability is a separately loadable Qt plugin, not a Core dependency.
+add_library(mas_native_workspace MODULE plugins/desktop_workspace.cpp)
+add_library(mas_native_window_manager MODULE plugins/window_manager.cpp)
+foreach(module mas_native_workspace mas_native_window_manager)
+ target_include_directories(${module} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+ target_link_libraries(${module} PRIVATE Qt6::Widgets)
+ set_target_properties(${module} PROPERTIES
+   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins")
+endforeach()
+add_executable(mas_native_plugins_test tests/plugins_test.cpp)
+target_include_directories(mas_native_plugins_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+target_link_libraries(mas_native_plugins_test PRIVATE Qt6::Widgets Qt6::Test)
+add_test(NAME native_ui_plugins COMMAND mas_native_plugins_test
+  $<TARGET_FILE:mas_native_workspace> $<TARGET_FILE:mas_native_window_manager>)
+set_tests_properties(native_ui_plugins PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
