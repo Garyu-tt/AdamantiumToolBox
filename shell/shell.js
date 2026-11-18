@@ -10,6 +10,7 @@ import {createWindowManager} from '/shell/window_manager.js';
 import {windowLayoutUI} from '/shell/window_layout_ui.js';
 import windowLayouts from '/shell/window-layouts.js';
 import {bindWorkspace} from '/shell/workspace_surface.js';
+import {watchGraphEvents} from '/shell/graph_events.js';
 const token=sessionStorage.getItem('ada-token')||'';
 let graph={nodes:[],edges:[]};const windows=new Map();
 const manager=createWindowManager(desktop,windowLayouts,()=>paintTasks());
@@ -83,9 +84,17 @@ async function refresh(){
   paintTasks();
  }catch(e){status.textContent='Ошибка: '+e.message;}
 }
-document.querySelector('#refresh').onclick=refresh;
-if(!token)status.textContent='Требуется токен запуска';else await refresh();
-setInterval(refresh,12000);
+let refreshing=false,refreshQueued=false;
+async function scheduleRefresh(){
+ if(refreshing){refreshQueued=true;return;}
+ refreshing=true;
+ try{do{refreshQueued=false;await refresh();}while(refreshQueued);}
+ finally{refreshing=false;}
+}
+document.querySelector('#refresh').onclick=scheduleRefresh;
+if(!token)status.textContent='Требуется токен запуска';
+else{await scheduleRefresh();watchGraphEvents(token,scheduleRefresh);}
+setInterval(scheduleRefresh,12000);
 
 document.querySelector('#backend-graph').onclick=builtins.graph;document.querySelector('#code-map').onclick=builtins.codemap;
 
