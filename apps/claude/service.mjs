@@ -11,7 +11,7 @@ const max=Number(process.env.ADA_CLAUDE_WORKERS||4);
 if(!Number.isInteger(max)||max<1||max>128)throw Error('invalid_worker_limit');
 let active=0;
 function pump(){while(active<max&&waiting.length){const job=waiting.shift();if(job.status==='cancelled')continue;
- active++;job.status='running';generate(job.request,job.controller.signal).then(x=>{job.result=x;job.status='completed';},
+ active++;job.status='running';generate(job.request,job.controller.signal).then(x=>{if(!job.controller.signal.aborted){job.result=x;job.status='completed';}},
  e=>{job.status=job.controller.signal.aborted?'cancelled':'failed';job.error=String(e.message).slice(0,160);})
  .finally(()=>{active--;controllers.delete(job.jobId);pump();});}}
 const actions={'claude.status':'ai.claude.read','claude.jobs':'ai.claude.read',
@@ -19,8 +19,8 @@ const actions={'claude.status':'ai.claude.read','claude.jobs':'ai.claude.read',
 const enabled=id=>caps.has(actions[id])&&(id!=='claude.start'||configured());
 const nodes=[{id:'claude.view',type:'view',title:manifest.name,icon:manifest.icon,requires:['ai.claude.read']},
  ...Object.entries(actions).filter(([id])=>enabled(id)).map(([id,cap])=>({id,type:'action',title:id,requires:[cap]}))];
-if(configured()&&caps.has('ai.claude.run'))nodes.push({id:'claude.provider',type:'resource',requires:['ai.claude.run'],
- provider:{schema:'mas-agent-provider-1',startAction:'claude.start',statusAction:'claude.status',cancelAction:'claude.cancel'}});
+if(configured()&&caps.has('ai.claude.run')&&caps.has('ai.claude.read'))nodes.push({id:'claude.provider',type:'resource',requires:['ai.claude.run'],
+ provider:{schema:'mas-agent-provider-1',startAction:'claude.start',statusAction:'claude.status',cancelAction:caps.has('ai.claude.cancel')?'claude.cancel':null}});
 const graph={app:manifest.id,version:1,nodes,edges:nodes.slice(1).map(n=>({from:'claude.view',to:n.id,type:'uses'}))};
 const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
 const summary=j=>({jobId:j.jobId,status:j.status,error:j.error,result:j.result});
