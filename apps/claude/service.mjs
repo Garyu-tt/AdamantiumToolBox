@@ -16,7 +16,7 @@ let active=0;
 const persist=job=>{const {controller,...record}=job;return store.save(record);};
 const summary=j=>({jobId:j.jobId,status:j.status,error:j.error,result:j.result,createdAt:j.createdAt});
 function pump(){while(active<max&&waiting.length){
- const job=waiting.shift();if(job.status!=='queued')continue;active++;
+ const job=waiting.shift();if(job.status!=='queued'){controllers.delete(job.jobId);continue;}active++;
  void (async()=>{try{
   job.status='running';await persist(job);
   if(job.controller.signal.aborted)throw Error('cancelled');
@@ -46,7 +46,8 @@ async function invoke(id,p){
  if(id==='claude.cancel'){
   const controller=controllers.get(p.jobId),job=jobs.get(p.jobId);
   if(!controller||!job)throw Error('job_not_running');
-  controller.abort();job.status=job.status==='queued'?'cancelled':'cancel_requested';
+  const queued=job.status==='queued';controller.abort();job.status=queued?'cancelled':'cancel_requested';
+  if(queued){const at=waiting.indexOf(job);if(at>=0)waiting.splice(at,1);controllers.delete(job.jobId);}
   await persist(job);return {jobId:p.jobId,status:job.status};
  }
  if(id==='claude.start'){
