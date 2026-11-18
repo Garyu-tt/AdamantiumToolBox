@@ -1,5 +1,6 @@
 #include "interfaces.hpp"
 #include "svg_canvas.hpp"
+#include "provider_selection.hpp"
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QLabel>
@@ -24,7 +25,7 @@ public:
   sizes->addWidget(new QLabel("Width",this));sizes->addWidget(width_);
   sizes->addWidget(new QLabel("Height",this));sizes->addWidget(height_);
   layout->addLayout(sizes);
-  run_=new QPushButton("Generate via Leonardo Router",this);layout->addWidget(run_);
+  run_=new QPushButton("Generate SVG",this);layout->addWidget(run_);
   status_=new QLabel(this);layout->addWidget(status_);
   canvas_=new SvgCanvas(this);canvas_->setMinimumSize(280,200);layout->addWidget(canvas_,1);
   QObject::connect(run_,&QPushButton::clicked,this,&LeonardoPanel::submit);
@@ -42,23 +43,20 @@ public:
 private slots:
  void online(bool yes){online_=yes;refresh();}
  void sync(const QJsonObject& graph) {
-  eligible_=false;
-  for(const auto& value:graph.value("nodes").toArray()){
-   const auto item=value.toObject();
-   if(item.value("id").toString()=="leonardo.generate"&&item.value("type").toString()=="action")
-    eligible_=true;
-  }
+  const auto selected=mas::graphics::selectSvg(graph);
+  action_=selected.action;
+  provider_=selected.providerId;
   refresh();
  }
  void submit(){
-  if(!eligible_||!online_||!pending_.isEmpty())return;
+  if(action_.isEmpty()||!online_||!pending_.isEmpty())return;
   pending_=QUuid::createUuid().toString(QUuid::WithoutBraces);
   status_->setText("Rendering...");refresh();
   const QJsonObject params{{"kind","image"},{"format","image/svg+xml"},
    {"prompt",prompt_->toPlainText()},
    {"options",QJsonObject{{"width",width_->value()},{"height",height_->value()}}}};
   const bool sent=QMetaObject::invokeMethod(host_,"invoke",Qt::DirectConnection,
-   Q_ARG(QString,pending_),Q_ARG(QString,QString("leonardo.generate")),Q_ARG(QJsonObject,params));
+   Q_ARG(QString,pending_),Q_ARG(QString,action_),Q_ARG(QJsonObject,params));
   if(!sent){pending_.clear();status_->setText("Bridge unavailable");refresh();}
  }
  void complete(const QString& id,const QJsonObject& result,const QString& error){
@@ -78,12 +76,15 @@ private slots:
  }
 private:
  void refresh(){
-  run_->setEnabled(eligible_&&online_&&pending_.isEmpty());
+  run_->setEnabled(!action_.isEmpty()&&online_&&pending_.isEmpty());
+  if(online_&&action_.isEmpty()&&pending_.isEmpty())status_->setText("No authorized SVG provider");
+  else if(online_&&pending_.isEmpty()&&!provider_.isEmpty())
+   status_->setText("Provider: "+provider_);
   if(!online_&&pending_.isEmpty())status_->setText("Core unavailable · read-only");
  }
  QObject* host_;QPlainTextEdit* prompt_;QSpinBox *width_,*height_;
  QPushButton* run_;QLabel* status_;SvgCanvas* canvas_;
- bool online_=false,eligible_=false;QString pending_;
+ bool online_=false;QString pending_,action_,provider_;
 };
 class LeonardoView final:public QObject,public INativeView {
  Q_OBJECT

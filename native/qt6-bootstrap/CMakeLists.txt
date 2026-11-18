@@ -95,3 +95,5 @@ target_include_directories(mas_native_leonardo_test PRIVATE ${CMAKE_CURRENT_SOUR
 target_link_libraries(mas_native_leonardo_test PRIVATE Qt6::Widgets)
 add_test(NAME native_leonardo_canvas COMMAND mas_native_leonardo_test)
 set_tests_properties(native_leonardo_canvas PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+include(plugins/leonardo/provider_selection.cmake)
