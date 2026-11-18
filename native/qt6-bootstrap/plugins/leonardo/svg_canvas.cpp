@@ -40,7 +40,8 @@ bool shape(QXmlStreamReader& xml,QJsonObject& output) {
 }
 }
 bool SvgCanvas::setSvg(const QByteArray& data) {
- if(data.isEmpty()||data.size()>110000)return false;
+ if(data.isEmpty()||data.size()>110000||!data.startsWith('<'))return false;
+ if(data==lastSvg_)return true;
  QXmlStreamReader xml(data);
  QJsonArray shapes;double logicalW=512,logicalH=512;int roots=0;
  while(!xml.atEnd()) {
@@ -65,7 +66,7 @@ bool SvgCanvas::setSvg(const QByteArray& data) {
   }
  }
  if(xml.hasError()||roots!=1)return false;
- scene_=shapes;logicalWidth_=logicalW;logicalHeight_=logicalH;
+ lastSvg_=data;scene_=shapes;logicalWidth_=logicalW;logicalHeight_=logicalH;
  buffer_=QImage();update();return true;
 }
 void SvgCanvas::changeEvent(QEvent* event) {
@@ -86,10 +87,10 @@ void SvgCanvas::paintEvent(QPaintEvent*) {
   }
  }
  QPainter target(this);
- if(cacheable&&!buffer_.isNull())target.drawImage(QPoint(0,0),buffer_);
+ if(cacheable&&!buffer_.isNull()){++cacheHits_;target.drawImage(QPoint(0,0),buffer_);}
  else renderScene(target);
 }
-void SvgCanvas::renderScene(QPainter& p) {
+void SvgCanvas::renderScene(QPainter& p) {++rasterPasses_;
  p.fillRect(rect(),palette().base());
  p.setRenderHint(QPainter::Antialiasing,true);
  p.scale(width()/logicalWidth_,height()/logicalHeight_);
