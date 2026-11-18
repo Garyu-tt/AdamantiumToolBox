@@ -1,0 +1,23 @@
+name: Network Approval Ledger isolated MAS smoke
+on:
+  push:
+    paths:
+      - 'packages/network_approval/**'
+      - '.github/workflows/network-approval-isolation.yml'
+  pull_request:
+    paths:
+      - 'packages/network_approval/**'
+      - '.github/workflows/network-approval-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  ledger-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Signed approval, crash safety, HTTP and Core isolation
+        run: node --test packages/network_approval/tests/*.test.mjs
