@@ -2,7 +2,7 @@ import {isIP} from 'node:net';
 export function decodePrefix(cidr){
  if(typeof cidr!=='string'||cidr.length>64)return null;
  const [address,len,extra]=cidr.split('/');
- if(extra!==undefined||!/^\d{1,3}$/.test(len||''))return null;
+ if(address?.includes('%')||extra!==undefined||!/^\d{1,3}$/.test(len||''))return null;
  const family=isIP(address),bits=family===4?32:family===6?128:0,mask=Number(len);
  if(!bits||mask>bits)return null;
  let words;
