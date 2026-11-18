@@ -30,6 +30,8 @@ const documentEvents=new Map();
 globalThis.document={createElement:tag=>new Element(tag),
  addEventListener:(name,handler)=>documentEvents.set(name,handler)};
 globalThis.ResizeObserver=class{observe(){}};
+const storage=new Map();
+globalThis.localStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)};
 const desktop=new Element('desktop');desktop.clientWidth=1200;desktop.clientHeight=800;
 const tasks=new Element('tasks'),manager=createWindowManager(desktop,tasks);
 function open(id,left=20){
@@ -68,6 +70,17 @@ first.handle.focus();assert.equal(first.win.hidden,false);
 assert.equal(manager.arrange(2),2);
 assert.equal(first.win.style.width,'600px');
 assert.equal(second.win.style.left,'600px');
+const split=desktop.children.find(x=>x.className==='win-split-layer').children
+ .find(x=>x.dataset.axis==='xs');
+const edge=(type,x)=>{
+ const event=new Event(type,{cancelable:true});
+ Object.assign(event,{pointerId:13,button:0,clientX:x,clientY:150});
+ split.dispatchEvent(event);
+};
+edge('pointerdown',600);edge('pointermove',720);edge('pointerup',720);
+assert.equal(first.win.style.width,'720px');
+assert.equal(second.win.style.left,'720px');
+assert.equal(JSON.parse(storage.get('mas.window.splits.v1'))['2'].xs[0],.6);
 const additional=Array.from({length:6},(_,i)=>open('more-'+i,i*25));
 first.handle.focus();
 assert.equal(manager.arrange(8),8);
