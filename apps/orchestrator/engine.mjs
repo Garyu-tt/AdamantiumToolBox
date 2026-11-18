@@ -3,7 +3,8 @@ const key=/^[a-z][a-z0-9_-]{0,63}$/;
 const action=/^[a-z][a-z0-9_-]{1,39}(?:\.[a-z0-9_-]+)+$/;
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 export function validate(flow,allowed,maxSteps=64){
- if(!flow||!Array.isArray(flow.steps)||!flow.steps.length||flow.steps.length>maxSteps)throw Error('invalid_workflow');
+ if(!flow||!Array.isArray(flow.steps)||!flow.steps.length||flow.steps.length>maxSteps||
+  (flow.parallelism!==undefined&&(!Number.isInteger(flow.parallelism)||flow.parallelism<1||flow.parallelism>128)))throw Error('invalid_workflow');
  const ids=new Set();
  for(const s of flow.steps){
   if(!s||!key.test(s.id)||ids.has(s.id)||!action.test(s.action)||!allowed.has(s.action))throw Error('step_denied');
@@ -44,9 +45,10 @@ export async function execute(flow,invoke,{allowed,parallelism=4,signal,onUpdate
  const steps=validate(flow,allowed),outputs=Object.create(null),state=Object.create(null);
  const pending=new Map(steps.map(s=>[s.id,s]));const running=new Map();
  const limit=Math.min(Math.max(1,parallelism),Math.max(1,Number(flow.parallelism)||parallelism));
- const notify=(id,status,extra={})=>{state[id]={status,...extra};onUpdate({state,outputs});};
+ const notify=async(id,status,extra={})=>{state[id]={status,...extra};
+  await onUpdate({state:structuredClone(state),outputs:structuredClone(outputs)});};
  async function task(s){
-  notify(s.id,'running');let result=await invoke(s.action,expand(s.params||{},outputs),signal);
+  await notify(s.id,'running');let result=await invoke(s.action,expand(s.params||{},outputs),signal);
   if(s.poll){
    if(!result||result.status!=='queued'||typeof result.jobId!=='string')throw Error('invalid_async_job');
    const delay=s.poll.intervalMs||1000,jobId=result.jobId,maxAttempts=s.poll.maxAttempts||600;
@@ -59,7 +61,7 @@ export async function execute(flow,invoke,{allowed,parallelism=4,signal,onUpdate
    }
    if(result.status!=='completed')throw Error(result.status==='running'||result.status==='queued'?'poll_limit_exceeded':'provider_'+result.status);
   }
-  if(signal?.aborted)throw Error('cancelled');outputs[s.id]=result;notify(s.id,'completed');
+  if(signal?.aborted)throw Error('cancelled');outputs[s.id]=result;await notify(s.id,'completed');
  }
  while(pending.size||running.size){
   if(signal?.aborted)throw Error('cancelled');
@@ -71,7 +73,7 @@ export async function execute(flow,invoke,{allowed,parallelism=4,signal,onUpdate
   }
   if(!running.size)throw Error('workflow_stalled');
   const settled=await Promise.race(running.values());running.delete(settled.id);
-  if(settled.error){notify(settled.id,'failed',{error:String(settled.error.message).slice(0,160)});throw settled.error;}
+  if(settled.error){await notify(settled.id,'failed',{error:String(settled.error.message).slice(0,160)});throw settled.error;}
  }
  return {status:'completed',steps:state,outputs};
 }
