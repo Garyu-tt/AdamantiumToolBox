@@ -1,6 +1,6 @@
 import {layoutRects,snapRect,fitFloating} from './window_geometry.js';
 import {attachWindowDrag} from './window_drag.js';
-export function createWindowManager(desktop,tasks){
+export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
  const records=new Map();let selected=null,z=100;
  const bounds=()=>({width:desktop.clientWidth,height:desktop.clientHeight});
  function geometry(win){
@@ -103,7 +103,7 @@ export function createWindowManager(desktop,tasks){
  const observer=typeof ResizeObserver==='function'?new ResizeObserver(reflow):null;
  observer?.observe(desktop);if(!observer)window.addEventListener('resize',reflow);
  document.addEventListener('keydown',event=>{
-  if(event.target.closest?.('input,textarea,select,[contenteditable]'))return;
+  if(!keyboardEnabled||event.target.closest?.('input,textarea,select,[contenteditable]'))return;
   const arrow=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key);
   if(selected&&arrow&&(event.metaKey||(event.ctrlKey&&event.altKey))){
    event.preventDefault();
