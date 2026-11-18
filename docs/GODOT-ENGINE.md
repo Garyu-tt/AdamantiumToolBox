@@ -71,5 +71,5 @@ Run python tools/check-size.py, python tools/architecture-check.py,
 node tools/mas-check.mjs, node tests/godot.test.mjs,
 node tests/godot_runtime.test.mjs, node tests/isolation.test.mjs.
 Sync the approved source to the Toolbox runtime and restart service supervisor
-to discover newly added apps. Dynamic shell navigation comes from live graph.
+to discover newly added apps. Dynamic shell navigation and subscribed app provider lists follow graph updates.
 This repository change does not deploy binaries to laptop/server.
