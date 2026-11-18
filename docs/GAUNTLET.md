@@ -49,3 +49,8 @@ not establish a distributed event notification transport.
 Fixiki outbox requests declare the semantic capability `task.blocker.triage`
 rather than a hardcoded provider. Dispatch remains PENDING_DISPATCH until
 a trusted capability exists and an authenticated delivery receipt is observed.
+
+`gauntlet.outbox` is a read-only, hash-verified queue inspector.
+Clients may request only `fixiki-outbox` or `delivery-outbox` and may
+not mutate queue records through this API. Neither queue is considered
+delivered until an independently authorized adapter acknowledges the request.

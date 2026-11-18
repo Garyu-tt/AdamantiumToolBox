@@ -3,9 +3,11 @@ export async function mount(host,api){
   if(text!==undefined)el.textContent=text;parent.append(el);return el;};
  make('h2','Mechanicus Gauntlet');
  make('p','Подписанные результаты CI, блокеры Fixiki и очередь релиз-кандидатов.');
- const refresh=make('button','Обновить'),panel=make('section');
+ const refresh=make('button','Обновить'),queue=make('small',''),panel=make('section');
  async function redraw(){
   const cases=await api.call('gauntlet.list',{});
+  const pending=await api.call('gauntlet.outbox',{kind:'fixiki-outbox'});
+  queue.textContent='Fixiki: '+pending.length+' ожидают подтверждения доставки';
   panel.replaceChildren();
   for(const c of cases){
    const box=make('article',undefined,panel);

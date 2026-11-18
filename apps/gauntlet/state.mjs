@@ -39,6 +39,18 @@ export async function detail(root,id){
   doc.task_id!==c.task_id||doc.sha256!==c.sha256)throw Error('diagnostic_integrity_failure');
  return {case:info,diagnostic:doc};
 }
+export async function outbox(root,kind){
+ if(!['fixiki-outbox','delivery-outbox'].includes(kind))throw Error('invalid_queue');
+ let names=[];try{names=await readdir(join(root,kind));}
+ catch(e){if(e.code!=='ENOENT')throw e;}
+ const entries=[];
+ for(const name of names.filter(n=>/^[a-f0-9]{64}\.json$/.test(n))){
+  const value=JSON.parse(await readFile(join(root,kind,name),'utf8'));
+  if(hash(JSON.stringify(value))+'.json'!==name)throw Error('queue_integrity_failure');
+  entries.push({sha256:name.slice(0,64),...value});
+ }
+ return entries;
+}
 export async function blocker(root,c,issues){
  const report={schema:'gauntlet-diagnostic-1',task_id:c.task_id,
   sha256:c.sha256,attempt:c.attempts,issues,

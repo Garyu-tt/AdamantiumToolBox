@@ -4,7 +4,7 @@ import {catalog} from '../../core/catalog.mjs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {submit,accept} from './pipeline.mjs';
-import {list,detail} from './state.mjs';
+import {list,detail,outbox} from './state.mjs';
 import {stateRoot,hash} from './shared.mjs';
 const source=resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const secret=process.env.ADA_INTERNAL_KEY||'';
@@ -15,8 +15,8 @@ async function graph(){
  const cases=await list(stateRoot());
  const nodes=[
   {id:'gauntlet.view',type:'view',title:'Gauntlet QA',icon:'graph',requires:['gauntlet.read']},
-  ...['list','detail','submit','attest'].map(id=>({id:'gauntlet.'+id,type:'action',
-   title:id,requires:[['list','detail'].includes(id)?'gauntlet.read':
+  ...['list','detail','outbox','submit','attest'].map(id=>({id:'gauntlet.'+id,type:'action',
+   title:id,requires:[['list','detail','outbox'].includes(id)?'gauntlet.read':
     id==='submit'?'gauntlet.submit':'gauntlet.verify']})),
   ...cases.filter(c=>['BLOCKED','FAILED'].includes(c.status)).map(c=>({
    id:'gauntlet.blocker_'+hash(c.task_id).slice(0,16),type:'resource',
@@ -30,6 +30,7 @@ async function graph(){
 async function invoke(action,params){
  if(action==='gauntlet.list')return await list(stateRoot());
  if(action==='gauntlet.detail')return await detail(stateRoot(),params?.task_id);
+ if(action==='gauntlet.outbox')return await outbox(stateRoot(),params?.kind);
  if(action==='gauntlet.submit')return await submit(stateRoot(),params,await catalog(source));
  if(action==='gauntlet.attest'){
   if(!process.env.GAUNTLET_QA_PUBLIC_KEY_FILE)throw Error('qa_key_not_configured');

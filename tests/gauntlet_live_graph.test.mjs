@@ -53,6 +53,10 @@ try{
  assert.equal(diag.diagnostic.task_id,input.task_id);
  assert(diag.diagnostic.issues.includes('checksum_mismatch'));
  assert.equal(diag.case.diagnostic,blocker.diagnostic);
+ const queued=(await invoke('gauntlet.outbox',{kind:'fixiki-outbox'})).result;
+ assert.equal(queued.length,1);
+ assert.equal(queued[0].required_capability,'task.blocker.triage');
+ assert.equal(queued[0].status,'PENDING_DISPATCH');
  c=(await invoke('gauntlet.submit',{...input,sha256:bundleHash(files)})).result;
  assert.equal(c.status,'BUILDING');
  assert.equal((await graph()).nodes.filter(n=>n.type==='resource').length,0);
