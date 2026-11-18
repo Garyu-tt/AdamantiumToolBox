@@ -88,7 +88,7 @@ try{
  await until(()=>evaluate('performance.getEntriesByType("navigation")[0]?.type==="reload"&&document.body.classList.contains("workspace-mode")'),'reload');
  assert(await evaluate('[...document.querySelectorAll(".ada-canvas .ada-shortcut-label")].some(x=>x.textContent==="QA Folder")'));
  await dragFolder(evaluate,(method,params)=>ws.send(JSON.stringify({id:++sequence,method,params})),pause);
- console.log('DESKTOP_UI_OK Start, layout and folder persistence');
+ console.log('DESKTOP_UI_OK');
 }finally{
  ws?.close();
  for(const cp of children)if(cp.exitCode===null)cp.kill();
