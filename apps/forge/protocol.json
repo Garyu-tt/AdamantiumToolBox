@@ -1,0 +1,28 @@
+{
+  "schema": "mechanicus.forge.adapter.v1",
+  "role": "stateless-contract-adapter",
+  "rules": {
+    "function_unit": "one independently invokable function per function node",
+    "invocation_unit": "one target function per request; one function may be called repeatedly",
+    "publication": "provider verification + capability publication + UI contribution; all external",
+    "revisit": "revision-driven invalidation and re-verification; all external",
+    "blockers": "cause, evidence, impact, remedies, safe attempts, verification; all external",
+    "safe_failover": "missing providers degrade to documentation and validation only"
+  },
+  "provider_ports": [
+    {"role": "graph", "contract": "graph.snapshot.read", "purpose": "external bidirectional dependency and provenance queries"},
+    {"role": "taskpool", "contract": "tasks.work.claim", "purpose": "external queue and leases; no duplicate queue"},
+    {"role": "capabilities", "contract": "capability.resolve", "purpose": "dynamic provider discovery and typed invocation"},
+    {"role": "ui", "contract": "ui.contribution.publish", "purpose": "expose verified actions in Raw UI / composers"},
+    {"role": "diagnostics", "contract": "diagnostic.incident.report", "purpose": "explain blocker, impacts and remedies"},
+    {"role": "remediation", "contract": "remediation.attempt.safe", "purpose": "bounded deterministic repairs and verification"},
+    {"role": "provenance", "contract": "provenance.record.append", "purpose": "immutable evidence and external audit history"}
+  ],
+  "graph_node_kinds": ["project", "plugin", "module", "function", "capability", "task", "revision", "artifact", "test", "ui_contribution", "blocker", "remedy", "execution", "policy", "host"],
+  "graph_edge_kinds": ["contains", "implements", "provides", "requires", "depends_on", "consumes", "invokes", "displayed_as", "verified_by", "blocked_by", "remediated_by", "invalidates", "supersedes", "executed_on", "produces", "derived_from"],
+  "function_states": ["proposed", "validated", "implemented", "verified", "published", "invalidated"],
+  "events": ["function.verified", "function.published", "function.invalidated", "dependency.changed", "incident.detected", "incident.remediation_attempted", "ui.contribution.changed"],
+  "adapter_actions": ["forge.describe", "forge.validate", "forge.prepare"],
+  "external_effects": false,
+  "stores_state": false
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "forge.function.v1",
+  "id": "mechanicus.dependencies.inspect",
+  "version": "0.1.0",
+  "request": {
+    "atomic": true,
+    "goal": "Return direct dependents of one function by capability reference",
+    "acceptance": ["Output validates against the schema", "No mutation of the graph snapshot"]
+  },
+  "capability": {
+    "action": "dependencies.inspect",
+    "input_schema": {"type": "object", "properties": {"function_id": {"type": "string"}}, "required": ["function_id"]},
+    "output_schema": {"type": "object", "properties": {"dependents": {"type": "array"}}}
+  },
+  "dependencies": [{"capability": "graph.snapshot.read"}],
+  "ui": {"expose": true, "role": "action", "label": "Show dependents"}
+}
