@@ -31,7 +31,7 @@ assert(off.status.some(x=>x.name==='memory.envelope'&&x.state==='blocked'));
 const folder=await mkdtemp(join(tmpdir(),'noosphere-core-only-'));
 try{
  await mkdir(join(folder,'apps','noosphere'),{recursive:true});
- const manifest=await readFile(resolve(root,'../../manifest.json'),'utf8');
+ const manifest=await readFile(resolve(root,'../manifest.json'),'utf8');
  await writeFile(join(folder,'apps','noosphere','manifest.json'),manifest);
  const plugins=await catalog(folder);
  assert.deepEqual(plugins.map(x=>x.id),['noosphere']);
