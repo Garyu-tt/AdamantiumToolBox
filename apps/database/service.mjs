@@ -14,7 +14,8 @@ const runtime=await loadModules(source,{policy,context:{dataDir}});
 const nodes=[{id:'database.view',type:'view',title:'Database',icon:'database',requires:['database.read']}];
 for(const [id,action] of runtime.actions){
  nodes.push({id,type:'action',title:action.name,capability:action.name,
-  module:action.owner,requires:[action.permission]});
+  module:action.owner,requires:[action.permission],
+  capabilityVersion:action.version,operation:action.operation});
 }
 nodes.push({id:'database.modules',type:'action',title:'Modules',requires:['database.read']});
 const graph={app:'database',version:1,nodes,edges:nodes.slice(1).map(n=>({from:'database.view',to:n.id,type:'uses'}))};
