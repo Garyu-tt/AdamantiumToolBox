@@ -80,7 +80,7 @@ export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
   focus(item);return handle;
  }
  function arrange(preset){
-  const count=preset==='focus'?3:preset,shown=[...records.values()].filter(item=>!item.win.hidden).slice(0,count);
+  const count=preset==='focus'?3:preset,shown=[...records.values()].filter(item=>!item.win.hidden).sort((a,b)=>Number(b===selected)-Number(a===selected)).slice(0,count);
   if(!shown.length)return 0;
   const {width,height}=bounds(),rects=layoutRects(width,height,preset,shown.length);
   for(let i=0;i<shown.length;i++){
