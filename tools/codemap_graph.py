@@ -5,6 +5,7 @@ from pathlib import PurePosixPath
 import sys
 from codemap import ROOT, files, meta, read
 from codemap_parse import inspect
+from codemap_relations import collect
 
 def resolve_import(source, spec, known):
     spec=spec.split("?")[0].strip()
@@ -48,7 +49,7 @@ def build():
                  key=lambda e:(e["from"],e["to"]))
     return entries,edges
 
-def context(file,sha,entries,edges):
+def context(file,sha,entries,edges,relations):
     current={e["file"]:e for e in entries}
     if file not in current:raise ValueError("unknown_file")
     if sha and current[file]["sha256"]!=sha:raise ValueError("stale_hash")
@@ -62,20 +63,24 @@ def context(file,sha,entries,edges):
         info.pop("calls",None)
         contracts.append(info)
     full=meta(ROOT/file,True)
+    related=[e for e in relations if e['file']==file or e['from']==file or e['to']==file]
     return {"schema":"mas-context-pack-1","file":file,"revision":full["sha256"],
             "source":full["source"],"symbols":full["symbols"],
             "imports":full["imports"],"dependencies":deps,"dependents":users,
             "contracts":contracts,"total_modules":len(entries),
-            "truncated_neighbors":len(deps)+len(users)>24}
+            "truncated_neighbors":len(deps)+len(users)>24,
+            "relations":related[:48],"truncated_relations":len(related)>48}
 
 def main():
     entries,edges=build()
+    relations=collect(ROOT,{e['file'] for e in entries})
     mode=sys.argv[1] if len(sys.argv)>1 else "graph"
     if mode=="graph":
         return {"schema":"mas-codegraph-1","nodes":entries,"edges":edges,
+                "relations_schema":"mas-code-relations-1","relations":relations,
                 "parser_note":"Python AST; JavaScript lexical imports, partial"}
     if mode=="context":
-        return context(sys.argv[2],sys.argv[3] if len(sys.argv)>3 else "",entries,edges)
+        return context(sys.argv[2],sys.argv[3] if len(sys.argv)>3 else "",entries,edges,relations)
     raise ValueError("unknown_mode")
 try:
     print(json.dumps(main(),ensure_ascii=False))
