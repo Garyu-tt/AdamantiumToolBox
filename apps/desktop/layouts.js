@@ -17,9 +17,12 @@ export function mountLayouts(taskbar,windows){
  }
  for(const [preset,title,hotkey] of presets){
   const b=document.createElement('button');b.type='button';
+  const glyph=document.createElement('span');glyph.className='ada-layout-glyph';
+  glyph.dataset.preset=String(preset);
+  for(let n=0;n<(preset==='focus'?3:preset);n++)glyph.append(document.createElement('i'));
   const name=document.createElement('span');name.textContent=title;
   const key=document.createElement('small');key.textContent=hotkey;
-  b.append(name,key);b.onclick=()=>{windows.arrange(preset);show(false);};
+  b.append(glyph,name,key);b.onclick=()=>{windows.arrange(preset);show(false);};
   menu.append(b);
  }
  const dismiss=event=>{
