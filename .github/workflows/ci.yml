@@ -60,3 +60,4 @@ jobs:
           node tests/browser_relay.test.mjs
           node tests/browser_provider_cli.test.mjs
           node tests/isolation.test.mjs
+          node tests/desktop_ui.test.mjs
