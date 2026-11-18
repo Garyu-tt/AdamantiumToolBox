@@ -4,8 +4,9 @@ import {validateGraph} from './contract.mjs';
 import {standardApi} from './api.mjs';
 import {semanticApi} from './semantic_api.mjs';
 import {linkTree} from './linkfs.mjs';
+import {resolveAsset} from './assets.mjs';
 import { readFile } from 'node:fs/promises';
-import { resolve, extname, sep } from 'node:path';
+import { resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const token=process.env.ADA_TOKEN||'',secret=process.env.ADA_INTERNAL_KEY||'';
@@ -51,21 +52,16 @@ async function graph(){
 }
 const mime={'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.ico':'image/x-icon'};
 async function asset(req,res){
- const url=new URL(req.url,'http://127.0.0.1');
- let file=url.pathname==='/'?'shell/index.html':url.pathname.slice(1);
- if(file==='shell.js')file='shell/shell.js';
- if(file==='style.css')file='shell/style.css';
- const safe=/^(?:shell\/(?:index\.html|shell\.js|style\.css|builtin\.js|navigation\.js|system_graph\.js|system_codemap\.js|system_mesh\.js)|apps\/[a-z0-9_-]+\/[a-z0-9_-]+\.js|icons\/[a-z0-9_-]+\.(?:svg|ico)|ui\/(?:kit\.js|mas\.css))$/;
- if(!safe.test(file))return reply(res,404,{error:'not_found'});
- if(file.startsWith('ui/'))file='standards/'+file;
- const path=resolve(root,file);
- if(!path.startsWith(root+sep))return reply(res,403,{error:'invalid_path'});
  try{
+  const url=new URL(req.url,'http://127.0.0.1');
+  const apps=new Set((await catalog(root)).map(a=>a.id));
+  const path=await resolveAsset(root,url.pathname,apps);
   const body=await readFile(path);res.writeHead(200,{'Content-Type':mime[extname(path)]||'application/octet-stream','Cache-Control':'no-store',
   'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'",
   'X-Content-Type-Options':'nosniff'});res.end(body);
  }catch{reply(res,404,{error:'not_found'});}
 }
+
 http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');
  if(await standardApi(req,res,{reply,token,secret,caps}))return;

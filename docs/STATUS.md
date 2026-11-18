@@ -16,3 +16,6 @@
 
 - CodeGraph derives import edges and reverse dependents; Context Pack checks SHA256
   and provides full target code plus neighboring contract signatures.
+
+- Asset routing now reads declarative standards/architecture/assets.json and validates
+  registered app IDs, safe types, traversal, and symlinks. Verified in Core + App runs.

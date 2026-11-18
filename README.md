@@ -52,3 +52,8 @@ python tests/architecture.test.py and node tests/isolation.test.mjs before accep
 ## Optional DedupArc provider
 node tools/archive.mjs pack snapshot.darc ./apps
 See docs/DEDUPARC-STORAGE.md. .darc random-access writes are not implemented.
+
+## Declarative asset policy
+Static shell UI and app asset routes are declared in
+standards/architecture/assets.json; core/assets.mjs validates mounts and extensions
+and refuses asset traversal. Tests: node tests/assets.test.mjs.
