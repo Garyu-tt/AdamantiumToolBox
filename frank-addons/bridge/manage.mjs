@@ -26,6 +26,7 @@ if(command==='adapter'){
 }else if(command==='approve'){
  const p=found.find(p=>p.key===arg);if(!p)die('package_not_found');
  if(!d.adapters.some(x=>x.capability===p.manifest.adapter))die('adapter_not_registered');
+ if(p.manifest.permissions.length)die('scoped_permissions_not_supported');
  d.packages=d.packages.filter(x=>x.key!==arg);
  d.packages.push({key:arg,digest:await packageDigest(p.directory)});
 }else if(command==='disable'){
