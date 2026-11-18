@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {validateManifest,validateGraph} from '../core/contract.mjs';
 import {providers,dispatch} from '../apps/godot/registry.mjs';
 import {engine,projectPath} from '../apps/godot_local/config.mjs';
+import {engineEnv} from '../apps/godot_local/environment.mjs';
 const root=await mkdtemp(join(tmpdir(),'godot-mas-')),previous=globalThis.fetch;
 process.env.ADA_TOKEN='godot-test-token-with-sufficient-length';
 process.env.ADA_CORE_URL='http://127.0.0.1:15555/';
@@ -38,6 +39,9 @@ try{
  await assert.rejects(dispatch('session.stop',{sessionId:'s1'}),/provider_id_required/);
  await assert.rejects(dispatch('unknown',{}),/invalid_request/);
  assert.equal((await engine()).configured,false);
+ process.env.ADA_INTERNAL_KEY='private-test-key';
+ assert(!('ADA_INTERNAL_KEY' in engineEnv()));
+ assert(!('NODE_OPTIONS' in engineEnv()));
  const base=join(root,'projects'),project=join(base,'washitsu');
  await mkdir(project,{recursive:true});
  await writeFile(join(project,'project.godot'),'config_version=5\n');
