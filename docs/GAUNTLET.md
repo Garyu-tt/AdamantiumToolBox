@@ -77,3 +77,14 @@ required. CI checks the staged payload with the authoritative
 signer, envelope store, Lifecycle plan/approval and activation receipt
 are separate unconnected steps. Source digest and payload digest differ
 by design because the byte encodings differ.
+
+## Independent test evidence artifact (CI)
+A separate least-privilege GitHub Actions job `gauntlet-evidence`
+runs four Gauntlet tests in subprocesses, records their actual exit codes,
+signal, elapsed time and stdout/stderr with per-test SHA-256, and uploads
+`gauntlet-evidence.json` even when tests fail. The report includes the
+Git commit SHA and Actions run ID. A pure verifier rejects a PASS with
+nonzero exit code or modified logs. This workflow runs tests of the
+Gauntlet **implementation**, not untrusted Claude candidates, and is
+**not** signed by the QA key; an isolated external QA worker/signature
+provisioning still blocks external plugin RELEASE_READY.

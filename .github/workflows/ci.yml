@@ -62,3 +62,31 @@ jobs:
           node tests/window_geometry.test.mjs
           node tests/window_ui.test.mjs
           node tests/isolation.test.mjs
+
+  gauntlet-evidence:
+    name: Independent Gauntlet evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Execute QA scripts and preserve real logs
+        env:
+          GAUNTLET_EVIDENCE_PATH: ${{ runner.temp }}/gauntlet-evidence.json
+        run: |
+          node tools/gauntlet-ci-evidence.mjs \
+            tests/gauntlet.test.mjs \
+            tests/gauntlet_failures.test.mjs \
+            tests/gauntlet_live_graph.test.mjs \
+            tests/gauntlet_ci_evidence.test.mjs
+      - name: Publish immutable evidence for independent review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gauntlet-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/gauntlet-evidence.json
+          if-no-files-found: error
