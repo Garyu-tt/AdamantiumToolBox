@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install native build tools
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++ qt6-base-dev qt6-base-dev-tools
       - name: Fetch pinned CppMicroServices fork and its submodules
         run: |
           git clone --depth=1 --recursive --branch development https://github.com/Garyu-tt/CppMicroServices.git "$RUNNER_TEMP/cppms"
@@ -37,6 +37,17 @@ jobs:
           cmake -S native/cppms-bootstrap -B build/native-cppms -G Ninja \
             -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/cppms-install" -DCMAKE_BUILD_TYPE=Release
           cmake --build build/native-cppms --parallel 2
+      - name: Build complete Qt graph client with optional CppMS mirror
+        run: |
+          cmake -S native/qt6-bootstrap -B build/native-qt-cppms -G Ninja \
+            -DMAS_WITH_CPPMS=ON -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/cppms-install" \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/native-qt-cppms --parallel 2
+      - name: Test combined Qt + CppMicroServices binaries
+        env:
+          QT_QPA_PLATFORM: offscreen
+          LD_LIBRARY_PATH: ${{ runner.temp }}/cppms-install/lib
+        run: ctest --test-dir build/native-qt-cppms --output-on-failure
       - name: Verify ServiceTracker add and revoke
         env:
           LD_LIBRARY_PATH: ${{ runner.temp }}/cppms-install/lib

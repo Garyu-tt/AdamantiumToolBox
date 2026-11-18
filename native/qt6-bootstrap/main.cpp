@@ -1,5 +1,6 @@
 #include "window.hpp"
 #include "graph_client.hpp"
+#include "cppms_mirror.hpp"
 #include <QApplication>
 #include <QCoreApplication>
 #include <QJsonArray>
@@ -23,6 +24,13 @@ int main(int argc,char** argv) {
    }
    shell.setCapabilities(apps);
   });
+#ifdef MAS_WITH_CPPMS
+ CppMsMirror mirror;
+ QObject::connect(&graph,&GraphClient::graphChanged,&shell,
+  [&mirror](const QJsonObject& state){mirror.reconcile(state);});
+ QObject::connect(&graph,&GraphClient::availabilityChanged,&shell,
+  [&mirror](bool online){if(!online)mirror.reconcile({});});
+#endif
  graph.start();
  if(app.arguments().contains("--smoke"))
   QTimer::singleShot(120,&app,&QCoreApplication::quit);
