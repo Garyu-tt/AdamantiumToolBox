@@ -10,6 +10,7 @@ frank-addons/
     providers/shared/      # reusable auth, sandbox and HTTP lifecycle
     providers/python/      # optional Python executor
     providers/javascript/  # optional JavaScript/Node executor
+    providers/rust/        # optional Rust source compiler + executor
   <language>/<addon-id>/
     frank-addon.json       # package manifest
     <entry>                # language entry
@@ -18,8 +19,8 @@ apps/frankenstein/         # optional MAS gateway, NOT Frank package storage
 ```
 
 The language-independent ABI is specified by
-[FRANK-ADAPTER-1](../standards/FRANK-ADAPTER-1.md). Both Python and
-JavaScript implement it. Neither is required by the microkernel.
+[FRANK-ADAPTER-1](../standards/FRANK-ADAPTER-1.md). Python, JavaScript,
+and Rust implement it. Neither is required by the microkernel.
 The bridge discovers languages from declared package capabilities and
 operator-approved adapter registrations, not a fixed list.
 
@@ -38,8 +39,9 @@ node frank-addons/bridge/manage.mjs disable frank.javascript.hello --approve
 ```
 
 Adapter registration does not install an interpreter or start its process.
-See [Python provider](bridge/providers/python/README.md) or
-[JavaScript provider](bridge/providers/javascript/README.md) for startup.
+See [Python provider](bridge/providers/python/README.md),
+[JavaScript provider](bridge/providers/javascript/README.md), or
+[Rust provider](bridge/providers/rust/README.md) for startup.
 Only approved, intact packages with a healthy provider appear in MAS as
 `frankenstein.<language>.<addon-id>.<action>`.
 The package identity remains `frank.<language>.<addon-id>`.
@@ -51,7 +53,8 @@ The package identity remains `frank.<language>.<addon-id>`.
 - Neither signatures nor sandboxed execution of arbitrary hostile code are
   production-ready. No unsigned remote automatic activation.
 - Python uses Linux namespaces and Python resource limits. JavaScript uses
-  Linux namespaces and Node's V8 heap cap. Missing Bubblewrap means execution
+  Linux namespaces and Node's V8 heap cap. Rust source is compiled and
+  executed inside a network-unshared namespace with resource/time limits. Missing Bubblewrap means execution
   is disabled, never silently downgraded.
 - Bridge-wide `frankenstein.invoke` is coarse: only packages with
   `permissions: []` can currently be approved. Per-action grants remain TODO.
