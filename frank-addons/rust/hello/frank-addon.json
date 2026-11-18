@@ -1,0 +1,17 @@
+{
+  "schema": "frank-addon-1",
+  "id": "hello",
+  "name": "Rust Hello",
+  "language": "rust",
+  "version": "0.1.0",
+  "entry": "main.rs",
+  "adapter": "frankenstein.adapter.rust",
+  "lifecycle": "independent",
+  "permissions": [],
+  "actions": [
+    {
+      "id": "echo",
+      "title": "Echo JSON"
+    }
+  ]
+}
