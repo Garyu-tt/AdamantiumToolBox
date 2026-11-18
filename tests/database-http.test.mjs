@@ -10,7 +10,9 @@ const free=()=>new Promise(ok=>{const s=createServer();s.listen(0,'127.0.0.1',()
 const pause=ms=>new Promise(ok=>setTimeout(ok,ms));
 const root=await mkdtemp(join(tmpdir(),'mas-http-')),port=await free();
 const secret='synthetic-http-test-secret-over-24-chars';
-const env={...process.env,DATABASE_DATA_DIR:root,APP_PORT:String(port),ADA_INTERNAL_KEY:secret,DATABASE_MODULE_POLICY:'{"indexing":false}'};
+const env={...process.env,DATABASE_DATA_DIR:root,APP_PORT:String(port),ADA_INTERNAL_KEY:secret,DATABASE_MODULE_POLICY:'{"indexing":false}',
+ DATABASE_STORAGE_POLICY:JSON.stringify({schema:'mas-database-policy-1',tier:'edge',
+  maxJournalBytes:1048576,maxBackups:0,allowWrites:true})};
 const child=spawn(process.execPath,[service],{env,stdio:'ignore'}),url='http://127.0.0.1:'+port;
 try{
  let health;
