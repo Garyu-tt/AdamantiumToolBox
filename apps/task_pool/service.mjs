@@ -18,7 +18,7 @@ const nodes=[{id:'task_pool.view',type:'view',title:manifest.name,icon:manifest.
 if(caps.has('tasks.claim'))nodes.push({id:'task_pool.provider',type:'resource',
  requires:['tasks.claim'],provider:{schema:'mas-task-provider-1',
  claimAction:'task_pool.claim',heartbeatAction:'task_pool.heartbeat',
- completeAction:caps.has('tasks.finish')?'task_pool.complete':null}});
+ completeAction:caps.has('tasks.finish')?'task_pool.complete':null,failAction:caps.has('tasks.finish')?'task_pool.fail':null}});
 const graph={app:manifest.id,version:1,nodes,edges:nodes.slice(1).map(n=>({
  from:'task_pool.view',to:n.id,type:'uses'}))};
 const reply=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8',
