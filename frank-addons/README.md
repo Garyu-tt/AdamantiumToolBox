@@ -58,7 +58,8 @@ their intact approved packages. No code executes during discovery.
 - This is local owner approval, **not signed publisher provenance**.
 - No language executor or OS-level sandbox is included. Trusted adapters
   receive package file paths; they must isolate execution themselves.
-- Bridge-wide `frankenstein.invoke` scope is coarse. Per-addon/per-user
-  scopes and signed release verification are not yet implemented.
+- Bridge-wide `frankenstein.invoke` scope is coarse. Until per-addon/per-user
+  scopes are implemented, only packages with `permissions: []` can be approved.
+  Signed release verification is also not yet implemented.
 - The bridge app is optional. Removing it never breaks classical MAS apps.
 - Tests: `node tests/frank_addons.test.mjs` and `node tests/frank_bridge.test.mjs`.
