@@ -112,8 +112,8 @@ export function createWindowManager(desktop,tasks){
    if(event.key==='ArrowUp')dock(selected,'max');
    if(event.key==='ArrowDown')selected.mode?restore(selected):minimize(selected);
   }
-  if(event.altKey&&event.shiftKey&&['Digit2','Digit4','Digit8'].includes(event.code)){
-   event.preventDefault();arrange(Number(event.code.slice(-1)));
+  if(event.ctrlKey&&event.altKey&&['Digit2','Digit3','Digit4','Digit8'].includes(event.code)){
+   event.preventDefault();arrange(event.code==='Digit3'?'focus':Number(event.code.slice(-1)));
   }
  });
  return {register,arrange,reflow,windows:()=>[...records.keys()]};
