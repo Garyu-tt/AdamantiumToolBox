@@ -3,12 +3,11 @@ import {join} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 const schema='mas-task-pool-state-1';
 const id=/^[0-9a-f-]{36}$/i,worker=/^[a-z0-9][a-z0-9_.-]{0,63}$/i;
-const own=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
 const requireId=value=>{if(typeof value!=='string'||!id.test(value))throw Error('invalid_task_id');return value;};
 const actor=value=>{if(typeof value!=='string'||!worker.test(value))throw Error('invalid_worker_id');return value;};
 const validCaps=value=>Array.isArray(value)&&value.length<=32&&value.every(x=>typeof x==='string'&&
  /^[a-z][a-z0-9_.-]{1,79}$/.test(x))&&new Set(value).size===value.length;
-const serialized=value=>JSON.stringify(value);
+const serialized=JSON.stringify;
 const hash=value=>createHash('sha256').update(serialized(value)).digest('hex');
 export class TaskPool{
  constructor(root,clock=()=>Date.now()){this.file=join(root,'task-pool.json');this.root=root;
@@ -64,6 +63,9 @@ export class TaskPool{
   actor(workerId);if(!validCaps(capabilities)||!Number.isInteger(leaseMs)||leaseMs<10000||leaseMs>600000)
    throw Error('invalid_claim');
   return this.transact(doc=>{
+   for(const t of Object.values(doc.tasks))if(t.status==='claimed'&&t.lease?.expiresAt<=this.clock()){
+    t.status='needs_review';t.lease=null;t.revision++;t.note='expired_lease_unknown';
+   }
    const eligible=Object.values(doc.tasks).find(t=>t.status==='queued'&&
     t.requires.every(x=>capabilities.includes(x)));
    if(!eligible)return {status:'empty'};
