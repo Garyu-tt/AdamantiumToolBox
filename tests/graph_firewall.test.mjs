@@ -10,6 +10,8 @@ const flow=(from='operator',port=8443)=>({from,to:'admin',protocol:'tcp',port});
 const sample=inspect(topology);
 assert.equal(sample.summary.nodes,3);
 assert.equal(sample.summary.issues,0);
+const mismatched={...topology,services:[{...topology.services[0],addresses:['192.0.2.99']}]};
+assert(inspect(mismatched).issues.some(x=>x.code==='service_address_not_on_host'));
 assert(sample.edges.some(x=>x.type==='allow'));
 assert.equal(sample.effectiveDefault,'deny');
 assert.equal(sample.safeToApply,false);
