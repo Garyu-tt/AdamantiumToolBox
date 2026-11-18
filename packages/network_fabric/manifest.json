@@ -1,0 +1,34 @@
+{
+  "mas": "1.0",
+  "id": "network_fabric",
+  "name": "Mechanicus Network Fabric",
+  "version": "0.3.0",
+  "icon": "network_fabric",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8928,
+    "invokeTimeoutMs": 5000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "network_fabric.read",
+    "network_fabric.evaluate"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  }
+}
