@@ -2,7 +2,7 @@
   "mas": "1.0",
   "id": "desktop",
   "name": "Desktop Workspace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icon": "workbench",
   "lifecycle": "independent",
   "service": {
