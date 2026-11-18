@@ -11,7 +11,8 @@
   },
   "ui": {
     "standard": "mas-ui-1",
-    "mode": "embedded-and-standalone"
+    "mode": "embedded-and-standalone",
+    "surface": "workspace"
   },
   "auth": {
     "mode": "host-delegated"
