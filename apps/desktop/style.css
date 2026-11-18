@@ -44,3 +44,12 @@ body.workspace-mode #desktop{min-width:0;background:linear-gradient(130deg,var(-
  text-align:left;gap:15px;background:transparent;border-color:transparent;min-height:38px}
 .ada-layout-menu button:hover{background:var(--surface);border-color:var(--line)}
 .ada-layout-menu small{white-space:nowrap;color:var(--muted)}
+
+.ada-layout-glyph{display:grid;flex:none;width:46px;height:28px;gap:2px}
+.ada-layout-glyph i{border:1px solid var(--accent);background:var(--surface);border-radius:2px}
+.ada-layout-glyph[data-preset="2"]{grid-template-columns:repeat(2,1fr)}
+.ada-layout-glyph[data-preset="4"]{grid-template:repeat(2,1fr)/repeat(2,1fr)}
+.ada-layout-glyph[data-preset="8"]{grid-template:repeat(2,1fr)/repeat(4,1fr)}
+.ada-layout-glyph[data-preset="focus"]{grid-template:repeat(2,1fr)/3fr 2fr}
+.ada-layout-glyph[data-preset="focus"] i:first-child{grid-row:span 2}
+.ada-layout-menu button>span:nth-child(2){flex:1}
