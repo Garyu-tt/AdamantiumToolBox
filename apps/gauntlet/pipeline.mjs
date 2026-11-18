@@ -16,12 +16,15 @@ export async function submit(root,input,active=[]){
   if(old?.sha256===input.sha256)return publicView(old);
   if(old&&(old.attempts>=budget.attempts||old.spent_usd>=budget.cost))
    throw Error('retry_budget_exhausted');
-  const c={task_id:input.task_id,sha256:input.sha256,author_id:input.author_id,
+  const c={task_id:input.task_id,plugin_id:input.plugin_id,sha256:input.sha256,author_id:input.author_id,
    files:input.files,attempts:(old?.attempts||0)+1,spent_usd:old?.spent_usd||0,
    issues:[],history:old?.history||[],budget,diagnostic:null};
   if(old)stamp(c,'FIXING');stamp(c,'QUEUED');
   const result=inspect(input,active);
   c.issues=result.issues;
+  c.affected_components=[input.plugin_id,...c.issues.flatMap(s=>{
+   const a=s.split(':');return a.length>1?[a.slice(1).join(':')]:[];
+  })].filter(Boolean);
   if(c.issues.length){
    stamp(c,c.attempts>=budget.attempts?'FAILED':'BLOCKED');
    c.diagnostic=await blocker(root,c,c.issues);
@@ -38,6 +41,8 @@ export async function accept(root,input,key){
   c.qa_evidence=await put(root,'qa-evidence',c.task_id+c.sha256+input.report.run_id,
    {report:input.report,signature:input.signature});
   c.spent_usd+=checked.cost;stamp(c,'TESTING');c.issues=checked.issues;
+  c.affected_components=[c.plugin_id,...checked.issues
+   .filter(s=>s.startsWith('dependent_unverified:')).map(s=>s.split(':')[1])].filter(Boolean);
   if(c.spent_usd>c.budget.cost)c.issues.push('cost_budget_exhausted');
   if(c.issues.length){
    stamp(c,c.attempts>=c.budget.attempts||c.spent_usd>=c.budget.cost?'FAILED':'BLOCKED');

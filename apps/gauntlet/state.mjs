@@ -27,13 +27,26 @@ export async function list(root){
  }
  return cases.sort((a,b)=>a.task_id.localeCompare(b.task_id));
 }
+export async function detail(root,id){
+ const c=await load(root,id);
+ if(!c)return null;
+ const info=publicView(c);
+ if(!c.diagnostic)return {case:info,diagnostic:null};
+ const filename=c.diagnostic;
+ if(!/^[a-f0-9]{64}\.json$/.test(filename))throw Error('bad_diagnostic_reference');
+ const doc=JSON.parse(await readFile(join(root,'diagnostics',filename),'utf8'));
+ if(hash(JSON.stringify(doc))+'.json'!==filename||
+  doc.task_id!==c.task_id||doc.sha256!==c.sha256)throw Error('diagnostic_integrity_failure');
+ return {case:info,diagnostic:doc};
+}
 export async function blocker(root,c,issues){
  const report={schema:'gauntlet-diagnostic-1',task_id:c.task_id,
-  sha256:c.sha256,attempt:c.attempts,issues,qa_evidence:c.qa_evidence||null,
+  sha256:c.sha256,attempt:c.attempts,issues,
+  affected_components:c.affected_components||[],qa_evidence:c.qa_evidence||null,
   at:new Date().toISOString()};
  const file=await put(root,'diagnostics',c.task_id+c.sha256+String(c.attempts),report);
  await put(root,'fixiki-outbox',c.task_id+c.sha256+String(c.attempts),{
-  schema:'gauntlet-fix-request-1',target:'capability:fixiki.triage',task_id:c.task_id,
+  schema:'gauntlet-fix-request-1',required_capability:'task.blocker.triage',task_id:c.task_id,
   sha256:c.sha256,diagnostic:file,issues,budget:c.budget,status:'PENDING_DISPATCH'});
  return file;
 }

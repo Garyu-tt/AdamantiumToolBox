@@ -7,8 +7,10 @@ export const validHash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(val
 export const validTask=value=>typeof value==='string'&&/^[a-zA-Z0-9_.-]{3,80}$/.test(value);
 export const stateRoot=()=>process.env.GAUNTLET_STATE_DIR||
  join(process.env.LOCALAPPDATA||process.env.XDG_STATE_HOME||homedir(),'Adamantium Toolbox','gauntlet');
-export const publicView=c=>({task_id:c.task_id,sha256:c.sha256,status:c.status,
- attempts:c.attempts,spent_usd:c.spent_usd,issues:c.issues||[],history:c.history||[]});
+export const publicView=c=>({task_id:c.task_id,plugin_id:c.plugin_id,
+ sha256:c.sha256,status:c.status,diagnostic:c.diagnostic||null,
+ affected_components:c.affected_components||[],attempts:c.attempts,
+ spent_usd:c.spent_usd,issues:c.issues||[],history:c.history||[]});
 export function limits(){
  const attempts=Number(process.env.GAUNTLET_MAX_ATTEMPTS||3);
  const cost=Number(process.env.GAUNTLET_MAX_COST_USD||20);

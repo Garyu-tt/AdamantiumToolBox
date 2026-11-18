@@ -39,3 +39,13 @@ State persistence is atomic per file, not a cross-process transaction.
 Only in-process submissions are serialized. The release queue is local,
 not a connected delivery service; its consumer requires a separate adapter.
 No live MAS graph client was present when this branch was authored.
+
+## R02 graph inspection and repair routing
+`gauntlet.detail` returns an authorized case summary and verified diagnostic
+by task ID. Blocker resource nodes reflect source SHA-256, status, diagnostic
+reference and affected component IDs. Nodes appear/disappear on live graph
+requests; shell UI re-renders from polling without a page reload. This does
+not establish a distributed event notification transport.
+Fixiki outbox requests declare the semantic capability `task.blocker.triage`
+rather than a hardcoded provider. Dispatch remains PENDING_DISPATCH until
+a trusted capability exists and an authenticated delivery receipt is observed.

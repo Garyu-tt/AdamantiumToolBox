@@ -12,6 +12,16 @@ export async function mount(host,api){
    make('strong',c.task_id+' — '+c.status,box);
    make('p',c.issues.join(', ')||'Нет зарегистрированных ошибок',box);
    make('small',c.sha256+' · '+c.attempts+' попытка(и)',box);
+   if(c.diagnostic){
+    const show=make('button','Диагностика',box);
+    const details=make('pre','',box);details.hidden=true;
+    show.onclick=async()=>{
+     if(!details.hidden){details.hidden=true;return;}
+     try{const r=await api.call('gauntlet.detail',{task_id:c.task_id});
+      details.textContent=JSON.stringify(r.diagnostic,null,2);details.hidden=false;
+     }catch(e){details.textContent=e.message;details.hidden=false;}
+    };
+   }
   }
  }
  refresh.onclick=()=>redraw().catch(e=>{panel.textContent=e.message;});
