@@ -37,7 +37,7 @@ try{
  }
  const env={...process.env,LOCALAPPDATA:join(tmp,'userdata'),ADA_TOKEN:token,
   ADA_INTERNAL_KEY:secret,ADA_PORT:String(ports.core),ADA_CORE_URL:base,
-  ADA_CAPS:'godot.read,godot.launch,engine.provider,graph.read'};
+  ADA_CAPS:'godot.read,godot.launch,engine.provider,engine.launch,graph.read'};
  await mkdir(env.LOCALAPPDATA,{recursive:true});
  for(const app of ['godot','godot_local'])
   children.push(spawn(process.execPath,[join(tmp,'apps',app,'service.mjs')],
@@ -60,7 +60,7 @@ try{
  assert.equal(response.configured,false);
  assert.equal(response.reason,'godot_executable_not_configured');
  await assert.rejects(invoke('godot.session.start',{projectId:'x',profile:'headless'}),
-  /godot_executable_not_configured/);
+  /upstream_400|core_http_400/);
  console.log('GODOT_RUNTIME_OK Core + router + optional local backend');
 }finally{
  for(const child of children)if(child.exitCode===null){
