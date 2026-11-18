@@ -1,6 +1,6 @@
 export async function capabilityApi(req,res,{authorized,reply,graph}){
- const url=new URL(req.url,'http://127.0.0.1');
- if(req.method!=='GET'||url.pathname!=='/api/capabilities')return false;
+ const path=(req.url||'').split('?')[0];
+ if(req.method!=='GET'||path!=='/api/capabilities')return false;
  if(!authorized(req)){reply(res,401,{error:'unauthorized'});return true;}
  try{reply(res,200,{schema:'mas-capability-providers-1',
   providers:(await graph()).providers.list()});}
