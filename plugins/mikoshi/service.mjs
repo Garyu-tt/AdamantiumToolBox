@@ -1,4 +1,4 @@
-"""Adamantium MAS host-delegated bridge. No direct neural write actions."""
+// Adamantium MAS host-delegated bridge. No direct neural write actions.
 import http from 'node:http';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
