@@ -3,7 +3,7 @@ set -eu
 case "$1" in
   ''|/*|*../*|../*|*/..|*\\*) exit 2 ;;
 esac
-ulimit -t 8
+ulimit -t 30
 ulimit -f 65536
 ulimit -n 64
 /rust-toolchain/bin/rustc --sysroot /rust-toolchain \

@@ -54,3 +54,14 @@ a trusted capability exists and an authenticated delivery receipt is observed.
 Clients may request only `fixiki-outbox` or `delivery-outbox` and may
 not mutate queue records through this API. Neither queue is considered
 delivered until an independently authorized adapter acknowledges the request.
+
+## CI flakiness observed during R02
+A pull_request CI run on the exact same commit as a green push run
+failed in Frank Rust's namespace test. Observed failure modes were
+`rustc must work in CI Linux namespace` and a later `adapter_http_400`
+after roughly 19 seconds. The Rust compilation deadline was 16 seconds,
+the host bridge call timeout 18 seconds. R02 retains production defaults
+but provisions bounded 45/60-second limits inside the Rust CI test,
+raises the sandbox CPU ulimit to 30 seconds, and exposes safe adapter error
+codes for diagnostics. Only independent repeated CI runs can confirm
+whether this remedies the intermittent failure.

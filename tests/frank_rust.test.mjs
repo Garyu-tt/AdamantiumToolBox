@@ -8,6 +8,10 @@ import {sandboxReady,runRust} from '../frank-addons/bridge/providers/rust/sandbo
 import {packageDigest,saveRegistry} from '../frank-addons/bridge/approval.mjs';
 import {authorizedAddon} from '../frank-addons/bridge/providers/shared/authorize.mjs';
 import {bridgeGraph,bridgeInvoke} from '../frank-addons/bridge/runtime.mjs';
+if(process.env.CI){
+ process.env.FRANK_RUST_TIMEOUT_MS=process.env.FRANK_RUST_TIMEOUT_MS||'45000';
+ process.env.FRANK_BRIDGE_TIMEOUT_MS=process.env.FRANK_BRIDGE_TIMEOUT_MS||'60000';
+}
 const root=await mkdtemp(join(tmpdir(),'frank-rust-'));
 process.env.ADA_FRANK_STATE_DIR=join(root,'state');
 const capability='frankenstein.adapter.rust',secret='frank-rust-test-key-with-sufficient-length';
