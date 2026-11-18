@@ -4,7 +4,7 @@ Two independent MAS applications. The **Orchestrator is general-purpose**, indep
 
 ## Activation
 
-Install through existing MAS app discovery, then grant the `orchestration.read`, `orchestration.execute`, `orchestration.cancel`, `ai.claude.read`, `ai.claude.run`, and `ai.claude.cancel` permissions using the existing owner-approved permissions mechanism. Both apps support `Core + App` boot independently. No auto-activation or deployment is performed by this repository change.
+Install through existing MAS app discovery, then grant the `orchestration.read`, `orchestration.execute`, `orchestration.cancel`, `claude.read`, `claude.run`, and `claude.cancel` permissions using the existing owner-approved permissions mechanism. Both apps support `Core + App` boot independently. No auto-activation or deployment is performed by this repository change.
 
 Operator environment settings (never commit credentials):
 
