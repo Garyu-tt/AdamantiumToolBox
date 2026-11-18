@@ -15,8 +15,9 @@ capabilities supplied by other applications through typed adapters.
   No guarantee that integration preserves all functions.
 - Every mutation is atomically persisted. Snapshots are immutable,
   and fork creates a distinct instance without mutating the source.
-- There is no automatic background stepping yet. The incubator server
-  remains available independently; ticks are explicitly requested.
+- Background stepping is opt-in per brain with a persisted schedule and
+  a capped number of CPU steps per scheduler cycle. Unconfigured brains
+  remain paused. Pausing and restarting the service preserves the schedule.
 - Existing Dante runtime and state are not migrated or modified.
 
 ## Recursive modules
