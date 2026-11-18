@@ -14,8 +14,8 @@ const pause=t=>new Promise(ok=>setTimeout(ok,t));
 const token='witness-core-operator-token-long',key='witness-core-internal-secret-long';
 test('real Core + network_witness alone, auth, signed anchor and hot revocation',{timeout:35000},async()=>{
  const f=await fixture(),temp=await mkdtemp(join(tmpdir(),'witness-core-')),
-  runtime=join(temp,'runtime'),home=join(temp,'home'),cp=await free(),ap=await free();
- let core,app;const base='http://127.0.0.1:'+cp;
+  runtime=join(temp,'runtime'),home=join(temp,'home'),corePort=await free(),appPort=await free();
+ let core,app;const base='http://127.0.0.1:'+corePort;
  const bearer={Authorization:'Bearer '+token};
  async function graph(){const r=await fetch(base+'/api/graph',{headers:bearer,signal:AbortSignal.timeout(900)});return r.json();}
  async function invoke(action,params={}){const r=await fetch(base+'/api/invoke',{method:'POST',
@@ -26,9 +26,9 @@ test('real Core + network_witness alone, auth, signed anchor and hot revocation'
   await cp(join(repo,'core'),join(runtime,'core'),{recursive:true});
   await cp(source,join(runtime,'apps','network_witness'),{recursive:true});
   const mp=join(runtime,'apps','network_witness','manifest.json');const m=JSON.parse(await readFile(mp,'utf8'));
-  m.service.port=ap;await writeFile(mp,JSON.stringify(m));
+  m.service.port=appPort;await writeFile(mp,JSON.stringify(m));
   const env={...process.env,LOCALAPPDATA:home,ADA_TOKEN:token,ADA_INTERNAL_KEY:key,
-   ADA_CAPS:'network_witness.read,network_witness.write',ADA_PORT:String(cp),APP_PORT:String(ap),
+   ADA_CAPS:'network_witness.read,network_witness.write',ADA_PORT:String(corePort),APP_PORT:String(appPort),
    NETWORK_WITNESS_LOG:f.logPath,NETWORK_WITNESS_KEY:f.keyPath,NETWORK_WITNESS_TRUST:f.trustPath};
   app=spawn(process.execPath,[join(runtime,'apps','network_witness','service.mjs')],{env,stdio:'ignore'});
   core=spawn(process.execPath,[join(runtime,'core','kernel.mjs')],{env,stdio:'ignore'});
