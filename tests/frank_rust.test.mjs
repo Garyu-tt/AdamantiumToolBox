@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {once} from 'node:events';
 import {createAdapterServer} from '../frank-addons/bridge/providers/shared/server.mjs';
-import {sandboxReady} from '../frank-addons/bridge/providers/rust/sandbox.mjs';
+import {sandboxReady,runRust} from '../frank-addons/bridge/providers/rust/sandbox.mjs';
 import {packageDigest,saveRegistry} from '../frank-addons/bridge/approval.mjs';
 import {authorizedAddon} from '../frank-addons/bridge/providers/shared/authorize.mjs';
 import {bridgeGraph,bridgeInvoke} from '../frank-addons/bridge/runtime.mjs';
