@@ -12,6 +12,10 @@ for(const preset of [2,4,8]){
  assert.equal(pixels,1920*1080);
 }
 assert.deepEqual(layoutRects(999,777,4,0),[]);
+const focus=layoutRects(1920,1080,'focus');
+assert.equal(focus.length,3);
+assert.equal(focus.reduce((sum,r)=>sum+r.width*r.height,0),1920*1080);
+assert(focus[0].width>focus[1].width);
 assert.equal(layoutRects(999,777,8,3).length,3);
 assert.throws(()=>layoutRects(100,100,3),/invalid_layout/);
 assert.deepEqual(snapRect(1000,800,'left'),{x:0,y:0,width:500,height:800});
