@@ -14,6 +14,10 @@ class Element extends EventTarget{
  replaceChildren(...children){this.children=[];this.append(...children);}
  remove(){if(this.parent)this.parent.children=this.parent.children.filter(x=>x!==this);}
  setAttribute(name,value){this.attributes[name]=value;}
+ closest(){return null;}
+ setPointerCapture(id){this.pointer=id;}
+ hasPointerCapture(id){return this.pointer===id;}
+ releasePointerCapture(){this.pointer=null;}
  get offsetWidth(){return parseFloat(this.style.width)||400;}
  getBoundingClientRect(){
   const left=parseFloat(this.style.left)||0,top=parseFloat(this.style.top)||0;
@@ -38,6 +42,17 @@ function open(id,left=20){
 const first=open('first',40),second=open('second',490);
 assert.deepEqual(manager.windows(),['first','second']);
 assert.equal(tasks.children.length,2);
+const point=(type,x,y)=>{
+ const event=new Event(type);
+ Object.assign(event,{pointerId:7,button:0,clientX:x,clientY:y});
+ first.bar.dispatchEvent(event);
+};
+point('pointerdown',100,40);
+point('pointermove',200,100);
+point('pointerup',200,100);
+assert.equal(first.win.style.left,'140px');
+assert.equal(first.win.style.top,'90px');
+first.win.style.left='40px';first.win.style.top='30px';
 first.handle.snap('right');
 assert.equal(first.win.style.left,'600px');
 assert.equal(first.win.style.width,'600px');
