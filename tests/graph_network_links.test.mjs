@@ -24,7 +24,8 @@ try{
   obj.service.port=ports[i];await writeFile(manifest,JSON.stringify(obj));
  }
  const corePort=await free();
- const env={...process.env,ADA_TOKEN:token,ADA_INTERNAL_KEY:secret,
+ const env={...process.env,LOCALAPPDATA:join(test,'home'),
+  ADA_TOKEN:token,ADA_INTERNAL_KEY:secret,
   ADA_CAPS:'graph_firewall.read,network_inventory.read,graph.read,frontend.read',
   ADA_PORT:String(corePort)};
  for(let i=0;i<ids.length;i++)children.push(spawn(process.execPath,
