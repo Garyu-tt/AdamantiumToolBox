@@ -33,4 +33,7 @@ assert.equal(bad.cycles.length,1);
 assert.deepEqual(impacted(bad,'db.task'),['api.action']);
 assert.deepEqual(projectGraph({nodes:[],edges:[]}).nodes,[]);
 assert.equal(findCycles([],[]).length,0);
+const malformed=projectGraph({nodes:[{id:'bad.view',title:{evil:true},entity:{schema:'mas-graph-entity-1',kind:'task',title:{evil:true},status:'magic'}}]});
+assert.equal(malformed.nodes.find(n=>n.id==='bad.view').title,'bad.view');
+assert.equal(malformed.nodes.find(n=>n.id==='bad.view').status,'unknown');
 console.log('GRAPH_MANAGER_MODEL_OK provenance blocked dependencies cycles filters empty');
