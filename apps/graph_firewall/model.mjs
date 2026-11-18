@@ -29,10 +29,19 @@ export function parseTopology(input){
  }
  for(const [serviceId,s] of services){
   if(!s.addresses.length)issues.push({code:'unresolved_service_address',service:serviceId});
+  const owner=nodes.get(s.node);
+  for(const addr of s.addresses)if(!owner.addresses.includes(addr))
+   issues.push({code:'service_address_not_on_host',service:serviceId,address:addr,node:s.node});
  }
  for(const [nodeId,n] of nodes){
   if(!n.addresses.length)issues.push({code:'unresolved_node_address',node:nodeId});
  }
+ const addressOwners=new Map();
+ for(const n of nodes.values())for(const address of n.addresses){
+  const owners=addressOwners.get(address)||new Set();owners.add(n.id);addressOwners.set(address,owners);
+ }
+ for(const [address,owners] of addressOwners)if(owners.size>1)
+  issues.push({code:'ambiguous_address_owner',address,owners:[...owners]});
  const pairs=new Map();
  for(const r of rules.values())if(r.enabled){
   const key=r.from+'|'+r.to,entry=pairs.get(key)||new Set();entry.add(r.effect);pairs.set(key,entry);
