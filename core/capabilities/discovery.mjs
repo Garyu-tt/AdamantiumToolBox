@@ -21,6 +21,6 @@ export function registryFromGraphs(apps,{nodeId,invoke}){
 export function localProviders(specs,upstream){
  const nodeId=process.env.ADA_NODE_ID||'host-'+createHash('sha256').update(hostname()).digest('hex').slice(0,16);
  return registryFromGraphs(specs,{nodeId,invoke:async(app,action,params)=>
-  (await upstream('http://127.0.0.1:'+app.service.port+'/invoke',{action,params},
+  (await upstream(app.invokeUrl,{action,params},
    app.service.invokeTimeoutMs||1200)).result});
 }
