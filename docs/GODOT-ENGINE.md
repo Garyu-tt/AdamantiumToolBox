@@ -26,7 +26,7 @@ Runtime environment, NOT source control:
 - ADA_CORE_URL, ADA_TOKEN, ADA_INTERNAL_KEY, ADA_CAPS: provided by Toolbox.
 
 Owner policy requires explicit opt-in to godot.read, godot.launch and
-engine.provider. Existing private policy is never overwritten. Review each
+engine.provider and engine.launch. Existing private policy is never overwritten. Review each
 executable, project script and dependency before granting launch permission.
 Launched game/project code has the privileges of the Toolbox OS user.
 Project IDs are directory names, never arbitrary filesystem paths.
