@@ -2,7 +2,7 @@ import {isIP} from 'node:net';
 const hex=(s,n)=>typeof s==='string'&&s.length===n&&new RegExp('^[0-9a-fA-F]{'+n+'}$').test(s);
 const iface=s=>typeof s==='string'&&/^[a-zA-Z0-9_.:@-]{1,64}$/.test(s);
 const ipv4=s=>[6,4,2,0].map(i=>parseInt(s.slice(i,i+2),16)).join('.');
-const ipv6=s=>Array.from({length:8},(_,i)=>s.slice(i*4,i*4+4)).join(':');
+const ipv6=s=>Array.from({length:8},(_,i)=>parseInt(s.slice(i*4,i*4+4),16).toString(16)).join(':');
 const contiguous=mask=>{const bits=mask.split('.').map(Number).map(x=>x.toString(2).padStart(8,'0')).join('');
  return /^1*0*$/.test(bits)?bits.indexOf('0')===-1?32:bits.indexOf('0'):null;};
 const rows=(raw,skipHeader=false,max=4096)=>{
