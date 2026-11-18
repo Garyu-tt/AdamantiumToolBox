@@ -48,7 +48,7 @@ function launch(args,input='',timeout=TIMEOUT){
    if(failure)return reject(Error('sandbox_unavailable'));
    if(timedOut)return reject(Error('sandbox_timeout'));
    if(overflow)return reject(Error('sandbox_output_limit'));
-   if(code!==0)return reject(Error('sandbox_failed:'+stderr.slice(0,3000)));
+   if(code!==0)return reject(Error('sandbox_failed:'+stderr.slice(0,160)));
    resolve(stdout);
   });
   child.stdin.end(input);
@@ -57,7 +57,7 @@ function launch(args,input='',timeout=TIMEOUT){
 export async function ready(profile){
  try{return (await launch(sandboxArgs(null,null,profile,true),'',profile.timeoutMs||TIMEOUT)).trim()===
   profile.readyText;}
- catch(error){if(process.env.CI)console.error('SANDBOX_PROBE_DIAGNOSTIC',error.message);return false;}
+ catch{return false;}
 }
 export async function execute(pkg,digest,action,params,runner,profile){
  if(!await ready(profile))throw Error('sandbox_unavailable');
