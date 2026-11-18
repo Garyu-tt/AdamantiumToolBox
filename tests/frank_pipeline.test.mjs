@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
-import {packageDigest,saveRegistry} from '../frank-addons/bridge/approval.mjs';
+import {packageDigest,saveRegistry,loadRegistry} from '../frank-addons/bridge/approval.mjs';
 import {bridgeGraph,bridgeInvoke} from '../frank-addons/bridge/runtime.mjs';
 const root=await mkdtemp(join(tmpdir(),'frank-pipe-'));
 process.env.ADA_FRANK_STATE_DIR=join(root,'state');
@@ -35,7 +35,15 @@ async function addon(language,adapterCapability){
 }
 try{
  const python='frankenstein.adapter.python',js='frankenstein.adapter.javascript';
- const portPython=await adapter(python,body=>({from:'python',value:body.params}));
+ let revokeDuringSource=false;
+ const portPython=await adapter(python,async body=>{
+  if(revokeDuringSource){
+   const state=await loadRegistry();
+   state.packages=state.packages.filter(p=>p.key!=='frank.javascript.hello');
+   await saveRegistry(state);
+  }
+  return {from:'python',value:body.params};
+ });
  const portJs=await adapter(js,body=>({from:'js',received:body.params.input}));
  const py=await addon('python',python),script=await addon('javascript',js);
  const registry={schema:'frank-registry-1',adapters:[
@@ -54,11 +62,15 @@ try{
   {from,to,input:JSON.parse('{"__proto__":true}')}),/invalid_frank_value/);
  await assert.rejects(bridgeInvoke(root,secret,'frankenstein.pipe',
   {from,to,input:{over:Number.MAX_SAFE_INTEGER+2}}),/invalid_frank_value/);
+ revokeDuringSource=true;
+ await assert.rejects(bridgeInvoke(root,secret,'frankenstein.pipe',{from,to,input}),
+  /capability_unavailable/);
+ revokeDuringSource=false;await saveRegistry(registry);
  await writeFile(join(script.dir,'main.txt'),'tampered');
  await assert.rejects(bridgeInvoke(root,secret,'frankenstein.pipe',{from,to,input}),
   /capability_unavailable/);
  assert(!(await bridgeGraph(root,secret)).nodes.some(n=>n.id==='frankenstein.pipe'));
- console.log('FRANK_PIPELINE_OK two languages, typed value, invalid action, digest revocation');
+ console.log('FRANK_PIPELINE_OK two languages, typed value, invalid action, mid-flight revocation, digest revocation');
 }finally{
  for(const server of servers)await new Promise(ok=>server.close(ok));
  await rm(root,{recursive:true,force:true});
