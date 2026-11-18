@@ -1,0 +1,23 @@
+name: Network Fabric isolated Core smoke
+on:
+  push:
+    paths:
+      - 'packages/network_fabric/**'
+      - '.github/workflows/network-fabric-smoke.yml'
+  pull_request:
+    paths:
+      - 'packages/network_fabric/**'
+      - '.github/workflows/network-fabric-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate local policies and Core integration
+        run: node --test packages/network_fabric/tests/*.test.mjs
