@@ -1,4 +1,6 @@
-import {layoutRects,snapRect,fitFloating} from './window_geometry.js';
+import {snapRect,fitFloating} from './window_geometry.js';
+import {windowLayouts} from './window_layout_runtime.js';
+import {readPlacement,savePlacement} from './window_placements.js';
 import {attachWindowDrag} from './window_drag.js';
 export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
  const records=new Map();let selected=null,z=100;
@@ -29,15 +31,20 @@ export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
   selected=item;for(const r of records.values())r.win.classList.toggle('is-focused',r===item);
   repaint();
  }
- function restore(item){
-  item.win.hidden=false;
-  if(item.mode){
+ const layouts=windowLayouts(desktop,records,position,geometry,focus);
+ function remember(item){if(!item.mode){item.normal=geometry(item.win);savePlacement(item.key,item.normal);}} function restore(item){
+  item.win.hidden=false;layouts.leave(item);if(item.mode){
    item.mode=null;delete item.win.dataset.mode;
    if(item.normal){const {width,height}=bounds();position(item,fitFloating(item.normal,width,height));}
   }
   focus(item);
  }
  function minimize(item){
+  layouts.leave(item);
+  if(item.mode?.kind==='tile'){
+   item.mode=null;delete item.win.dataset.mode;
+   if(item.normal){const {width,height}=bounds();position(item,fitFloating(item.normal,width,height));}
+  }
   item.win.hidden=true;
   if(selected===item)selected=null;
   item.win.classList.remove('is-focused');repaint();
@@ -46,14 +53,15 @@ export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
   const {width,height}=bounds();return snapRect(width,height,zone);
  }
  function dock(item,zone){
-  if(!item.mode)item.normal=geometry(item.win);
+  layouts.leave(item);
+  if(!item.mode){item.normal=geometry(item.win);savePlacement(item.key,item.normal);}
   item.mode={kind:'snap',zone};item.win.dataset.mode=zone;
   position(item,rectangle(zone));focus(item);
  }
  function maximize(item){item.mode?.zone==='max'?restore(item):dock(item,'max');}
  function close(item){
   if(!records.has(item.key))return;
-  records.delete(item.key);item.cleanup?.();item.win.remove();
+  layouts.leave(item);records.delete(item.key);item.cleanup?.();item.win.remove();
   item.onClose?.();
   if(selected===item)selected=null;
   repaint();
@@ -62,6 +70,9 @@ export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
   if(records.has(key))throw Error('duplicate_window_key');
   const item={key,title,onClose,win,bar,mode:null,normal:null,cleanup:null};
   records.set(key,item);
+  const saved=readPlacement(key);
+  if(saved&&keyboardEnabled){const {width,height}=bounds();
+   item.normal=fitFloating(saved,width,height);position(item,item.normal);}
   const controls=document.createElement('span');controls.className='win-controls';
   for(const [text,label,action] of [
    ['−','Свернуть',()=>minimize(item)],['□','Развернуть или восстановить',()=>maximize(item)],
@@ -72,6 +83,7 @@ export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
   bar.append(controls);
   bar.addEventListener('dblclick',e=>{if(!e.target.closest('button'))maximize(item);});
   win.addEventListener('pointerdown',()=>focus(item));
+  win.addEventListener('pointerup',()=>remember(item));
   item.cleanup=attachWindowDrag(desktop,win,bar,{focus:()=>focus(item),
    isDocked:()=>!!item.mode,restore:()=>restore(item),
    snap:zone=>dock(item,zone),rectangle});
@@ -79,26 +91,14 @@ export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
    maximize:()=>maximize(item),snap:zone=>dock(item,zone),element:win};
   focus(item);return handle;
  }
- function arrange(preset){
-  const count=preset==='focus'?3:preset,shown=[...records.values()].filter(item=>!item.win.hidden).sort((a,b)=>Number(b===selected)-Number(a===selected)).slice(0,count);
-  if(!shown.length)return 0;
-  const {width,height}=bounds(),rects=layoutRects(width,height,preset,shown.length);
-  for(let i=0;i<shown.length;i++){
-   const item=shown[i];if(!item.mode)item.normal=geometry(item.win);
-   item.mode={kind:'tile',preset,slot:i};item.win.dataset.mode='tile';
-   position(item,rects[i]);
-  }
-  focus(shown[0]);return shown.length;
- }
+ const arrange=preset=>layouts.arrange(preset,selected);
  function reflow(){
   const {width,height}=bounds();if(!width||!height)return;
   for(const item of records.values()){
    if(item.mode?.kind==='snap')position(item,snapRect(width,height,item.mode.zone));
-   else if(item.mode?.kind==='tile'){
-    const {preset,slot}=item.mode;
-    position(item,layoutRects(width,height,preset)[slot]);
-   }else if(!item.win.hidden)position(item,fitFloating(geometry(item.win),width,height));
+   else if(!item.mode&&!item.win.hidden)position(item,fitFloating(geometry(item.win),width,height));
   }
+  layouts.reflow();
  }
  const observer=typeof ResizeObserver==='function'?new ResizeObserver(reflow):null;
  observer?.observe(desktop);if(!observer)window.addEventListener('resize',reflow);
