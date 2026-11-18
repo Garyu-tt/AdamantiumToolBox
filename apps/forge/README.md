@@ -16,3 +16,16 @@ ports, not advertised as installed providers.
 Run within the MAS host with `ADA_INTERNAL_KEY` and `ADA_CAPS=forge.read,forge.validate`.
 Read `docs/FORGE-PUBLICATION-R02.md` for the transaction/revision protocol and
 `docs/FORGE-INCIDENTS.md` for blockers.
+
+## R03 additions
+
+- `forge.providers.negotiate`: pure matching of required external provider ports
+  against an externally supplied, revision-bound discovery snapshot; no trust or
+  host authorization is conferred by the provided status/identity/policy claims.
+  Missing providers and ambiguous primaries return explained issues.
+- `forge.events.project`: pure, cursor-bound batch projection of external events
+  into unexecuted UI/graph/revisit/verification plans; rejects gaps, replays and
+  incomplete blocker descriptions. The cursor belongs to an external service.
+
+R03 retains isolated `Core + Forge` startup and requires no real MAS external
+services or agents. Read `docs/FORGE-PROTOCOL-R03.md` for contracts and gates.

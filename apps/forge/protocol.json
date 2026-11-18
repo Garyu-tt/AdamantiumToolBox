@@ -1,5 +1,5 @@
 {
-  "schema": "mechanicus.forge.adapter.v2",
+  "schema": "mechanicus.forge.adapter.v3",
   "role": "stateless-contract-adapter",
   "rules": {
     "function_unit": "one independently invokable function per function node",
@@ -11,7 +11,9 @@
     "ui_fallback": "every validated function has a Raw UI draft; unverified functions are not invokable",
     "commit": "external revision-aware atomic visibility; Forge returns recipes, not commits",
     "invalidation": "external reverse-index lookup, UI revocation and lease-based reconsideration",
-    "blocker_explanation": "cause + evidence + impact + remedies required before diagnosis is considered complete"
+    "blocker_explanation": "cause + evidence + impact + remedies required before diagnosis is considered complete",
+    "provider_negotiation": "Pure external snapshot matching; no bound providers or authorization; host must recheck live identity, policy and revision",
+    "events": "Pure projection of externally supplied ordered events with externally owned cursor; no subscription, cursor writes or UI effects"
   },
   "provider_ports": [
     {
@@ -129,13 +131,17 @@
     "invalidated"
   ],
   "events": [
-    "function.verified",
-    "function.published",
-    "function.invalidated",
+    "contract.changed",
     "dependency.changed",
+    "function.invalidated",
+    "function.published",
+    "function.verified",
     "incident.detected",
     "incident.remediation_attempted",
-    "ui.contribution.changed"
+    "permission.changed",
+    "provider.revoked",
+    "ui.contribution.changed",
+    "verification.failed"
   ],
   "adapter_actions": [
     "forge.describe",
@@ -144,7 +150,9 @@
     "forge.compose",
     "forge.publication.plan",
     "forge.reconcile.prepare",
-    "forge.incident.validate"
+    "forge.incident.validate",
+    "forge.providers.negotiate",
+    "forge.events.project"
   ],
   "external_effects": false,
   "stores_state": false,
