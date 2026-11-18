@@ -1,3 +1,4 @@
+import {remember,findJob,markJob} from './jobs.mjs';
 const schema='mas-graphics-provider-1';
 const kinds=new Set(['icon','image','video','render']);
 function coreEndpoint(){
@@ -25,7 +26,10 @@ export async function discover(){
   for(const op of n.provider.operations){
    if(!kinds.has(op.kind)||typeof op.action!=='string'||!actions.has(op.action)||
       !op.action.startsWith(n.id.split('.')[0]+'.')||!Array.isArray(op.formats))continue;
+   const jobs=op.jobs;
+   const jobAction=name=>typeof name==='string'&&name.startsWith(n.id.split('.')[0]+'.')&&actions.has(name)?name:null;
    discovered.push({id:n.id,kind:op.kind,action:op.action,formats:op.formats,
+    jobs:jobs?{statusAction:jobAction(jobs.statusAction),cancelAction:jobAction(jobs.cancelAction)}:null,
     locality:n.provider.locality==='remote'?'remote':'local',priority:Number(op.priority)||0});
   }
  }
@@ -43,5 +47,32 @@ export async function dispatch(p){
  const result=await call('/api/invoke',{action:chosen.action,params:{kind:p.kind,prompt:p.prompt,
   format:p.format||chosen.formats[0],options:p.options||{}}});
  if(!result||!['completed','queued'].includes(result.status))throw Error('bad_provider_result');
+ if(result.status==='queued'){
+  if(p.kind==='icon')throw Error('icon_async_not_supported');
+  if(!chosen.jobs?.statusAction)throw Error('provider_missing_job_status');
+  const pending=await remember({providerId:chosen.id,kind:p.kind,sourceJobId:result.jobId});
+  return {status:'queued',jobId:pending.id,providerId:chosen.id,kind:p.kind};
+ }
  return {providerId:chosen.id,action:chosen.action,...result};
+}
+export async function jobStatus(id){
+ const job=await findJob(id);
+ const provider=(await discover()).find(p=>p.id===job.providerId&&p.kind===job.kind&&p.jobs?.statusAction);
+ if(!provider)return {jobId:id,status:'provider_unavailable',lastKnown:job.status};
+ const result=await call('/api/invoke',{action:provider.jobs.statusAction,
+  params:{jobId:job.sourceJobId}});
+ if(!result||!['queued','running','completed','failed','cancelled'].includes(result.status))
+  throw Error('bad_provider_job_status');
+ await markJob(id,result.status);
+ return {...result,jobId:id,providerId:job.providerId,kind:job.kind};
+}
+export async function cancelJob(id){
+ const job=await findJob(id);
+ const provider=(await discover()).find(p=>p.id===job.providerId&&p.kind===job.kind&&p.jobs?.cancelAction);
+ if(!provider)return {jobId:id,status:'provider_unavailable',lastKnown:job.status};
+ const result=await call('/api/invoke',{action:provider.jobs.cancelAction,
+  params:{jobId:job.sourceJobId}});
+ if(!['cancelled','cancel_requested'].includes(result?.status))throw Error('bad_provider_cancel');
+ await markJob(id,result.status);
+ return {jobId:id,status:result.status};
 }

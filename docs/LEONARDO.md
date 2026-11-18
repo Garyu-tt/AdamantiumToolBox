@@ -78,3 +78,22 @@ The icon catalog contains only revision and SHA-256 metadata; changed icons
 are fetched by key and reflected in the launcher and window title bars.
 When the provider is absent, unhealthy or unauthorized, static app icons
 remain usable. Core and optional apps do not require any new dependency.
+
+## v0.3 asynchronous jobs for image/video providers
+
+Provider operations can advertise an optional `jobs` descriptor:
+```json
+{"kind":"video","action":"provider.submit","formats":["video/mp4"],
+ "jobs":{"statusAction":"provider.status","cancelAction":"provider.cancel"}}
+```
+The status/cancel actions must exist in the live authorized capability graph
+and belong to the same plugin. `submit` can return `{status:"queued",jobId:"..."}`.
+Leonardo stores only a private, bounded opaque job mapping, returning its own
+UUID to clients. Other plugins use `leonardo.jobs.status`, `leonardo.jobs.cancel`,
+and `leonardo.jobs.list` via the standard MAS API. If a provider disappears,
+status reports `provider_unavailable` with the last observed status. No silent
+cross-node failover is attempted. Long-running providers own their actual workers.
+Cancelled/completed jobs are reported only after the provider confirms status.
+v0.3 does not stream video bytes or install media generation backends.
+Asynchronous icon regeneration is explicitly rejected pending an atomic
+finalization protocol. This avoids reporting icons saved when they are not.

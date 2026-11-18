@@ -1,7 +1,8 @@
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {discover,dispatch} from './router.mjs';
+import {discover,dispatch,jobStatus,cancelJob} from './router.mjs';
+import {listJobs} from './jobs.mjs';
 import {getIcon,listIcons,saveIcon,validKey} from './icon-store.mjs';
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('internal_key_missing');
@@ -11,7 +12,10 @@ const actions={
  'leonardo.generate':'graphics.generate',
  'leonardo.icons.regenerate':'graphics.icons',
  'leonardo.icons.get':'graphics.read',
- 'leonardo.icons.catalog':'graphics.read'
+ 'leonardo.icons.catalog':'graphics.read',
+ 'leonardo.jobs.list':'graphics.read',
+ 'leonardo.jobs.status':'graphics.read',
+ 'leonardo.jobs.cancel':'graphics.generate'
 };
 const nodes=[{id:'leonardo.view',type:'view',title:'Leonardo Graphics',icon:'leonardo',requires:['graphics.read']},
  {id:'leonardo.icon-assets',type:'resource',requires:['graphics.read'],
@@ -27,6 +31,9 @@ async function invoke(action,p){
  if(action==='leonardo.providers')return discover();
  if(action==='leonardo.icons.get')return getIcon(p.key);
  if(action==='leonardo.icons.catalog')return listIcons();
+ if(action==='leonardo.jobs.list')return listJobs();
+ if(action==='leonardo.jobs.status')return jobStatus(p.jobId);
+ if(action==='leonardo.jobs.cancel')return cancelJob(p.jobId);
  if(action==='leonardo.generate')return dispatch(p);
  if(action==='leonardo.icons.regenerate'){
   validKey(p.key);
