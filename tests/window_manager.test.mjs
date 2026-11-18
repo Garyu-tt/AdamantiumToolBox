@@ -22,7 +22,9 @@ class Element extends EventTarget{
   return {left,top,right:left+width,bottom:top+height,width,height};
  }
 }
-globalThis.document={createElement:tag=>new Element(tag),addEventListener:()=>{}};
+const documentEvents=new Map();
+globalThis.document={createElement:tag=>new Element(tag),
+ addEventListener:(name,handler)=>documentEvents.set(name,handler)};
 globalThis.ResizeObserver=class{observe(){}};
 const desktop=new Element('desktop');desktop.clientWidth=1200;desktop.clientHeight=800;
 const tasks=new Element('tasks'),manager=createWindowManager(desktop,tasks);
@@ -61,6 +63,19 @@ assert.equal(second.win.style.left,'720px');
 desktop.clientWidth=1600;desktop.clientHeight=900;manager.reflow();
 assert.equal(first.win.style.width,'960px');
 assert.equal(second.win.style.left,'960px');
+first.handle.focus();
+const press=(key,code,flags)=>{
+ let prevented=false;
+ documentEvents.get('keydown')({key,code,metaKey:false,ctrlKey:false,altKey:false,
+  target:{closest:()=>false},preventDefault:()=>{prevented=true;},...flags});
+ assert(prevented,'shortcut_not_handled');
+};
+press('ArrowLeft','ArrowLeft',{metaKey:true});
+assert.equal(first.win.style.width,'800px');
+press('2','Digit4',{ctrlKey:true,altKey:true});
+assert.equal(first.win.style.width,'800px');
+press('3','Digit3',{ctrlKey:true,altKey:true});
+assert.equal(first.win.style.width,'960px');
 second.handle.close();assert.equal(manager.windows().length,7);
 assert.equal(tasks.children.length,7);
 assert(!desktop.children.includes(second.win));
