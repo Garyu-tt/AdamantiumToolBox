@@ -54,4 +54,9 @@ jobs:
           MAS_BROWSER_REQUIRE_ENGINE: '1'
         run: |
           node tests/browser.test.mjs
+          node tests/browser_lease.test.mjs
+          node tests/browser_continuity.test.mjs
+          node tests/browser_handoff.test.mjs
+          node tests/browser_relay.test.mjs
+          node tests/browser_provider_cli.test.mjs
           node tests/isolation.test.mjs

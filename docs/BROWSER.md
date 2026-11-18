@@ -12,12 +12,14 @@ apps/browser/engine.json. Other Chromium executables may be discovered from
 PATH or configured explicitly with ADA_BROWSER_EXECUTABLE.
 No browser binary is bundled, and the engine is optional.
 
-A browser opens only when the user requests a tab, using its own randomly
-named user-data directory below LOCALAPPDATA/Adamantium Toolbox/browser/sessions.
+A browser opens only when the user requests a tab. A stable identity is stored
+in the owner's private runtime and uses a retained Chromium profile under
+browser/profiles/. Auth cookies and site state survive a graceful restart.
 It does not inherit the regular Edge profile, saved passwords, or open tabs.
-No persistent login sessions are promised in version 0.1.0.
+Sites may still revoke credentials and demand reauthentication.
 The screenshot refresh interval and viewport are declared in engine.json.
-Close session is best effort; status reports if the profile was removed.
+The close action retains profile data. Cross-node control uses a local-tunnel
+relay provider, not raw Chromium profile copying. See docs/BROWSER-CONTINUITY.md.
 
 ## Rendering and automation
 
@@ -33,7 +35,8 @@ Typed MAS actions:
 - browser.screenshot: receive a bounded JPEG viewport snapshot
 - browser.click: click bounded viewport coordinates
 - browser.type: type into the focused input, with a length limit
-- browser.stop: close the session and attempt profile cleanup
+- browser.stop: close the session but retain the authenticated profile
+- browser.provider: local or remote execution mode (no secret values)
 
 All are invoked through /api/invoke and live CapabilityGraph, not by exposing
 the raw debugging WebSocket as an external API. No arbitrary JavaScript
@@ -54,7 +57,8 @@ machine access may be able to access it. This is NOT OS sandboxing.
 Do not browse untrusted pages with high-value sessions or assume the
 browser cannot access internal network resources. Permissions gate the
 Toolbox RPC only, not operating-system privileges of Chromium.
-Each session uses an independent temporary user-data directory.
+One browser identity has a persistent private data directory and an exclusive
+lease. Multiple processes may NOT share it concurrently.
 
 The engine process is isolated from normal Edge profiles, not necessarily
 from local user files, system services, or LAN hosts. The next phases are a
@@ -85,3 +89,7 @@ GitHub Actions now has a dedicated windows-latest job with
 MAS_BROWSER_REQUIRE_ENGINE=1, which fails rather than skipping when the
 Chromium provider is unavailable. Linux CI continues verifying all other
 contracts and Core + App independence without needing a display server.
+
+Authentication continuity and SSH tunnel setup are documented in
+[Browser Continuity](BROWSER-CONTINUITY.md). A real cross-machine connection
+has not yet been configured; no site credentials are exported by the program.

@@ -40,3 +40,10 @@
 
 - Browser Core integration verified: API graph, LinkFS navigation, UI assets,
   delegated typed screenshot invocation through a local fixture website.
+
+- Browser Continuity v1: stable private Chromium profile, persistent login
+  through local browser restarts, exclusive process lease and recovery of
+  stale dead-owner leases. Remote clients use scoped key-authenticated relay
+  through localhost-only tunnels, keeping browser execution at the identity
+  owner. Windows host/client pair passes fake-login handoff test. No actual
+  cross-machine tunnel or portable credential vault deployed yet.

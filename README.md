@@ -88,3 +88,10 @@ node tools/authorize-app.mjs grant browser --approve, followed by a restart.
 
 Installed-browser smoke test: node tests/browser_proxy.test.mjs.
 This uses a temporary local fixture site and does not access private accounts.
+
+## Browser Continuity and cross-node control
+Browser MAS retains one owner-private Chromium profile across restarts.
+Other nodes can control that browser through a client-side loopback SSH
+forward and a separately scoped relay key; no raw cookies or native profile
+are copied across operating systems. Site-specific device-bound logins may
+still require reauthentication. See docs/BROWSER-CONTINUITY.md.

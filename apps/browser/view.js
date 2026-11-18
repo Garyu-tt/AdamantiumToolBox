@@ -73,7 +73,7 @@ export async function mount(host,api){
  };
  stop.onclick=async()=>{if(!allowed('stop'))return;
   try{const result=await api.call('browser.stop');active='';tabs.replaceChildren();
-   img.removeAttribute('src');status.textContent=result.profileRemoved?'Сессия закрыта и очищена':'Сессия закрыта';}
+   img.removeAttribute('src');status.textContent=result.profileRetained?'Сессия закрыта, входы сохранены':'Сессия закрыта';}
   catch(error){status.textContent=error.message;} };
  img.onclick=async ev=>{
   if(!active||!allowed('click'))return;
@@ -94,6 +94,8 @@ export async function mount(host,api){
  if(!allowed('type')){type.disabled=true;text.disabled=true;}
  const link=e('link');link.rel='stylesheet';link.href='/apps/browser/style.css';
  await list().catch(error=>status.textContent=error.message);
+ const provider=await api.call('browser.provider').catch(()=>({mode:'local'}));
+ status.textContent=provider.mode==='relay'?'Браузер на другой ноде':'Локальный профиль браузера';
  const settings=await api.call('browser.settings').catch(()=>({previewRefreshMs:5000}));
  const timer=setInterval(()=>{if(!host.isConnected)return clearInterval(timer);
   if(document.visibilityState==='visible'&&active)snap();},settings.previewRefreshMs);

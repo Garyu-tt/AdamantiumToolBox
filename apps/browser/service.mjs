@@ -4,13 +4,17 @@ import {join} from 'node:path';
 import {resolve} from 'node:path';
 import {engine,config} from './engine.mjs';
 import {BrowserSession} from './session.mjs';
+import {provider,hostKey,authorizedHost,relayInvoke} from './provider.mjs';
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('Missing internal key');
-const found=await engine(await config());
 const runtime=resolve(process.env.LOCALAPPDATA||process.cwd(),'Adamantium Toolbox');
-const session=new BrowserSession(runtime);
+const backend=await provider(runtime);
+const found=backend.mode==='local'?await engine(await config()):{source:'relay'};
+const session=backend.mode==='local'?new BrowserSession(runtime):null;
+const inbound=backend.mode==='local'?await hostKey(runtime):null;
 const requires={
- 'browser.settings':'browser.read','browser.tabs':'browser.read','browser.open':'browser.navigate',
+ 'browser.settings':'browser.read','browser.provider':'browser.read',
+ 'browser.tabs':'browser.read','browser.open':'browser.navigate',
  'browser.navigate':'browser.navigate','browser.screenshot':'browser.read',
  'browser.click':'browser.interact','browser.type':'browser.interact',
  'browser.stop':'browser.navigate','browser.back':'browser.navigate',
@@ -31,6 +35,9 @@ const send=(res,status,data)=>{res.writeHead(status,{
 async function action(name,p){
  const permission=requires[name];
  if(!permission||!caps.has(permission))throw Error('capability_denied');
+ if(name==='browser.provider')return {mode:backend.mode,persistent:true,
+  profileHost:backend.mode==='local'?'this-node':'remote-provider'};
+ if(backend.mode==='relay')return relayInvoke(runtime,backend,name,p);
  if(name==='browser.settings'){const c=await config();
   return {previewRefreshMs:c.previewRefreshMs,maxTabs:c.maxTabs,viewport:c.viewport};}
  if(name==='browser.tabs')return session.pages();
@@ -48,7 +55,9 @@ async function action(name,p){
 }
 http.createServer((req,res)=>{
  if(req.url==='/health')return send(res,200,{app:'browser',engine:found.source});
- if(req.headers['x-internal-key']!==secret)return send(res,401,{error:'unauthorized'});
+ const local=req.headers['x-internal-key']===secret;
+ const remote=backend.mode==='local'&&authorizedHost(inbound,req.headers['x-browser-relay-key']);
+ if(!local&&!remote)return send(res,401,{error:'unauthorized'});
  if(req.method==='GET'&&req.url==='/graph')return send(res,200,spec);
  if(req.method==='POST'&&req.url==='/invoke'){
   let data='',oversized=false;
@@ -62,5 +71,5 @@ http.createServer((req,res)=>{
  send(res,404,{error:'not_found'});
  }).listen(Number(process.env.APP_PORT||
  JSON.parse(await readFile(join(import.meta.dirname,'manifest.json'),'utf8')).service.port),'127.0.0.1');
-process.on('SIGTERM',()=>{session.close().finally(()=>process.exit(0));});
-process.on('SIGINT',()=>{session.close().finally(()=>process.exit(0));});
+process.on('SIGTERM',()=>{Promise.resolve(session?.close()).finally(()=>process.exit(0));});
+process.on('SIGINT',()=>{Promise.resolve(session?.close()).finally(()=>process.exit(0));});

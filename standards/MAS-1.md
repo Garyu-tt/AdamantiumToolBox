@@ -97,3 +97,5 @@ navigation is not automatically authorized for other agents.
 The initial browser UI is a screenshot-based remote viewport; future WebView2
 rendering can replace this presentation without changing the MAS action contract.
 See docs/BROWSER.md.
+
+Browser Continuity and remote control: see docs/BROWSER-CONTINUITY.md.

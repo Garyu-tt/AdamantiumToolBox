@@ -1,7 +1,8 @@
 import {spawn} from 'node:child_process';
-import {mkdir,readFile,rm} from 'node:fs/promises';
+import {once} from 'node:events';
+import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {randomUUID} from 'node:crypto';
+import {identity,lease} from './continuity.mjs';
 import {engine,config,allowedUrl} from './engine.mjs';
 import {cdp} from './cdp.mjs';
 import * as tabs from './tab_actions.mjs';
@@ -18,8 +19,9 @@ export class BrowserSession{
  async start(){
   if(this.port)return;
   const c=await config(),found=await engine(c);
-  const profile=join(this.runtime,'browser','sessions',randomUUID());
-  await mkdir(profile,{recursive:true});
+  const owner=await identity(this.runtime),profile=owner.profile;
+  const release=await lease(profile);
+  this.releaseProfile=release;this.identityId=owner.id;
   const flags=[...c.flags,'--remote-debugging-port=0','--remote-debugging-address=127.0.0.1',
    '--user-data-dir='+profile,'--window-size='+c.viewport.width+','+c.viewport.height,
    'about:blank'];
@@ -102,12 +104,13 @@ export class BrowserSession{
   this.port=null;this.tabs.clear();
   if(this.browserWs)try{await cdp(this.browserWs,'Browser.close',{},2000);}catch{}
   const child=this.child;this.browserWs=null;this.child=null;
-  if(child?.exitCode===null)child.kill();
-  let profileRemoved=false;
-  if(this.profile){
-   try{await rm(this.profile,{recursive:true,force:true,maxRetries:6,retryDelay:250});
-    profileRemoved=true;}catch{}
+  if(child?.exitCode===null){
+   const done=once(child,'exit').catch(()=>{});
+   await Promise.race([done,pause(3800)]);
+   if(child.exitCode===null){child.kill();await Promise.race([done,pause(2200)]);}
   }
-  this.profile=null;return {stopped:true,profileRemoved};
+  const release=this.releaseProfile;this.releaseProfile=null;
+  if(release)await release();
+  this.profile=null;return {stopped:true,profileRetained:true};
  }
 }
