@@ -11,7 +11,7 @@ namespace {
 const QStringList tags={"rect","circle","ellipse","line","text"};
 const QStringList attrs={"x","y","width","height","cx","cy","r","rx","ry",
  "x1","y1","x2","y2","stroke","stroke-width","fill","opacity","font-size","font-family"};
-constexpr auto ns="http://www.w3.org/2000/svg";
+const auto ns=QStringLiteral("http://www.w3.org/2000/svg");
 bool shape(QXmlStreamReader& xml,QJsonObject& output) {
  const auto tag=xml.name().toString();
  if(!tags.contains(tag)||xml.namespaceUri()!=ns)return false;
