@@ -1,4 +1,4 @@
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,copyFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {validateManifest} from '../core/contract.mjs';
 import {validateModules} from './modules.mjs';
@@ -33,30 +33,25 @@ export async function generateApp(root,{id,name=id,port,icon='studio'}){
   'view.js':`export async function mount(host,{call}){\n const button=document.createElement('button'),result=document.createElement('pre');\n button.textContent='Ping';button.onclick=async()=>{try{result.textContent=JSON.stringify(await call(${js(action)},{}));}\n catch(e){result.textContent=String(e.message)}};host.append(button,result);\n}\n`
  };
  for(const [file,source] of Object.entries(files))await writeFile(join(directory,file),source,'utf8');
- return {directory,files:Object.keys(files),manifest,modules};
+ await mkdir(join(directory,'runtime'));
+ for(const file of ['modules.mjs','graph.mjs'])
+  await copyFile(new URL('./'+file,import.meta.url),join(directory,'runtime',file));
+ return {directory,files:[...Object.keys(files),'runtime/modules.mjs','runtime/graph.mjs'],manifest,modules};
 }
 const serviceSource=`import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {handlers} from './handlers.mjs';
+import {makeGraph} from './runtime/graph.mjs';
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url)));
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('missing_internal_key');
 const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data));};
 async function graph(){
  const doc=JSON.parse(await readFile(new URL('./modules.json',import.meta.url)));
- if(doc.schema!=='mas-modules-1'||doc.app!==manifest.id)throw Error('bad_modules');
- const nodes=[],edges=[];
- const visit=m=>{if(m.enabled===false)return;
-  for(const p of m.provides||[]){
-   if(p.type==='action'&&typeof handlers[p.id]!=='function')continue;
-   nodes.push({id:p.id,type:p.type,title:p.title,version:p.version,
-    requires:p.permissions,...(p.type==='view'?{icon:manifest.icon}:{})});
-  }
-  edges.push(...m.links||[]);for(const child of m.children||[])visit(child);
- };
- for(const m of doc.modules)visit(m);
- const ids=new Set(nodes.map(n=>n.id));
- return {app:manifest.id,version:1,nodes,edges:edges.filter(e=>ids.has(e.from)&&ids.has(e.to))};
+ const spec=makeGraph(doc,manifest);
+ if(spec.nodes.some(n=>n.type==='action'&&typeof handlers[n.id]!=='function'))
+  throw Error('missing_action_handler');
+ return spec;
 }
 http.createServer(async(req,res)=>{
  if(req.url==='/health')return send(res,200,{app:manifest.id});
