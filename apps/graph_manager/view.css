@@ -1,0 +1,14 @@
+.gm-root{display:flex;flex-direction:column;gap:.75rem;min-width:0}
+.gm-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.gm-toolbar input{min-width:9rem;flex:1}
+.gm-workspace{display:flex;flex-wrap:wrap;gap:.75rem;min-height:18rem}
+.gm-viewport{flex:3;min-width:16rem;overflow:auto;max-height:65vh}
+.gm-details{flex:1;min-width:12rem;overflow:auto;overflow-wrap:anywhere}
+.gm-canvas{min-width:100%;height:auto;max-height:62vh;overflow:visible}
+.gm-edge{stroke:currentColor;opacity:.28;stroke-width:1}
+.gm-vertex{cursor:pointer;fill:currentColor}
+.gm-vertex rect{fill:var(--mas-panel,transparent);stroke:currentColor;stroke-width:1.2}
+.gm-vertex text{fill:currentColor;pointer-events:none;font-size:12px}
+.gm-vertex:hover rect,.gm-selected rect{stroke-width:2.8}
+.gm-blocked rect{stroke:var(--mas-danger,currentColor);stroke-dasharray:5 3;stroke-width:2}
+.gm-vertex:focus{outline:solid 2px currentColor}
