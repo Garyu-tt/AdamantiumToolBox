@@ -2,13 +2,18 @@ export async function mount(host,api){
  const add=(tag,content)=>{const el=document.createElement(tag);
   if(content!==undefined)el.textContent=content;host.append(el);return el;};
  add('h2','nftables Preview');
- add('p','Только логические кандидаты. Нет применения, доступа к ядру или проверки маршрутов.');
- const text=add('textarea');text.rows=12;text.style.width='100%';
- text.placeholder='{"targetNode":"host","topology":{"nodes":[],"services":[],"rules":[]}}';
- const run=add('button','Составить предварительный план');
+ add('p','Кандидаты и граф транзакции: без применения к ядру, без изменения маршрутов.');
+ const input=add('textarea');input.rows=12;input.style.width='100%';
+ input.placeholder='{"targetNode":"host","topology":{"nodes":[],"services":[],"rules":[]},"managementFlows":[]}';
  const output=add('pre');output.style.whiteSpace='pre-wrap';
- run.disabled=!api.graph().nodes.some(x=>x.id==='nftables_preview.compile');
- run.onclick=async()=>{try{const result=await api.call('nftables_preview.compile',JSON.parse(text.value));
-  output.textContent=JSON.stringify(result,null,2);
- }catch(e){output.textContent='Ошибка: '+e.message;}};
+ output.style.overflowWrap='anywhere';
+ for(const [action,label] of [['nftables_preview.compile','Составить правила'],
+  ['nftables_preview.transaction','Проверить этапы транзакции']]){
+  const button=add('button',label);
+  button.disabled=!api.graph().nodes.some(x=>x.id===action);
+  button.onclick=async()=>{try{
+   const result=await api.call(action,JSON.parse(input.value));
+   output.textContent=JSON.stringify(result,null,2);
+  }catch(e){output.textContent='Ошибка: '+e.message;}};
+ }
 }
