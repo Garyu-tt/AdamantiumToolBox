@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {sanitizeTopology,planRoute} from '../lib/topology.mjs';
+const graph={revision:'r2',nodes:[{id:'a',label:'Alpha',online:true,privateKey:'SHOULD_NOT_LEAK'},{id:'b',online:true},{id:'c',online:true}],links:[{from:'a',to:'b',cost:9,up:true,secret:'secret'},{from:'a',to:'c',cost:3,up:true},{from:'c',to:'b',cost:4,up:true}]};
+test('safe visible projection drops secrets',()=>{const t=sanitizeTopology(graph);assert(!JSON.stringify(t).includes('SHOULD_NOT_LEAK'));assert(!JSON.stringify(t).includes('secret'));});
+test('directed shortest path',()=>assert.deepEqual(planRoute({topology:graph,source:'a',destination:'b'}),{status:'candidate',path:['a','c','b'],cost:7,applied:false,authorization:'not_evaluated'}));
+test('reverse path not implied',()=>assert.equal(planRoute({topology:graph,source:'b',destination:'a'}).status,'unreachable'));
+test('offline hop cannot route',()=>assert.equal(planRoute({topology:{...graph,nodes:[...graph.nodes.slice(0,2),{id:'c',online:false}]},source:'a',destination:'b'}).cost,9));
+test('duplicate nodes refused',()=>assert.throws(()=>sanitizeTopology({...graph,nodes:[graph.nodes[0],graph.nodes[0]]}),/duplicate_node/));
+test('missing endpoints fail closed',()=>assert.equal(planRoute({topology:graph,source:'a',destination:'z'}).status,'endpoint_offline_or_unknown'));
