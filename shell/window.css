@@ -1,4 +1,5 @@
 .window[hidden]{display:none!important}
+body.standalone .win-controls{display:none!important}
 .window[data-mode]{resize:none;min-width:0;min-height:0}
 .window.is-focused{box-shadow:0 0 0 1px var(--accent)}
 .titlebar{touch-action:none;min-height:29px}
