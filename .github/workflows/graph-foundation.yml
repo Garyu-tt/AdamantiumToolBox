@@ -4,6 +4,7 @@ on:
     paths:
       - 'apps/graph_dns/**'
       - 'apps/graph_firewall/**'
+      - 'apps/nftables_preview/**'
       - 'apps/noosphere/**'
       - 'apps/composite/**'
       - 'tests/graph_*.test.mjs'
@@ -33,6 +34,7 @@ jobs:
         run: |
           node tests/graph_services.test.mjs
           node tests/graph_firewall.test.mjs
+          node tests/graph_nftables.test.mjs
           node tests/graph_http_smoke.test.mjs
       - name: Verify export script syntax
         run: python -m py_compile tools/noosphere_sqlite_export.py
