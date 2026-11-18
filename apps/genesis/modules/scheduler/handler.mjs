@@ -7,6 +7,7 @@ export function start(store){
   try{
    for(const item of await store.list()){
     try{
+     if(!(await store.load(item.id)).schedule?.enabled)continue;
      await store.change(item.id,b=>{
       if(!b.schedule?.enabled)return null;
       return step(b,{steps:b.schedule.steps_per_tick,stimulus:b.schedule.stimulus});
