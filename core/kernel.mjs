@@ -47,7 +47,7 @@ async function graph(){
    seen.add(node.id);local.push(item);
   }
   if(Array.isArray(app.connections))connections.push(...app.connections.map(c=>({...c,owner:app.id})));
-  nodes.push(...local);providerSpecs.push({app,nodes:eligible});
+  nodes.push(...local);providerSpecs.push({app:{...app,invokeUrl:host+'/invoke'},nodes:eligible});
   const ids=new Set(local.map(n=>n.id));
   edges.push(...(spec.edges||[]).filter(e=>ids.has(e.from)&&ids.has(e.to)));
  }
