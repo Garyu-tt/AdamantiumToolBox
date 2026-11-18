@@ -21,7 +21,8 @@ public:
    const auto obj=val.toObject();old.insert(obj.value("id").toString(),obj);
   }
   for(const auto& val:next.value("nodes").toArray()) {
-   const auto obj=val.toObject(),id=obj.value("id").toString();
+   const auto obj=val.toObject();
+   const auto id=obj.value("id").toString();
    if(obj.value("type").toString()=="view"&&!id.isEmpty())incoming.insert(id,obj);
   }
   QJsonArray sorted,changed,revoked;

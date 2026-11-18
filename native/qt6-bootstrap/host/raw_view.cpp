@@ -45,7 +45,8 @@ void RawView::updateGraph(const QJsonObject& graph) {
  for(int i=0;i<actions_->count();++i)
   old.insert(actions_->item(i)->data(Qt::UserRole).toString(),actions_->item(i));
  for(const auto& value:nodes) {
-  const auto n=value.toObject(),id=n.value("id").toString();
+  const auto n=value.toObject();
+  const auto id=n.value("id").toString();
   if(n.value("type").toString()!="action"||!allowed.contains(id))continue;
   auto* row=old.take(id);
   if(!row){row=new QListWidgetItem(actions_);row->setData(Qt::UserRole,id);}
