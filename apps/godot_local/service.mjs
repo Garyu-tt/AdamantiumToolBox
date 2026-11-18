@@ -1,6 +1,6 @@
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
-import {engine,check} from './config.mjs';
+import {engine,check,configuredPaths} from './config.mjs';
 import {start,status,stop} from './sessions.mjs';
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 const key=process.env.ADA_INTERNAL_KEY||'';
@@ -13,17 +13,21 @@ const ops={
  'session.status':'godot_local.session.status',
  'session.stop':'godot_local.session.stop'
 };
-const spec={app:manifest.id,version:1,nodes:[
+function spec(){
+ const available=Object.entries(ops).filter(([kind])=>
+  kind!=='session.start'||configuredPaths());
+ return {app:manifest.id,version:1,nodes:[
  {id:'godot_local.view',type:'view',title:'Godot Local Provider',
   icon:manifest.icon,requires:['engine.provider']},
  {id:'godot_local.provider',type:'resource',title:'Godot Runtime',
   requires:['engine.provider'],provider:{schema:'mas-world-engine-provider-1',
    engine:'godot',version:manifest.engine.upstreamVersion,locality:'local',
-   features:['cpu-headless'],operations:Object.entries(ops).map(([kind,action])=>({kind,action}))}},
- ...Object.values(ops).map(id=>({id,type:'action',title:id,requires:[
+   features:['cpu-headless'],operations:available.map(([kind,action])=>({kind,action}))}},
+ ...available.map(([,id])=>({id,type:'action',title:id,requires:[
   id.endsWith('session.start')||id.endsWith('session.stop')?'engine.launch':'engine.provider']}))
 ],edges:[{from:'godot_local.view',to:'godot_local.provider',type:'uses'},
- ...Object.values(ops).map(id=>({from:'godot_local.provider',to:id,type:'provides'}))]};
+ ...available.map(([,id])=>({from:'godot_local.provider',to:id,type:'provides'}))]};
+}
 function send(res,code,data){
  res.writeHead(code,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});
  res.end(JSON.stringify(data));
@@ -42,7 +46,7 @@ async function invoke(action,p){
 http.createServer((req,res)=>{
  if(req.url==='/health')return send(res,200,{app:manifest.id});
  if(req.headers['x-internal-key']!==key)return send(res,401,{error:'unauthorized'});
- if(req.method==='GET'&&req.url==='/graph')return send(res,200,spec);
+ if(req.method==='GET'&&req.url==='/graph')return send(res,200,spec());
  if(req.method==='POST'&&req.url==='/invoke'){
   let raw='';
   req.on('data',d=>{raw+=d;if(raw.length>16384)req.destroy();});

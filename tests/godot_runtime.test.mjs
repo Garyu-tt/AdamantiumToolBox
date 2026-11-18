@@ -56,6 +56,7 @@ try{
  assert(ready,'godot_services_not_discovered');
  const all=await invoke('godot.providers',{});
  assert.equal(all.length,1);assert.equal(all[0].id,'godot_local.provider');
+ assert.equal(all[0].operations['session.start'],undefined);
  const response=await invoke('godot.engine.inspect',{providerId:all[0].id});
  assert.equal(response.configured,false);
  assert.equal(response.reason,'godot_executable_not_configured');

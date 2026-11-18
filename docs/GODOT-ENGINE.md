@@ -53,6 +53,9 @@ Router actions:
 
 Current supported launch profile is headless. Stop is best-effort.
 Sessions are held in local process memory and lost on provider restart.
+The launch action is absent from the live provider graph until executable
+and project root paths are configured and present. The version probe remains
+required before execution.
 The project-scoped startup API does not implement in-world RPC or Godot scene
 interactions yet; those require a separately versioned WorldBridge addon.
 

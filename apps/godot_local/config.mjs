@@ -1,4 +1,5 @@
 import {readFile,realpath,stat} from 'node:fs/promises';
+import {statSync} from 'node:fs';
 import {isAbsolute,join,relative} from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -6,6 +7,12 @@ import {engineEnv} from './environment.mjs';
 const run=promisify(execFile);
 const config=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 export const expectedVersion=config.engine.upstreamVersion;
+export function configuredPaths(){
+ const binary=process.env.ADA_GODOT_EXECUTABLE,root=process.env.ADA_GODOT_PROJECT_ROOT;
+ if(!binary||!root||!isAbsolute(binary)||!isAbsolute(root))return false;
+ try{return statSync(binary).isFile()&&statSync(root).isDirectory();}
+ catch{return false;}
+}
 export async function engine(){
  const binary=process.env.ADA_GODOT_EXECUTABLE;
  if(!binary)return {configured:false,reason:'godot_executable_not_configured',

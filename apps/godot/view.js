@@ -11,19 +11,21 @@ export async function mount(host,api){
  const status=add('button','Статус сессии');
  const stop=add('button','Остановить');
  const output=add('pre','');
- let active=null;
+ let active=null,available=[];
  const has=id=>api.graph().nodes.some(n=>n.type==='action'&&n.id===id);
  function show(value){output.textContent=JSON.stringify(value,null,2);}
  function controls(){
   const id=select.value;
   inspect.disabled=!id||!has('godot.engine.inspect');
   check.disabled=!id||!has('godot.project.check');
-  start.disabled=!id||!has('godot.session.start');
+  start.disabled=!id||!has('godot.session.start')||
+   !available.some(p=>p.id===id&&p.operations?.['session.start']);
   status.disabled=!active||!has('godot.session.status');
   stop.disabled=!active||!has('godot.session.stop');
  }
  async function refresh(){
   const previous=select.value,items=await api.call('godot.providers');
+  available=items;
   select.replaceChildren();
   for(const p of items){const op=add('option',p.id+' · '+p.engine+' · '+p.locality,select);op.value=p.id;}
   if(items.some(x=>x.id===previous))select.value=previous;
