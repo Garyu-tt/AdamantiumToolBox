@@ -45,5 +45,5 @@ function cleanup(){
  for(const s of active.values())if(['starting','running','stop_requested'].includes(s.status))
   s.child.kill('SIGTERM');
 }
-process.once('SIGTERM',cleanup);
-process.once('SIGINT',cleanup);
+process.once('SIGTERM',()=>{cleanup();process.exit(0);});
+process.once('SIGINT',()=>{cleanup();process.exit(0);});
