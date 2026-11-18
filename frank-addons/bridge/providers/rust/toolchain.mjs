@@ -17,5 +17,7 @@ export async function rustToolchain(){
  if(root==='/'||!(await stat(join(root,'bin','rustc'))).isFile())
   throw Error('invalid_toolchain');
  if(!(await stat(linker)).isFile())throw Error('missing_system_linker');
+ if(!['/usr/','/bin/','/lib/','/lib64/'].some(p=>linker.startsWith(p)))
+  throw Error('linker_outside_system_mount');
  return {root,linker};
 }
