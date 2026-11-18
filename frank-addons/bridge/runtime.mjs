@@ -1,5 +1,6 @@
 import {frankCatalog} from './catalog.mjs';
 import {loadRegistry,packageDigest} from './approval.mjs';
+import {assertFrankValue} from './values.mjs';
 const base='frankenstein';
 async function call(port,route,secret,body){
  const res=await fetch('http://127.0.0.1:'+port+route,{
@@ -45,17 +46,37 @@ export async function bridgeGraph(root,secret){
   nodes.push({id,type:'action',title:route.title,requires:['frankenstein.invoke']});
   edges.push({from:base+'.view',to:id,type:'uses'});
  }
+ if(routes.size>=2){
+  nodes.push({id:base+'.pipe',type:'action',title:'Frank pipeline',requires:['frankenstein.invoke']});
+  edges.push({from:base+'.view',to:base+'.pipe',type:'uses'});
+ }
  return {app:base,version:1,nodes,edges};
+}
+async function invokeSelected(selected,secret,params){
+ const {pkg,port}=selected;
+ const response=await call(port,'/invoke',secret,{protocol:'frank-adapter-1',
+  action:selected.action,params:assertFrankValue(params),
+  package:{key:pkg.key,language:pkg.language,id:pkg.id,
+   directory:pkg.directory,entry:pkg.entry}});
+ if(!response||!Object.hasOwn(response,'result'))throw Error('invalid_adapter_response');
+ return assertFrankValue(response.result);
 }
 export async function bridgeInvoke(root,secret,action,params){
  const {packages,routes}=await snapshot(root,secret);
  if(action===base+'.list')return {packages};
+ if(action===base+'.pipe'){
+  if(routes.size<2||!params||typeof params!=='object'||
+   typeof params.from!=='string'||typeof params.to!=='string'||
+   !Object.hasOwn(params,'input'))throw Error('invalid_pipeline');
+  const source=routes.get(params.from);
+  if(!source||!routes.has(params.to))throw Error('capability_unavailable');
+  const value=await invokeSelected(source,secret,assertFrankValue(params.input));
+  // A plugin may be disabled while its predecessor runs. Re-resolve.
+  const fresh=(await snapshot(root,secret)).routes.get(params.to);
+  if(!fresh)throw Error('capability_unavailable');
+  return invokeSelected(fresh,secret,{input:value});
+ }
  const selected=routes.get(action);
  if(!selected)throw Error('capability_unavailable');
- const {pkg,port}=selected;
- const response=await call(port,'/invoke',secret,{protocol:'frank-adapter-1',
-  action:selected.action,params:params||{},package:{key:pkg.key,language:pkg.language,
-   id:pkg.id,directory:pkg.directory,entry:pkg.entry}});
- if(!Object.prototype.hasOwnProperty.call(response,'result'))throw Error('invalid_adapter_response');
- return response.result;
+ return invokeSelected(selected,secret,params||{});
 }
