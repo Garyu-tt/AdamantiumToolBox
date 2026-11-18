@@ -1,6 +1,6 @@
 # Noosphere 3.0: clean-slate distributed memory (design contract)
 
-Status: planned, NOT DEPLOYED. R02 ships the first local semantic capability router, not Noosphere's persistence, distributed recovery or legacy migration.
+Status: R03 stateless standalone Noosphere plugin code exists in draft PR, NOT DEPLOYED. R02 ships local semantic routing; R03 adds envelope validation without persistence. Distributed recovery and legacy migration remain unimplemented.
 
 ## Ownership boundary
 
@@ -52,9 +52,15 @@ Every persisted record needs a stable object ID, schema version, payload referen
 
 A node may retain only a cache and placement manifest; it is not automatically capable of reconstructing all data alone. Critical durable information needs enough independent recovery material and keys to restore after the specified failure scenario. Replication should avoid excessive churn during temporary outages; distinguish unavailable from definitively lost nodes. Reject conflicting writers unless primary/consensus and idempotency policies explicitly authorize them.
 
+## R03 implementation
+
+The independent `apps/noosphere` plugin exposes `noosphere.status`, `noosphere.modules`, and a stateless `noosphere.validate` action, mapped to `memory.envelope.validate@1.0`. Its recursive envelope module consumes optional separate temporal and provenance validators via typed capability contracts. No DB package is embedded or imported, no storage path is opened, and no memory read/write actions are advertised.
+
+The graph uses the existing shared graph icon until Leonardo produces a dedicated asset. Disabling ingestion removes the provenance validator and blocks the dependent envelope action. Test coverage: `tests/noosphere.test.mjs` and `tests/noosphere-http.test.mjs`.
+
 ## Next acceptance gates
 
-- R03: Core + Noosphere independent plugin, no embedded datastore, degraded-mode graph with no fictitious memory actions.
+- R03: Core + Noosphere independent plugin, no embedded datastore, stateless graph with no fictitious persistent memory actions. Implementation in draft, subject to CI.
 - R04: Database-backed CRUD through `storage.graph.*` via Core routing with per-caller identity and ACL.
 - R05: read-only incremental legacy adapter plus manifest, provenance and replay-safe checkpoints.
 - R06: two independently restorable copies and verified restore drills before durable real-world migration.
