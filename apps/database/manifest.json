@@ -1,0 +1,9 @@
+{
+ "mas":"1.0","id":"database","name":"Database / Graph Fabric Store","version":"0.1.0",
+ "icon":"database","lifecycle":"independent",
+ "service":{"protocol":"mas-http-1","port":8895,"invokeTimeoutMs":12000},
+ "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},
+ "auth":{"mode":"host-delegated"},"permissions":["database.read","database.write"],
+ "events":{"schema":"mas-event-1"},"data":{"refs":"mas-ref-1"},
+ "updates":{"strategy":"semver","migrations":[]}
+}
