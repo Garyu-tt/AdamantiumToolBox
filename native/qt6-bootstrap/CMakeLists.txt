@@ -69,3 +69,9 @@ target_link_libraries(mas_plugin_loader_test PRIVATE mas_plugin_loader)
 add_test(NAME native_plugin_policy COMMAND mas_plugin_loader_test
   $<TARGET_FILE:mas_native_workspace> $<TARGET_FILE:mas_native_window_manager>)
 set_tests_properties(native_plugin_policy PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_executable(mas_native_desktop host/native_desktop.cpp)
+target_link_libraries(mas_native_desktop PRIVATE
+  mas_raw_ui mas_plugin_loader mechanicus_graph Qt6::Widgets)
+add_test(NAME native_desktop_smoke COMMAND mas_native_desktop --smoke-test)
+set_tests_properties(native_desktop_smoke PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
