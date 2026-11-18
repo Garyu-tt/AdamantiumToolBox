@@ -1,6 +1,7 @@
 const TYPES=new Set(['project','plugin','module','capability','task','dependency','artifact','node']);
 const STATUS=new Set(['blocked','failed','running','queued','completed','unknown']);
 const safe=s=>typeof s==='string'&&s.length>0&&s.length<=160;
+const claim=s=>typeof s==='string'&&s.length<=600?s:null;
 const typed=n=>n?.entity?.schema==='mas-graph-entity-1'&&TYPES.has(n.entity.kind);
 const provenance={type:'core_capability_graph',trust:'runtime_visibility_not_deployment_proof'};
 export function projectGraph(input){
@@ -13,9 +14,10 @@ export function projectGraph(input){
   if(!/^[a-z][a-z0-9_-]{1,39}$/.test(owner))continue;
   const ent=typed(item)?item.entity:null;
   const status=STATUS.has(ent?.status)?ent.status:'unknown';
-  nodes.push({id:item.id,kind:ent?.kind||'capability',title:ent?.title||item.title||item.id,
-   status,owner,reason:ent?.reason||null,diagnostic:ent?.diagnostic||null,
-   responsible:ent?.responsible||null,remediation:ent?.remediation||null,
+  const title=claim(ent?.title)||claim(item.title)||item.id;
+  nodes.push({id:item.id,kind:ent?.kind||'capability',title,
+   status,owner,reason:claim(ent?.reason),diagnostic:claim(ent?.diagnostic),
+   responsible:claim(ent?.responsible),remediation:claim(ent?.remediation),
    source:ent?.source||provenance,observed:true});
   if(!owners.has(owner))owners.set(owner,'mas:'+owner);
  }
