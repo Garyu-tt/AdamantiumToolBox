@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {normalize,preview,reverse} from '../lib/plan.mjs';
+const s=()=>({schema:'network-reconciler-state-v1',node:'n1',revision:'rev1',protectedIds:['mgmt'],current:{routes:[{id:'mgmt',destination:'10.0.0.0/24',device:'wg0',via:null}],rules:[]}});
+const empty=()=>({node:'n1',routes:[{id:'mgmt',destination:'10.0.0.0/24',device:'wg0',via:null}],rules:[]});
+test('normalization sorts deterministic and omits unknown input data',()=>{const first=normalize({routes:[{id:'z',destination:'192.168.1.0/24',device:'wg1',via:null,secret:'must-not-copy'},{id:'a',destination:'::/0',device:'wg2',via:null}],rules:[]});assert.deepEqual(first.routes.map(x=>x.id),['a','z']);assert(!JSON.stringify(first).includes('must-not-copy'));});
+test('no-op has no changes and stays preview-only',()=>{const p=preview(s(),empty(),'rev1');assert.equal(p.operationCount,0);assert.equal(p.allowedToApply,false);assert.equal(p.previewOnly,true);});
+test('protected route change is blocked',()=>{const d=empty();d.routes[0].device='wg1';const p=preview(s(),d,'rev1');assert(p.blockers.includes('protected_id:mgmt'));assert(p.blockers.includes('connectivity_watchdog_and_revert_required'));});
+test('new firewall allow requires independent approvals',()=>{const d=empty();d.rules.push({id:'allow443',source:'10.0.0.0/24',destination:'10.1.0.0/24',protocol:'tcp',port:443,effect:'allow'});const p=preview(s(),d,'rev1');assert(p.blockers.includes('bilateral_approvals_required'));assert.equal(p.operationCount,1);});
+test('wrong revision denied',()=>assert.throws(()=>preview(s(),empty(),'rev0'),/revision_conflict/));
+test('wrong node denied',()=>assert.throws(()=>preview(s(),{...empty(),node:'n2'},'rev1'),/wrong_node/));
+test('TCP port 0 rejected',()=>{const d=empty();d.rules.push({id:'a',source:'0.0.0.0/0',destination:'10.0.0.0/8',protocol:'tcp',port:0,effect:'allow'});assert.throws(()=>preview(s(),d,'rev1'),/invalid_rule/);});
+test('duplicate route IDs rejected',()=>{const d=empty();d.routes.push({...d.routes[0]});assert.throws(()=>preview(s(),d,'rev1'),/duplicate_id/);});
+test('rollback preview is tamper-evident and hypothetical',()=>{const d=empty();d.rules.push({id:'deny1',source:'10.0.0.0/24',destination:'10.1.0.0/24',protocol:'udp',port:53,effect:'deny'});const p=preview(s(),d,'rev1');const undo=reverse(s(),p);assert.equal(undo.hypotheticalOperations.length,1);assert.equal(undo.hypotheticalOperations[0].after,null);assert.equal(undo.appliesChanges,false);});
+test('rollback plan hash mismatch blocked',()=>{const p=preview(s(),empty(),'rev1');p.planHash='0'.repeat(64);assert.throws(()=>reverse(s(),p),/stale_or_tampered_plan/);});
+test('rollback on changed snapshot blocked',()=>{const p=preview(s(),empty(),'rev1');const changed=s();changed.revision='rev2';assert.throws(()=>reverse(changed,p),/stale_or_tampered_plan/);});
