@@ -1,0 +1,6 @@
+{
+  "schema":"xr-provider-1","id":"wivrn","name":"WiVRn Process Probe",
+  "category":"pcvr","readOnly":true,
+  "processNames":["wivrn-server","wivrn-dashboard"],
+  "evidence":"Linux /proc process name observation only"
+}
