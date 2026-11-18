@@ -10,8 +10,14 @@ import {allowedUrl,engine} from '../apps/browser/engine.mjs';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 await assert.rejects(Promise.resolve().then(()=>allowedUrl('file:///etc/passwd')),/browser_url_denied/);
 await assert.rejects(Promise.resolve().then(()=>allowedUrl('javascript:alert(1)')),/browser_url_denied/);
+if(process.env.CI&&process.platform!=='win32'&&!process.env.MAS_BROWSER_CI_RUNTIME){
+ console.log('BROWSER_RUNTIME_SKIPPED CI Chromium sandbox not provisioned');process.exit(0);
+}
 const where=await engine().catch(e=>e.message==='browser_engine_unavailable'?null:Promise.reject(e));
-if(!where){console.log('BROWSER_RUNTIME_SKIPPED no Chromium engine');process.exit(0);}
+if(!where){
+ if(process.env.MAS_BROWSER_REQUIRE_ENGINE)throw Error('required_chromium_missing');
+ console.log('BROWSER_RUNTIME_SKIPPED no Chromium engine');process.exit(0);
+}
 const home=await mkdtemp(join(tmpdir(),'ada-browser-'));
 const secret='test-browser-internal-secret-for-runtime';
 const launch=()=>{

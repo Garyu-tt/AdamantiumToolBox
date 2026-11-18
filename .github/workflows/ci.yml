@@ -37,3 +37,21 @@ jobs:
             fi
             node "$t"
           done
+
+  browser-windows:
+    name: Chromium browser on Windows
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run real Chromium CDP tests
+        env:
+          MAS_BROWSER_REQUIRE_ENGINE: '1'
+        run: |
+          node tests/browser.test.mjs
+          node tests/isolation.test.mjs

@@ -75,3 +75,13 @@ tests remain available across platforms.
 The running installed Toolbox is additionally checked via
 node tests/browser_proxy.test.mjs. That test exercises navigation,
 icons, and screenshot actions through the authorized core API.
+
+CI on Linux runs MAS contract and Core + App isolation tests but skips
+real Chromium spawning unless MAS_BROWSER_CI_RUNTIME=1 is set for a prepared
+runner with a supported browser sandbox. A full Windows browser test has been
+executed on the owner's laptop.
+
+GitHub Actions now has a dedicated windows-latest job with
+MAS_BROWSER_REQUIRE_ENGINE=1, which fails rather than skipping when the
+Chromium provider is unavailable. Linux CI continues verifying all other
+contracts and Core + App independence without needing a display server.
