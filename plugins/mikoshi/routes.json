@@ -1,0 +1,53 @@
+{
+  "schema": "mikoshi.mas.routes.v1",
+  "static": [
+    {
+      "id": "mikoshi.status",
+      "title": "Статус подключения",
+      "mode": "local"
+    },
+    {
+      "id": "mikoshi.capabilities",
+      "title": "Доступные возможности",
+      "mode": "get",
+      "path": "/api/v1/capabilities"
+    },
+    {
+      "id": "mikoshi.components",
+      "title": "Граф компонентов",
+      "mode": "get",
+      "path": "/api/v1/component-graph"
+    },
+    {
+      "id": "mikoshi.neurons",
+      "title": "Единый граф нейросистемы",
+      "mode": "get",
+      "path": "/api/v1/unified-graph"
+    },
+    {
+      "id": "mikoshi.maps",
+      "title": "Доступные 2D-карты",
+      "mode": "native",
+      "native": "visual2d.list"
+    },
+    {
+      "id": "mikoshi.retina",
+      "title": "Статус R239",
+      "mode": "native",
+      "native": "retina.sparse.status"
+    },
+    {
+      "id": "mikoshi.engrams",
+      "title": "Каталог Engram",
+      "mode": "native",
+      "native": "engram.list"
+    }
+  ],
+  "dynamic": [
+    {
+      "fromPrefix": "visual2d.open.",
+      "idPrefix": "mikoshi.map.",
+      "titlePrefix": "2D: "
+    }
+  ]
+}
