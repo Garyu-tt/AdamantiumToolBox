@@ -31,7 +31,8 @@ SelectedProvider selectSvg(const QJsonObject& graph) {
   if(id.isEmpty()||provider.value("schema").toString()!="mas-graphics-provider-1")continue;
   for(const auto& opValue:provider.value("operations").toArray()) {
    if(!opValue.isObject())continue;
-   const auto op=opValue.toObject(),action=op.value("action").toString();
+   const auto op=opValue.toObject();
+   const auto action=op.value("action").toString();
    if(op.value("kind").toString()!="image"||
       !op.value("formats").toArray().contains("image/svg+xml")||
       !actions.contains(action)||!provides.value(id).contains(action))continue;
