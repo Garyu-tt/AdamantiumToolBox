@@ -8,14 +8,17 @@ $start=Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Adamantium 
 $desktop=[Environment]::GetFolderPath('Desktop')
 New-Item -ItemType Directory -Path $start -Force|Out-Null
 $shell=New-Object -ComObject WScript.Shell
-function Shortcut([string]$file,[string]$view,[string]$icon){
+function Shortcut([string]$file,[string]$view,[string]$icon,[string]$iconFile=''){
  $lnk=$shell.CreateShortcut($file)
  $lnk.TargetPath='C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
  $arg='-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "'+(Join-Path $root 'launch.ps1')+'"'
  if($view){$arg+=' -View '+$view}
  $lnk.Arguments=$arg
  $lnk.WorkingDirectory=$root
- $lnk.IconLocation=(Join-Path $root ('icons\'+$icon+'.ico'))+',0'
+ $location=Join-Path $root ('icons\'+$icon+'.ico')
+ if($iconFile -and [IO.Path]::GetExtension($iconFile) -eq '.ico' -and (Test-Path -LiteralPath $iconFile)){$location=$iconFile}
+ if(!(Test-Path -LiteralPath $location)){$location=Join-Path $root 'icons\adamantium.ico'}
+ $lnk.IconLocation=$location+',0'
  $lnk.Description='Adamantium Toolbox application'
  $lnk.Save()
 }
@@ -37,8 +40,7 @@ foreach($node in @($graph.nodes|Where-Object {$_.type -eq 'view'})){
  $name=($id -replace '[^a-z0-9._-]','_')+'.lnk'
  $ico=[string]$node.icon
  if($ico -notmatch '^[a-z0-9_-]+$'){$ico='adamantium'}
- if(!(Test-Path (Join-Path $root ('icons\'+$ico+'.ico')))){continue}
- Shortcut (Join-Path $start $name) $id $ico
+ Shortcut (Join-Path $start $name) $id $ico ([string]$node.iconFile)
  $keep+=$name
 }
 Get-ChildItem -LiteralPath $start -Filter '*.lnk'|Where-Object {$keep -notcontains $_.Name}|Remove-Item

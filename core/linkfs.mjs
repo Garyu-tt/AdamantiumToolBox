@@ -4,7 +4,7 @@ const MAX_DEPTH=8,MAX_ENTRIES=800;
 const suffix='.appref.json';
 export async function linkTree(root,backend){
  const base=resolve(root,'interface'),views=new Map(backend.nodes.filter(n=>n.type==='view').map(n=>[n.id,n]));
- let seen=0;
+ let seen=0;const referenced=new Set();
  async function folder(path,depth){
   const children=[];
   if(depth>MAX_DEPTH)return children;
@@ -25,10 +25,13 @@ export async function linkTree(root,backend){
     if(!view||ref.schema!=='mas-appref-1'||ref.app!==ref.view.split('.')[0])continue;
     const name=entry.name.slice(0,-suffix.length);
     if(!name||name.startsWith('.'))continue;
-    children.push({type:'app',name,view:view.id,icon:view.icon});
+    referenced.add(view.id);children.push({type:'app',name,view:view.id,icon:view.icon});
    }
   }
   return children;
  }
- return {schema:'mas-linkfs-1',root:'interface',children:await folder(base,0)};
+ const children=await folder(base,0);
+ const unlinked=[...views.values()].filter(v=>!referenced.has(v.id))
+  .map(v=>({type:'app',name:v.title||v.id,view:v.id,icon:v.icon}));
+ return {schema:'mas-linkfs-1',root:'interface',children:[...children,...unlinked]};
 }

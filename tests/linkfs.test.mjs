@@ -20,6 +20,9 @@ try{
  tree=await linkTree(root,backend);
  assert(tree.children.some(x=>x.name==='Переименованная папка'));
  assert(!tree.children.some(x=>x.name==='Инструменты'));
+ const dynamic=await linkTree(root,{nodes:[...backend.nodes,{id:'fresh.view',type:'view',title:'New Plugin',icon:'fresh'}]});
+ assert(dynamic.children.some(x=>x.type==='app'&&x.view==='fresh.view'&&x.name==='New Plugin'));
+ assert(!dynamic.children.some(x=>x.type==='app'&&x.view==='editor.view'));
  const isolated=await linkTree(root,{nodes:[]});
  assert.equal(isolated.children.find(x=>x.name==='Переименованная папка').children.length,0);
  console.log('LINKFS_OK folder-rename empty-folder app-filter');

@@ -23,11 +23,13 @@ function drag(bar,win){
   bar.addEventListener('pointermove',move);bar.addEventListener('pointerup',stop);
  });
 }
-function icon(name){const img=document.createElement('img');img.src='/icons/'+encodeURIComponent(name||'workbench')+'.svg';img.alt='';return img;}
+function icon(view){const img=document.createElement('img');
+ img.src=view.iconUrl||'/icons/'+encodeURIComponent(view.icon||'workbench')+'.svg';
+ img.alt='';return img;}
 async function openApp(view){
  if(windows.has(view.id))return focus(windows.get(view.id));
- const win=el('section',undefined,'window');win.style.left=(25+windows.size*24)+'px';win.style.top=(25+windows.size*19)+'px';
- const bar=el('div',undefined,'titlebar'),name=el('strong');name.append(icon(view.icon),el('span',view.title));
+ const win=el('section',undefined,'window');win.dataset.entry=view.entry;win.style.left=(25+windows.size*24)+'px';win.style.top=(25+windows.size*19)+'px';
+ const bar=el('div',undefined,'titlebar'),name=el('strong');name.append(icon(view),el('span',view.title));
  const close=el('button','×');close.setAttribute('aria-label','Закрыть');
  close.onclick=()=>{win.remove();windows.delete(view.id);paintTasks();};
  bar.append(name,close);const content=el('div',undefined,'app-content');win.append(bar,content);desktop.append(win);
@@ -51,7 +53,14 @@ async function refresh(){
  try{
   graph=await rpc('/api/graph');const views=graph.nodes.filter(n=>n.type==='view');
   const ids=new Set(views.map(v=>v.id));
-  for(const [id,win] of windows)if(!ids.has(id)){win.remove();windows.delete(id);}
+  const reload=[];
+  for(const [id,win] of windows){
+   const now=views.find(v=>v.id===id);
+   if(!ids.has(id)||now?.entry!==win.dataset.entry){
+    win.remove();windows.delete(id);if(now)reload.push(now);
+   }
+  }
+  for(const view of reload)await openApp(view);
   launcher.replaceChildren();
   if(!standalone)drawNavigation(launcher,await rpc('/api/navigation'),graph,openApp);
   if(standalone){document.body.classList.add('standalone');const v=views.find(v=>v.id===standalone);if(v)await openApp(v);else status.textContent='Приложение недоступно';}

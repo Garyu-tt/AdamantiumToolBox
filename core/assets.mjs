@@ -22,10 +22,15 @@ export async function resolveAsset(root,pathname,appIds=new Set()){
  const folder=mount.folder.split('/');
  if(folder.some(s=>!segment.test(s)||s==='.'||s==='..')||!Array.isArray(mount.extensions))throw Error('invalid_asset_policy');
  if(!mount.extensions.includes(extname(parts.at(-1))))throw Error('asset_type_denied');
- if(mount.scope==='manifest'&&(parts.length<3||!appIds.has(parts[1])))throw Error('app_not_registered');
- const base=await realpath(resolve(root,...folder));
- const actual=await realpath(resolve(root,...folder,...parts.slice(1)));
- if(!contained(await realpath(root),base)||!contained(base,actual))throw Error('asset_escape');
+ const app=mount.scope==='manifest';
+ if(app&&(parts.length<3||!appIds.has(parts[1])))throw Error('app_not_registered');
+ const source=app&&appIds instanceof Map?appIds.get(parts[1]):null;
+ const directory=typeof source==='string'?source:source?.directory;
+ const revision=typeof source==='object'?source?.hash:null;
+ if(revision&&(parts[2]!==revision||parts.length<4))throw Error('stale_asset_revision');
+ const base=await realpath(directory||resolve(root,...folder));
+ const actual=await realpath(resolve(base,...parts.slice(revision?3:directory?2:1)));
+ if((!directory&&!contained(await realpath(root),base))||!contained(base,actual))throw Error('asset_escape');
  if(!(await stat(actual)).isFile())throw Error('asset_not_file');
  return actual;
 }

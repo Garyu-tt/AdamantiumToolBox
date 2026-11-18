@@ -36,11 +36,16 @@ async function discover(){
  }
  for(const service of system){
   const key='service:'+service.id;
+  const old=children.get(key);
+  if(old&&old.file!==service.entry){children.delete(key);old.instance.kill();}
   if(!children.has(key))start(key,service.entry);
  }
  for(const app of entries){
-  const key='app:'+app.id;
-  if(!children.has(key))start(key,join(root,'apps',app.id,'service.mjs'),{APP_PORT:String(app.service.port)});
+  const key='app:'+app.id,file=join(app.directory,'service.mjs');
+  const env={APP_PORT:String(app.service.port)};
+  const old=children.get(key);
+  if(old&&(old.file!==file||old.env.APP_PORT!==env.APP_PORT)){children.delete(key);old.instance.kill();}
+  if(!children.has(key))start(key,file,env);
  }
 }
 start('kernel',join(root,'core','kernel.mjs'));

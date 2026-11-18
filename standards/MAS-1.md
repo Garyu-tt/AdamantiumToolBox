@@ -71,3 +71,12 @@ services/<id>.json. Each declares id, runtime=node, relative entry and enabled.
 The supervisor discovers, starts and stops these services dynamically. No app
 requires a particular base service unless that capability is explicitly declared
 in its own contract. Core + App tests exclude all optional base services.
+
+## Signed Module Lifecycle v1
+External MAS bundles are stored but never executed automatically. The local owner
+must inspect a signed immutable package and approve its activation explicitly.
+The plan gate checks signature, permissions, port conflicts, same-major semver and
+absence of migrations; the candidate is health/graph-probed before atomic selection.
+Versioned assets and retained bundles permit manual rollback without modifying
+bundled applications. See docs/LIFECYCLE.md. This is not a sandbox and this gate
+is not a formal backward-compatibility proof for API actions.

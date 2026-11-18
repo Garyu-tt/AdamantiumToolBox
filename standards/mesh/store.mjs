@@ -28,7 +28,6 @@ export async function receive(root,envelope,trust){
 }
 export async function unpack(root,envelope,trust){
  const {manifest}=trustEnvelope(envelope,trust);
- const active=join(rootPath(root),'apps',manifest.id);
  const stage=join(rootPath(root),'plugins','staging',manifest.id+'-'+randomUUID());
  await mkdir(stage,{recursive:true});
  try{
@@ -40,7 +39,7 @@ export async function unpack(root,envelope,trust){
   }
   const installed=join(rootPath(root),'plugins','installed');
   await mkdir(installed,{recursive:true});
-  const target=join(installed,manifest.id+'-'+envelope.hash.slice(0,16));
+  const target=join(installed,envelope.hash);
   await rename(stage,target);
   return {target,id:manifest.id,hash:envelope.hash};
  }catch(e){await rm(stage,{recursive:true,force:true});throw e;}

@@ -63,3 +63,10 @@ Base services are registered by independent JSON manifests in services/*.json.
 Core lifecycle discovers modules at runtime and stops removed/disabled services.
 Mesh API and Mesh worker run as optional system services, not hardcoded children.
 Run node tests/services.test.mjs.
+
+## Signed plugin lifecycle
+Use node tools/lifecycle.mjs status or plan <hash> to inspect a Mesh package.
+Select signed versions with activate <plan.json> --approve; rollback <id> --approve.
+The registry is atomic and preserves previous hashes; the supervisor picks up changes.
+Executable third-party plugins run with current OS-user privileges. No sandbox yet.
+See docs/LIFECYCLE.md. Never activate received packages automatically.

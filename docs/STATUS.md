@@ -22,3 +22,7 @@
 
 - Optional Mesh API and worker are now loaded through discovered system-service
   manifests in services/, with add/disable and path validation tests.
+
+- Lifecycle v1: signed package plan, explicit approval, isolated health/graph probe,
+  content-addressed install, atomic activation registry, rollback and live discovery.
+- No OS sandbox or distributed activation in v1; package execution requires approval.

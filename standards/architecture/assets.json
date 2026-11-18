@@ -1,9 +1,44 @@
 {
   "schema": "mas-asset-policy-1",
   "mounts": [
-    {"route":"shell","folder":"shell","extensions":[".html",".js",".css"],"scope":"internal"},
-    {"route":"ui","folder":"standards/ui","extensions":[".js",".css"],"scope":"internal"},
-    {"route":"icons","folder":"icons","extensions":[".svg",".ico"],"scope":"internal"},
-    {"route":"apps","folder":"apps","extensions":[".js"],"scope":"manifest"}
+    {
+      "route": "shell",
+      "folder": "shell",
+      "extensions": [
+        ".html",
+        ".js",
+        ".css"
+      ],
+      "scope": "internal"
+    },
+    {
+      "route": "ui",
+      "folder": "standards/ui",
+      "extensions": [
+        ".js",
+        ".css"
+      ],
+      "scope": "internal"
+    },
+    {
+      "route": "icons",
+      "folder": "icons",
+      "extensions": [
+        ".svg",
+        ".ico"
+      ],
+      "scope": "internal"
+    },
+    {
+      "route": "apps",
+      "folder": "apps",
+      "extensions": [
+        ".js",
+        ".css",
+        ".svg",
+        ".ico"
+      ],
+      "scope": "manifest"
+    }
   ]
 }

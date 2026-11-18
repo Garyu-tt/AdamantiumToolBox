@@ -33,7 +33,11 @@ async function graph(){
    if(!['view','action','resource','event'].includes(node.type))continue;
    if(!Array.isArray(node.requires)||!node.requires.every(c=>caps.has(c)))continue;
    const item={...node};delete item.requires;
-   if(node.type==='view')item.entry='/apps/'+app.id+'/view.js';
+   if(node.type==='view'){
+    item.entry='/apps/'+app.id+'/'+(app.hash?app.hash+'/':'')+'view.js';
+    if(app.source==='plugin'&&app.assets?.includes('icon.svg'))item.iconUrl='/apps/'+app.id+'/'+app.hash+'/icon.svg';
+    if(app.source==='plugin'&&app.assets?.includes('icon.ico'))item.iconFile=resolve(app.directory,'icon.ico');
+   }
    if(node.type==='action')routes.set(node.id,host+'/invoke');
    seen.add(node.id);local.push(item);
   }
@@ -54,7 +58,7 @@ const mime={'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg'
 async function asset(req,res){
  try{
   const url=new URL(req.url,'http://127.0.0.1');
-  const apps=new Set((await catalog(root)).map(a=>a.id));
+  const apps=new Map((await catalog(root)).map(a=>[a.id,{directory:a.directory,hash:a.hash}]));
   const path=await resolveAsset(root,url.pathname,apps);
   const body=await readFile(path);res.writeHead(200,{'Content-Type':mime[extname(path)]||'application/octet-stream','Cache-Control':'no-store',
   'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'",
