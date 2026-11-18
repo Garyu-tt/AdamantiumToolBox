@@ -10,6 +10,7 @@ const suites=[['graph_dns',39821,'graph_dns.audit','graph_dns.read',
  {nodes:[],services:[],rules:[]}],
  ['nftables_preview',39825,'nftables_preview.compile','nftables_preview.read',
  {targetNode:'host',topology:{nodes:[{id:'host',kind:'server',addresses:[]}],services:[],rules:[]}}],
+ ['network_inventory',39826,'network_inventory.snapshot','network_inventory.read',{}],
  ['noosphere',39822,'noosphere.inspect','noosphere.read',{records:[]}]];
 for(const [name,port,action,permission,params] of suites){
  const proc=spawn(process.execPath,[resolve(root,'apps',name,'service.mjs')],{
