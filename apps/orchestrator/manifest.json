@@ -1,0 +1,10 @@
+{
+  "mas":"1.0","id":"orchestrator","name":"Adamantium Orchestrator","version":"0.1.0",
+  "icon":"orchestrator","lifecycle":"independent",
+  "service":{"protocol":"mas-http-1","port":8896,"invokeTimeoutMs":15000},
+  "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},
+  "auth":{"mode":"host-delegated"},
+  "permissions":["orchestration.read","orchestration.execute","orchestration.cancel"],
+  "events":{"schema":"mas-event-1"},"data":{"refs":"mas-ref-1"},
+  "updates":{"strategy":"semver","migrations":[]}
+}
