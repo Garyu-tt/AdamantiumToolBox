@@ -13,7 +13,8 @@ export function selectPool(graph,wanted){
  return matches[0].provider;
 }
 export async function executeOne({api=call,workerId,skills,pollMs=1000,heartbeatMs=60000,
- leaseMs=300000,maxPolls=600,signal,allowTools=false,providerId=null}={}){
+ leaseMs=300000,maxPolls=600,signal,allowTools=false,providerId=null,
+ taskContract='ai.text.generate'}={}){
  if(!Number.isInteger(pollMs)||pollMs<100||pollMs>10000||!Number.isInteger(heartbeatMs)||
   heartbeatMs<100||heartbeatMs>=leaseMs||!Number.isInteger(maxPolls)||maxPolls<1||maxPolls>3600)
   throw Error('invalid_worker_policy');
@@ -21,7 +22,7 @@ export async function executeOne({api=call,workerId,skills,pollMs=1000,heartbeat
  if(!pool)return {status:'no_task_provider'};
  const actions=new Set(graph.nodes.filter(n=>n.type==='action').map(n=>n.id));
  if(!actions.has('claude.start')||!actions.has('claude.status'))throw Error('claude_capabilities_unavailable');
- const claim=await runAction(api,pool.claimAction,{workerId,capabilities:skills,leaseMs},signal);
+ const claim=await runAction(api,pool.claimAction,{workerId,capabilities:skills,leaseMs,requiresContract:taskContract},signal);
  if(claim.status==='empty')return claim;
  if(claim.status!=='claimed'||!claim.token||!claim.taskId)throw Error('invalid_claim_response');
  const payload=claim.payload||{};
@@ -67,7 +68,8 @@ export async function startWorkers({count=0,api=call,signal}={}){
   while(!signal?.aborted){
    try{await executeOne({api,workerId,skills,pollMs,signal,
     allowTools:process.env.ADA_CLAUDE_TASK_ALLOW_TOOLS==='true',
-    providerId:process.env.ADA_CLAUDE_TASK_PROVIDER||null});}
+    providerId:process.env.ADA_CLAUDE_TASK_PROVIDER||null,
+    taskContract:process.env.ADA_CLAUDE_TASK_CONTRACT||'ai.text.generate'});}
    catch(e){if(signal?.aborted)break;console.error('claude_worker_error',e.message);}
    try{await sleep(2000,undefined,{signal});}catch{break;}
   }
