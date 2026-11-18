@@ -24,7 +24,8 @@ const input={task_id:'delivery-qa-01',plugin_id:'specimen',author_id:'claude',
 const report={schema:'gauntlet-test-report-1',task_id:input.task_id,
  sha256:input.sha256,run_id:'fixture-001',runner_id:'independent-verifier',
  cost_usd:0,dynamic_ui_supported:false,dynamic_skip_reason:'isolated fixture',
- tests:tests.map(name=>({name,status:'PASS',log:name,log_sha256:hash(name)}))};
+ tests:tests.map(name=>({name,status:'PASS',log:name,log_sha256:hash(name),
+  command:'fixture '+name,exit_code:0,signal:null,duration_ms:10}))};
 const signature=sign(null,Buffer.from(JSON.stringify(report)),privateKey).toString('base64');
 try{
  await submit(root,input);

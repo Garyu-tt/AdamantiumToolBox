@@ -19,3 +19,11 @@ A delivery worker must read the current queue, call preflight just before
 signing, verify the payload SHA-256, use the owner-approved signed Lifecycle
 route, and confirm selected hash + target identity after activation.
 Never trust old outbox rows, task descriptions or a successful model reply.
+
+## Evidence integrity ratchet
+Signed QA reports must contain command, exit_code, signal, duration_ms,
+stdout/stderr log, SHA-256 and status for every required test (including
+dependency impact tests). PASS requires exit_code 0 and no termination
+signal. A signed PASS with a nonzero code or forged log is rejected.
+This verifies internal report consistency, not truthful CI execution;
+the signer must still be provisioned as a separate trusted runner.

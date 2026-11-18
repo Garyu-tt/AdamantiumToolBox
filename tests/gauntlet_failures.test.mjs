@@ -21,7 +21,8 @@ const make=(task_id,fileset=files)=>({task_id,plugin_id:'specimen',
 const names=['syntax','build','dependencies','isolation','unit','integration',
  'contract','security','regression','no_hardcode','conflicts'];
 const ev=(name,status='PASS')=>{const log=name+' real fixture '+status;
- return {name,status,log,log_sha256:hash(log)};};
+ return {name,status,log,log_sha256:hash(log),command:'qa-fixture '+name,
+  exit_code:status==='PASS'?0:1,signal:null,duration_ms:10};};
 const signReport=report=>({task_id:report.task_id,report,
  signature:sign(null,Buffer.from(JSON.stringify(report)),privateKey).toString('base64')});
 const base=task_id=>({schema:'gauntlet-test-report-1',task_id,sha256:make(task_id).sha256,
@@ -54,6 +55,10 @@ try{
  report=base(input.task_id);report.dynamic_ui_supported=true;delete report.dynamic_skip_reason;
  state=await accept(root,signReport(report),publicKey);
  assert(state.issues.includes('missing_test:ui_live'));
+ input=make('qa-forged-pass');await submit(root,input);
+ report=base(input.task_id);
+ report.tests[0]={...report.tests[0],exit_code:1};
+ await assert.rejects(accept(root,signReport(report),publicKey),/invalid_test_evidence/);
  input=make('qa-contract');await submit(root,input);
  report=base(input.task_id);report.changed_contracts=['mas.graph'];
  state=await accept(root,signReport(report),publicKey);

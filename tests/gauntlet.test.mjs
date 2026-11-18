@@ -21,7 +21,8 @@ const input={task_id:'qa-sample-01',plugin_id:'specimen',author_id:'claude',
  files,sha256:bundleHash(files)};
 function evidence(name,status='PASS'){
  const log=name+' test output: '+status;
- return {name,status,log,log_sha256:hash(log)};
+ return {name,status,log,log_sha256:hash(log),command:'qa-fixture '+name,
+  exit_code:status==='PASS'?0:1,signal:null,duration_ms:10};
 }
 const required=['syntax','build','dependencies','isolation','unit','integration',
  'contract','security','regression','no_hardcode','conflicts'];

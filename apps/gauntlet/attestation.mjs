@@ -2,6 +2,16 @@ import {verify} from 'node:crypto';
 import {hash,validHash} from './shared.mjs';
 const checks=['syntax','build','dependencies','isolation','unit','integration',
  'contract','security','regression','no_hardcode','conflicts'];
+function validResult(test){
+ if(!test||typeof test.log!=='string'||!test.log.length||test.log.length>65536||
+  !validHash(test.log_sha256)||hash(test.log)!==test.log_sha256||
+  typeof test.command!=='string'||!test.command.length||test.command.length>300||
+  !Number.isInteger(test.duration_ms)||test.duration_ms<0||test.duration_ms>3600000||
+  !(test.exit_code===null||(Number.isInteger(test.exit_code)&&test.exit_code>=0))||
+  !(test.signal===null||(typeof test.signal==='string'&&/^SIG[A-Z]+$/.test(test.signal)))||
+  !['PASS','FAIL'].includes(test.status))return false;
+ return (test.exit_code===0&&test.signal===null)===(test.status==='PASS');
+}
 export function attest(payload,c,publicKey){
  const {report,signature}=payload||{};
  if(!report||typeof signature!=='string'||!publicKey)throw Error('missing_trusted_attestation');
@@ -15,9 +25,7 @@ export function attest(payload,c,publicKey){
  if(!Array.isArray(report.tests))throw Error('missing_test_logs');
  const seen=new Set(),failed=[];
  for(const test of report.tests){
-  if(!test||typeof test.name!=='string'||seen.has(test.name)||
-   !['PASS','FAIL'].includes(test.status)||typeof test.log!=='string'||
-   !test.log.length||!validHash(test.log_sha256)||hash(test.log)!==test.log_sha256)
+  if(!validResult(test)||typeof test.name!=='string'||seen.has(test.name))
    throw Error('invalid_test_evidence');
   seen.add(test.name);if(test.status==='FAIL')failed.push('test_failed:'+test.name);
  }
@@ -33,9 +41,8 @@ export function attest(payload,c,publicKey){
    !Array.isArray(report.dependent_plugins)||!Array.isArray(report.dependent_results))
    failed.push('dependency_impact_unverified');
   else for(const id of report.dependent_plugins)
-   if(!report.dependent_results.some(x=>x.plugin_id===id&&x.status==='PASS'&&
-    typeof x.log==='string'&&x.log.length>0&&
-    validHash(x.log_sha256)&&hash(x.log)===x.log_sha256))failed.push('dependent_unverified:'+id);
+   if(!report.dependent_results.some(x=>x.plugin_id===id&&
+    validResult(x)&&x.status==='PASS'))failed.push('dependent_unverified:'+id);
  }
  return {issues:failed,cost};
 }
