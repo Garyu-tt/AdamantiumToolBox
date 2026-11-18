@@ -5,6 +5,7 @@ const fragment=new URLSearchParams(location.hash.slice(1));
 if(fragment.has('token')){sessionStorage.setItem('ada-token',fragment.get('token'));history.replaceState(null,'',location.pathname+location.search);}
 import {systemViews} from '/shell/builtin.js';
 import {drawNavigation} from '/shell/navigation.js';
+import {createIconAssets} from '/shell/icon_assets.js';
 import {createWindowManager} from '/shell/window_manager.js';
 import {windowLayoutUI} from '/shell/window_layout_ui.js';
 import windowLayouts from '/shell/window-layouts.js';
@@ -20,10 +21,10 @@ async function rpc(url,data){
  const response=await fetch(url,{method:data?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined});
  const result=await response.json();if(!response.ok||result.error)throw Error(result.error||'HTTP '+response.status);return result;
 }
+const iconAssets=createIconAssets(async(action,params)=>
+ (await rpc('/api/invoke',{action,params})).result);
 function focus(win){manager.show(win);}
-function icon(view){const img=document.createElement('img');
- img.src=view.iconUrl||'/icons/'+encodeURIComponent(view.icon||'workbench')+'.svg';
- img.alt='';return img;}
+function icon(view){return iconAssets.make(view);}
 async function openApp(view){
  if(windows.has(view.id))return focus(windows.get(view.id));
  const win=el('section',undefined,'window');win.dataset.entry=view.entry;win.style.left=(25+windows.size*24)+'px';win.style.top=(25+windows.size*19)+'px';
@@ -54,7 +55,8 @@ function paintTasks(){
 }
 async function refresh(){
  try{
-  graph=await rpc('/api/graph');const views=graph.nodes.filter(n=>n.type==='view');
+  graph=await rpc('/api/graph');await iconAssets.sync(graph);
+  const views=graph.nodes.filter(n=>n.type==='view');
   const ids=new Set(views.map(v=>v.id));
   const reload=[];
   for(const [id,win] of windows){
@@ -65,7 +67,7 @@ async function refresh(){
   }
   for(const view of reload)await openApp(view);
   launcher.replaceChildren();
-  if(!standalone)drawNavigation(launcher,await rpc('/api/navigation'),graph,openApp);
+  if(!standalone)drawNavigation(launcher,await rpc('/api/navigation'),graph,openApp,icon);
   if(standalone){document.body.classList.add('standalone');const v=views.find(v=>v.id===standalone);if(v)await openApp(v);else status.textContent='Приложение недоступно';}
   if(!standalone)status.textContent=views.length+' приложений · '+graph.nodes.length+' API';
   paintTasks();
