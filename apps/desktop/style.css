@@ -34,3 +34,13 @@ body.workspace-mode #desktop{min-width:0;background:linear-gradient(130deg,var(-
 .ada-file img{width:32px;height:32px}.ada-file:hover{background:var(--surface);border-color:var(--line)}
 .ada-explorer .titlebar strong{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:650px){.ada-canvas{grid-template-rows:repeat(auto-fill,80px);grid-auto-columns:80px}.ada-shortcut{width:80px;height:80px}.ada-tray-status{display:none}.ada-start-button{min-width:65px}}
+.ada-layout-control{position:relative;flex:none}
+.ada-layout-button{height:34px;border-radius:5px}
+.ada-layout-menu{display:none;position:absolute;bottom:40px;left:0;z-index:15500;
+ min-width:265px;background:var(--raised);border:1px solid var(--line);border-radius:7px;
+ box-shadow:0 10px 24px color-mix(in srgb,var(--text) 16%,transparent);padding:6px}
+.ada-layout-menu.open{display:grid;gap:3px}
+.ada-layout-menu button{display:flex;justify-content:space-between;align-items:center;
+ text-align:left;gap:15px;background:transparent;border-color:transparent;min-height:38px}
+.ada-layout-menu button:hover{background:var(--surface);border-color:var(--line)}
+.ada-layout-menu small{white-space:nowrap;color:var(--muted)}
