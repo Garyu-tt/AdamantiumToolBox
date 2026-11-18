@@ -1,5 +1,6 @@
 import {visibleTree,availableViews,flatten,findItem} from './model.js';
 import {folderWindow} from './explorer.js';
+import {mountLayouts} from './layouts.js';
 const el=(tag,cls='',text)=>{const node=document.createElement(tag);node.className=cls;if(text!==undefined)node.textContent=text;return node;};
 const pinKey='mas.desktop.pins.v1';
 export async function mount(host,api){
@@ -14,6 +15,7 @@ export async function mount(host,api){
  start.append(search,list);tray.append(state,clock);
  host.prepend(canvas);document.body.append(start,context);
  shell.taskbar.prepend(startButton);shell.taskbar.append(tray);
+ const layouts=mountLayouts(shell.taskbar,shell.windows);
  let tree=[],views=new Map(),pins=[],opened=new Set();
  try{const saved=JSON.parse(localStorage.getItem(pinKey)||'[]');if(Array.isArray(saved))pins=saved.filter(x=>typeof x==='string');}catch{}
  const save=()=>{try{localStorage.setItem(pinKey,JSON.stringify(pins));}catch{}};
@@ -21,7 +23,7 @@ export async function mount(host,api){
  function open(item){
   toggleStart(false);context.replaceChildren();context.classList.remove('open');
   if(item.type==='folder'){
-   const w=folderWindow(host,item,view=>view&&shell.openApp(view),shell.icon,views);
+   const w=folderWindow(host,item,view=>view&&shell.openApp(view),shell.icon,views,shell.windows);
    opened.add(w);return;
   }
   const view=views.get(item.view);if(view)shell.openApp(view);
@@ -106,7 +108,7 @@ export async function mount(host,api){
  const timer=setInterval(tick,30000);tick();update(shell.tree,shell.views);
  return {update,dispose(){
   clearInterval(timer);document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',keyboard);
-  for(const w of opened)w.remove();
+  for(const w of opened)w.close();layouts.dispose();
   for(const node of [canvas,start,context,startButton,tray,style])node.remove();
  }};
 }
