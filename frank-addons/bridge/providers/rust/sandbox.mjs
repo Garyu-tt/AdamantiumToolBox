@@ -5,7 +5,7 @@ const runner=fileURLToPath(new URL('./runner.sh',import.meta.url));
 async function profile(){
  const {root:toolchain,linker}=await rustToolchain();
  return {
-  extension:'.sh',timeoutMs:12000,
+  extension:'.sh',timeoutMs:16000,
   mounts:[{source:toolchain,target:'/rust-toolchain'}],
   probe:['/bin/sh','-c',
    '/rust-toolchain/bin/rustc --version >/dev/null 2>&1 && test -x "$1" && printf FRANK_SANDBOX_OK','--',linker],
