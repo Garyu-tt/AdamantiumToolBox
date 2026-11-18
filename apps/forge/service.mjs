@@ -1,6 +1,7 @@
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {validateFunction,prepareInvocation} from './contract.mjs';
+import {composeFunction,planPublication,prepareReconciliation,validateIncident} from './pipeline.mjs';
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 const protocol=JSON.parse(await readFile(new URL('./protocol.json',import.meta.url),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
@@ -9,7 +10,11 @@ const grants=new Set((process.env.ADA_CAPS||'').split(','));
 const actionNodes=[
  {id:'forge.describe',title:'Describe Forge adapter',permission:'forge.read'},
  {id:'forge.validate',title:'Validate atomic function',permission:'forge.validate'},
- {id:'forge.prepare',title:'Prepare capability request',permission:'forge.validate'}
+ {id:'forge.prepare',title:'Prepare capability request',permission:'forge.validate'},
+ {id:'forge.compose',title:'Compose graph/UI intents',permission:'forge.validate'},
+ {id:'forge.publication.plan',title:'Plan verified publication',permission:'forge.validate'},
+ {id:'forge.reconcile.prepare',title:'Prepare invalidation/revisit',permission:'forge.validate'},
+ {id:'forge.incident.validate',title:'Validate explained blocker',permission:'forge.validate'}
 ];
 const graph={app:manifest.id,version:1,nodes:[
  {id:'forge.view',type:'view',title:'Forge Contracts',icon:manifest.icon,requires:['forge.read']},
@@ -24,7 +29,11 @@ function invoke(body){
  if(!spec)return {status:404,payload:{error:'unknown_action'}};
  if(!grants.has(spec.permission))return {status:403,payload:{error:'capability_denied'}};
  const result=spec.id==='forge.describe'?protocol:
-  spec.id==='forge.validate'?validateFunction(body.params?.function):prepareInvocation(body.params);
+  spec.id==='forge.validate'?validateFunction(body.params?.function):
+  spec.id==='forge.prepare'?prepareInvocation(body.params):
+  spec.id==='forge.compose'?composeFunction(body.params):
+  spec.id==='forge.publication.plan'?planPublication(body.params):
+  spec.id==='forge.reconcile.prepare'?prepareReconciliation(body.params):validateIncident(body.params);
  return {status:200,payload:{result}};
 }
 http.createServer((req,res)=>{
@@ -32,8 +41,10 @@ http.createServer((req,res)=>{
  if(req.headers['x-internal-key']!==secret)return send(res,401,{error:'unauthorized'});
  if(req.method==='GET'&&req.url==='/graph')return send(res,200,graph);
  if(req.method==='POST'&&req.url==='/invoke'){
-  let raw='',oversize=false;
-  req.on('data',chunk=>{raw+=chunk;if(raw.length>65536)oversize=true;});
+  let raw='',size=0,oversize=false;
+  req.on('data',chunk=>{size+=chunk.length;
+   if(size>65536){oversize=true;return;}
+   raw+=chunk.toString('utf8');});
   req.on('end',()=>{
    if(oversize)return send(res,413,{error:'request_too_large'});
    try{const result=invoke(JSON.parse(raw));send(res,result.status,result.payload);}

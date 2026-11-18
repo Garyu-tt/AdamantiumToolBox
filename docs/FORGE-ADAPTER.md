@@ -78,3 +78,10 @@ No optional peer hostname, app ID, agent name, theme or dependency is baked into
 No step may label a simulated envelope an actual execution. If the publishing
 providers cannot provide atomicity, they must expose a pending revision that is
 not available for invocation, then switch to verified visibility on commit.
+
+## R02 addendum — publication intents, no side effects
+
+The new `forge.compose`, `forge.publication.plan`, `forge.reconcile.prepare` and
+`forge.incident.validate` endpoints are defined in `docs/FORGE-PUBLICATION-R02.md`.
+They emit no remote calls and make no durable graph/UI changes. R01 actions remain
+backward-compatible. R02 adds a protocol version and extends the contract inspector.

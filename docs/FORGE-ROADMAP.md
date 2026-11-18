@@ -75,3 +75,12 @@ dynamic published capability; and UI contribution if visible.
 Graph and UI state are updated by their **own** providers; Forge never edits them.
 Consecutive requests can revisit a node using revision controls. Unavailable
 providers yield a diagnosed pending state, never a misleading green success.
+
+## R02 adapter milestone
+
+- A07 `forge.compose`: graph/UI intent envelope — implemented locally, no graph writes.
+- A08 `forge.publication.plan`: transactional external recipe — implemented locally.
+- A09 `forge.reconcile.prepare`: reverse-impact/revoke/revisit recipe — implemented locally.
+- A10 `forge.incident.validate`: cause/evidence/impact/remedies validator — implemented locally.
+- A11 Live provider discovery, actual transaction commit, UI hot-reload — **not**
+  implemented by Forge; must be independently implemented by runtime/UI/graph apps.
