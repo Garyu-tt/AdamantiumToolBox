@@ -77,8 +77,8 @@ if(!Number.isInteger(taskWorkers)||taskWorkers<0||taskWorkers>32)throw Error('in
 if(taskWorkers&&!configured())throw Error('claude_task_provider_not_configured');
 if(taskWorkers){
  const stop=new AbortController();
- process.once('SIGTERM',()=>stop.abort());
- process.once('SIGINT',()=>stop.abort());
+ const shutdown=()=>{stop.abort();setTimeout(()=>process.exit(0),250).unref();};
+ process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
  void startWorkers({count:taskWorkers,signal:stop.signal})
   .catch(e=>console.error('task_worker_fatal',e.message));
 }
