@@ -57,9 +57,8 @@ Example:
 {"action":"leonardo.icons.regenerate","params":{"key":"editor",
  "prompt":"Minimal geometric editor pencil icon","format":"image/png"}}
 ```
-v0.1 does not change the shell's existing icon files. Connecting stored
-revisions to live shell icons is a **follow-up adapter**, not an implicit
-write to source files. Assets are currently kept in a private JSON registry;
+v0.2 dynamically updates shell icons through an optional discovered asset provider.
+This does not write into tracked source icon files. Assets are currently kept in a private JSON registry;
 Database/Noosphere adapters and distributed replication are future plugins.
 
 ## Known limitations
@@ -69,3 +68,13 @@ schemas are validated only at the icon-store boundary, not for every media kind.
 No AI image/video model is installed by these packages. No production job queue,
 asset CDN, per-user billing, GPU scheduler, or distributed storage is included.
 Avoid embedding credentials in requests or results.
+
+## v0.2 dynamic shell icon adapter
+
+Leonardo publishes a resource of schema `mas-graphics-asset-provider-1`.
+The shell discovers `listAction` and `getAction` from the live capability
+graph. No Leonardo-specific imports or plugin IDs are hardcoded in the shell.
+The icon catalog contains only revision and SHA-256 metadata; changed icons
+are fetched by key and reflected in the launcher and window title bars.
+When the provider is absent, unhealthy or unauthorized, static app icons
+remain usable. Core and optional apps do not require any new dependency.

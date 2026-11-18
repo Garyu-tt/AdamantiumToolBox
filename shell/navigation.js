@@ -1,4 +1,4 @@
-export function drawNavigation(target,tree,available,openApp){
+export function drawNavigation(target,tree,available,openApp,renderIcon){
  target.replaceChildren();
  const views=new Map(available.nodes.filter(n=>n.type==='view').map(n=>[n.id,n]));
  function draw(items,container){
@@ -12,6 +12,7 @@ export function drawNavigation(target,tree,available,openApp){
    }else if(item.type==='app'&&views.has(item.view)){
     const b=document.createElement('button');b.className='app-tile';b.type='button';
     b.textContent=item.name;b.title=item.view;b.onclick=()=>openApp(views.get(item.view));
+    if(renderIcon)b.prepend(renderIcon(views.get(item.view)));
     container.append(b);
    }
   }

@@ -2,7 +2,7 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {discover,dispatch} from './router.mjs';
-import {getIcon,saveIcon,validKey} from './icon-store.mjs';
+import {getIcon,listIcons,saveIcon,validKey} from './icon-store.mjs';
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('internal_key_missing');
 const caps=new Set((process.env.ADA_CAPS||'').split(','));
@@ -10,9 +10,13 @@ const actions={
  'leonardo.providers':'graphics.read',
  'leonardo.generate':'graphics.generate',
  'leonardo.icons.regenerate':'graphics.icons',
- 'leonardo.icons.get':'graphics.read'
+ 'leonardo.icons.get':'graphics.read',
+ 'leonardo.icons.catalog':'graphics.read'
 };
 const nodes=[{id:'leonardo.view',type:'view',title:'Leonardo Graphics',icon:'leonardo',requires:['graphics.read']},
+ {id:'leonardo.icon-assets',type:'resource',requires:['graphics.read'],
+  assetProvider:{schema:'mas-graphics-asset-provider-1',kind:'icon',priority:10,
+   listAction:'leonardo.icons.catalog',getAction:'leonardo.icons.get'}},
  ...Object.entries(actions).map(([id,cap])=>({id,type:'action',title:id.split('.').slice(1).join('.'),requires:[cap]}))];
 const spec={app:'leonardo',version:1,nodes,
  edges:Object.keys(actions).map(id=>({from:'leonardo.view',to:id,type:'uses'}))};
@@ -22,6 +26,7 @@ async function invoke(action,p){
  if(!caps.has(actions[action]))throw Error('capability_denied');
  if(action==='leonardo.providers')return discover();
  if(action==='leonardo.icons.get')return getIcon(p.key);
+ if(action==='leonardo.icons.catalog')return listIcons();
  if(action==='leonardo.generate')return dispatch(p);
  if(action==='leonardo.icons.regenerate'){
   validKey(p.key);

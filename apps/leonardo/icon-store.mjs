@@ -11,6 +11,14 @@ async function state(){
   if(body.schema!=='mas-leonardo-icons-1'||!body.items||Array.isArray(body.items))throw Error('bad_registry');return body;}
  catch(e){if(e.code==='ENOENT')return {schema:'mas-leonardo-icons-1',items:{}};throw e;}
 }
+export async function listIcons(){
+ const doc=await state(),items={};
+ for(const [key,item] of Object.entries(doc.items)){
+  if(!pattern.test(key)||!Number.isSafeInteger(item.revision)||typeof item.sha256!=='string')continue;
+  items[key]={revision:item.revision,sha256:item.sha256,updatedAt:item.updatedAt};
+ }
+ return {schema:'mas-graphics-icon-catalog-1',items};
+}
 export async function getIcon(key){
  validKey(key);const record=(await state()).items[key];
  if(!record)return {key,found:false};
