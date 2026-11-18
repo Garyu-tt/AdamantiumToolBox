@@ -36,6 +36,7 @@ try{
  let c=await submit(root,input);
  assert.equal(c.status,'BUILDING');
  c=await submit(root,input);assert.equal(c.attempts,1);
+ report.challenge=c.challenge;
  await assert.rejects(accept(root,{task_id:input.task_id,report,signature:'invalid'},publicKey),/signature/);
  c=await accept(root,signed(report),publicKey);assert.equal(c.status,'RELEASE_READY');
  assert(c.history.some(x=>x.status==='VERIFIED'));

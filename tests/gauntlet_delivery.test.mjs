@@ -26,9 +26,10 @@ const report={schema:'gauntlet-test-report-1',task_id:input.task_id,
  cost_usd:0,dynamic_ui_supported:false,dynamic_skip_reason:'isolated fixture',
  tests:tests.map(name=>({name,status:'PASS',log:name,log_sha256:hash(name),
   command:'fixture '+name,exit_code:0,signal:null,duration_ms:10}))};
-const signature=sign(null,Buffer.from(JSON.stringify(report)),privateKey).toString('base64');
+let signature;
 try{
- await submit(root,input);
+ const first=await submit(root,input);report.challenge=first.challenge;
+ signature=sign(null,Buffer.from(JSON.stringify(report)),privateKey).toString('base64');
  let c=await accept(root,{task_id:input.task_id,report,signature},publicKey);
  assert.equal(c.status,'RELEASE_READY');
  const current=await load(root,input.task_id);
@@ -48,5 +49,9 @@ try{
  const next={...files,'view.js':'export const other=true;\n'};
  await submit(root,{...input,files:next,sha256:bundleHash(next)});
  await assert.rejects(preflight(root,request,publicKey),/stale_or_unverified_candidate/);
+ const replay=await submit(root,input);
+ assert.notEqual(replay.challenge,first.challenge);
+ await assert.rejects(accept(root,{task_id:input.task_id,report,signature},publicKey),
+  /attestation_mismatch/);
  console.log('GAUNTLET_DELIVERY_PREFLIGHT_OK source lineage, QA signature, stale and tampering');
 }finally{await rm(root,{recursive:true,force:true});}

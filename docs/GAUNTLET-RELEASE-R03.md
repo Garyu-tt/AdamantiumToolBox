@@ -27,3 +27,11 @@ dependency impact tests). PASS requires exit_code 0 and no termination
 signal. A signed PASS with a nonzero code or forged log is rejected.
 This verifies internal report consistency, not truthful CI execution;
 the signer must still be provisioned as a separate trusted runner.
+
+## Anti-replay challenge
+Every new submitted source revision receives a random case challenge. A
+duplicate submission with the same task and source hash is idempotent.
+Every signed QA report must carry that exact challenge, in addition to
+task ID, source hash and CI run. A signed report for a former revision
+cannot be replayed if the user returns to the same source bytes later.
+The challenge is public freshness metadata, not a secret or permission.

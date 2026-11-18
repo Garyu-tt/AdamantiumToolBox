@@ -1,3 +1,4 @@
+import {randomUUID} from 'node:crypto';
 import {inspect} from './inspect.mjs';
 import {stagePackage} from './package.mjs';
 import {attest as validateAttestation} from './attestation.mjs';
@@ -17,7 +18,8 @@ export async function submit(root,input,active=[]){
   if(old?.sha256===input.sha256)return publicView(old);
   if(old&&(old.attempts>=budget.attempts||old.spent_usd>=budget.cost))
    throw Error('retry_budget_exhausted');
-  const c={task_id:input.task_id,plugin_id:input.plugin_id,sha256:input.sha256,author_id:input.author_id,
+  const c={task_id:input.task_id,plugin_id:input.plugin_id,sha256:input.sha256,
+   challenge:randomUUID(),author_id:input.author_id,
    files:input.files,attempts:(old?.attempts||0)+1,spent_usd:old?.spent_usd||0,
    issues:[],history:old?.history||[],budget,diagnostic:null};
   if(old)stamp(c,'FIXING');stamp(c,'QUEUED');

@@ -25,7 +25,8 @@ const ev=(name,status='PASS')=>{const log=name+' real fixture '+status;
   exit_code:status==='PASS'?0:1,signal:null,duration_ms:10};};
 const signReport=report=>({task_id:report.task_id,report,
  signature:sign(null,Buffer.from(JSON.stringify(report)),privateKey).toString('base64')});
-const base=task_id=>({schema:'gauntlet-test-report-1',task_id,sha256:make(task_id).sha256,
+const base=(task_id,challenge)=>({schema:'gauntlet-test-report-1',task_id,
+ challenge,sha256:make(task_id).sha256,
  run_id:'isolated-fixture-1',runner_id:'qa-independent',cost_usd:1,
  dynamic_ui_supported:false,dynamic_skip_reason:'fixture has no live bindings',
  tests:names.map(name=>ev(name))});
@@ -38,7 +39,7 @@ try{
  const depFiles={...files,'service.mjs':"import foo from '../other/service.mjs';"};
  assert(inspect(make('dependency-test',depFiles)).issues.some(x=>x.startsWith('implicit_dependency')));
  let state=await submit(root,input);assert.equal(state.status,'BUILDING');
- let report=base(input.task_id);report.tests=report.tests.map(x=>x.name==='unit'?ev('unit','FAIL'):x);
+ let report=base(input.task_id,state.challenge);report.tests=report.tests.map(x=>x.name==='unit'?ev('unit','FAIL'):x);
  state=await accept(root,signReport(report),publicKey);
  assert.equal(state.status,'BLOCKED');assert(state.issues.includes('test_failed:unit'));
  const name=(await readdir(join(root,'diagnostics')))[0];
@@ -47,20 +48,20 @@ try{
  assert(doc.qa_evidence);
  const evidence=JSON.parse(await readFile(join(root,'qa-evidence',doc.qa_evidence),'utf8'));
  assert.equal(evidence.report.tests.find(x=>x.name==='unit').status,'FAIL');
- input=make('qa-missing-tests');await submit(root,input);
- report=base(input.task_id);report.tests=report.tests.filter(x=>x.name!=='regression');
+ input=make('qa-missing-tests');state=await submit(root,input);
+ report=base(input.task_id,state.challenge);report.tests=report.tests.filter(x=>x.name!=='regression');
  state=await accept(root,signReport(report),publicKey);
  assert(state.issues.includes('missing_test:regression'));
- input=make('qa-dynamic');await submit(root,input);
- report=base(input.task_id);report.dynamic_ui_supported=true;delete report.dynamic_skip_reason;
+ input=make('qa-dynamic');state=await submit(root,input);
+ report=base(input.task_id,state.challenge);report.dynamic_ui_supported=true;delete report.dynamic_skip_reason;
  state=await accept(root,signReport(report),publicKey);
  assert(state.issues.includes('missing_test:ui_live'));
- input=make('qa-forged-pass');await submit(root,input);
- report=base(input.task_id);
+ input=make('qa-forged-pass');state=await submit(root,input);
+ report=base(input.task_id,state.challenge);
  report.tests[0]={...report.tests[0],exit_code:1};
  await assert.rejects(accept(root,signReport(report),publicKey),/invalid_test_evidence/);
- input=make('qa-contract');await submit(root,input);
- report=base(input.task_id);report.changed_contracts=['mas.graph'];
+ input=make('qa-contract');state=await submit(root,input);
+ report=base(input.task_id,state.challenge);report.changed_contracts=['mas.graph'];
  state=await accept(root,signReport(report),publicKey);
  assert(state.issues.includes('dependency_impact_unverified'));
  console.log('GAUNTLET_FAILURES_OK negative gates, SHA256 diagnostics and retained CI logs');

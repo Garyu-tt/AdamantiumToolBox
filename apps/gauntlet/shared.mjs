@@ -8,7 +8,7 @@ export const validTask=value=>typeof value==='string'&&/^[a-zA-Z0-9_.-]{3,80}$/.
 export const stateRoot=()=>process.env.GAUNTLET_STATE_DIR||
  join(process.env.LOCALAPPDATA||process.env.XDG_STATE_HOME||homedir(),'Adamantium Toolbox','gauntlet');
 export const publicView=c=>({task_id:c.task_id,plugin_id:c.plugin_id,
- sha256:c.sha256,status:c.status,diagnostic:c.diagnostic||null,
+ sha256:c.sha256,challenge:c.challenge||null,status:c.status,diagnostic:c.diagnostic||null,
  affected_components:c.affected_components||[],candidate:c.candidate||null,
  delivery:c.delivery||null,attempts:c.attempts,
  spent_usd:c.spent_usd,issues:c.issues||[],history:c.history||[]});

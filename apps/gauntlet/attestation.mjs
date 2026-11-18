@@ -18,7 +18,8 @@ export function attest(payload,c,publicKey){
  const raw=Buffer.from(JSON.stringify(report));
  if(!verify(null,raw,publicKey,Buffer.from(signature,'base64')))throw Error('bad_attestation_signature');
  if(report.schema!=='gauntlet-test-report-1'||report.task_id!==c.task_id||
- report.sha256!==c.sha256||!report.run_id||!report.runner_id||
+ report.sha256!==c.sha256||report.challenge!==c.challenge||
+ !report.run_id||!report.runner_id||
  report.runner_id===c.author_id)throw Error('attestation_mismatch');
  const cost=report.cost_usd;
  if(typeof cost!=='number'||!Number.isFinite(cost)||cost<0)throw Error('invalid_cost');
