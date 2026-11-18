@@ -42,5 +42,5 @@ const partial=await captureNetworkSnapshot({platform:'win32',interfaces:{},now:(
 assert(partial.issues.some(x=>x.code==='routing_not_supported'));
 assert(reconcileBindings({targetNode:'server',topology},partial).issues.some(x=>x.code==='routing_visibility_incomplete'));
 assert.throws(()=>reconcileBindings({targetNode:'missing',topology},snap),/target_not_in_topology/);
-assert.throws(()=>parseIpv6Routes('broken\n'),/invalid_route_source|^$/)===undefined;
+assert.equal(parseIpv6Routes('broken\n').issues[0].code,'invalid_ipv6_route');
 console.log('GRAPH_NETWORK_INVENTORY_OK Linux routes, gaps, local-only reconciliation');
