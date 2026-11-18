@@ -96,14 +96,11 @@ export async function mount(host,api){
  };
  const keyboard=e=>{
   if(e.key==='Escape'){toggleStart(false);context.classList.remove('open');}
-  if(e.key==='Escape'&&e.ctrlKey)return;
-  if(e.key==='Escape'&&e.shiftKey)return;
-  if(e.key==='Escape')return;
-  if(e.key==='Escape'&&e.metaKey)return;
-  if(e.key==='F10'&&e.shiftKey)return;
-  if(e.key==='Escape'&&e.altKey)return;
-  if((e.ctrlKey&&e.key==='Escape')||e.key==='Meta'){e.preventDefault();toggleStart(!start.classList.contains('open'));}
+  if(e.ctrlKey&&e.key==='Escape'){
+   e.preventDefault();toggleStart(!start.classList.contains('open'));
+  }
  };
+
  startButton.onclick=()=>toggleStart(!start.classList.contains('open'));
  search.oninput=paintStart;document.addEventListener('pointerdown',outside);document.addEventListener('keydown',keyboard);
  const timer=setInterval(tick,30000);tick();update(shell.tree,shell.views);
