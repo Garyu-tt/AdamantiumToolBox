@@ -36,7 +36,7 @@ function config(){
   throw Error('python_unavailable');
  return {c,source};
 }
-function childEnvironment(apiToken,apiPort){
+export function childEnvironment(apiToken,apiPort){
  const env={};
  for(const key of ['SystemRoot','WINDIR','ComSpec','PATH','PATHEXT',
   'TEMP','TMP','APPDATA','LOCALAPPDATA','USERPROFILE','HOME',
