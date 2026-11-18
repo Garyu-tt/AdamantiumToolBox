@@ -39,6 +39,7 @@ jobs:
           node tests/graph_nftables.test.mjs
           node tests/graph_network_inventory.test.mjs
           node tests/graph_wireguard.test.mjs
+          node tests/graph_transaction.test.mjs
           node tests/graph_http_smoke.test.mjs
       - name: Verify export script syntax
         run: python -m py_compile tools/noosphere_sqlite_export.py
