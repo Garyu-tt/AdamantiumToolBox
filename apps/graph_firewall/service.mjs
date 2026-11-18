@@ -11,7 +11,7 @@ const permission=manifest.permissions[0];
 const actions={'graph_firewall.inspect':inspect,'graph_firewall.simulate':simulate,'graph_firewall.plan':plan};
 const authorized=()=>new Set((process.env.ADA_CAPS||'').split(',')).has(permission);
 const graph=()=>({app:manifest.id,version:1,
- nodes:authorized()?[{id:'graph_firewall.view',type:'view',title:manifest.name,requires:[permission]},
+ nodes:authorized()?[{id:'graph_firewall.view',type:'view',title:manifest.name,icon:manifest.icon,requires:[permission]},
   ...Object.keys(actions).map(id=>({id,type:'action',requires:[permission]}))]:[],
  edges:authorized()?Object.keys(actions).map(id=>({from:'graph_firewall.view',to:id,type:'uses'})):[]});
 const reply=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json',
