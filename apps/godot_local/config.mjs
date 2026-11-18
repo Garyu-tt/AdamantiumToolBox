@@ -2,6 +2,7 @@ import {readFile,realpath,stat} from 'node:fs/promises';
 import {isAbsolute,join,relative} from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {engineEnv} from './environment.mjs';
 const run=promisify(execFile);
 const config=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 export const expectedVersion=config.engine.upstreamVersion;
@@ -12,7 +13,7 @@ export async function engine(){
  if(!isAbsolute(binary))return {configured:false,reason:'executable_must_be_absolute',
   expectedVersion};
  try{
-  const {stdout}=await run(binary,['--version'],{timeout:2500,windowsHide:true});
+  const {stdout}=await run(binary,['--version'],{timeout:2500,windowsHide:true,env:engineEnv()});
   const version=stdout.trim().split(/\s/)[0];
   if(!version.startsWith(expectedVersion))
    return {configured:false,reason:'engine_version_mismatch',version,expectedVersion};
