@@ -26,6 +26,8 @@ assert.deepEqual(makeGraph(disabled,manifest).nodes.map(x=>x.id),['fixture.view'
 const mismatched=structuredClone(doc);
 mismatched.modules[0].children[0].consumes[0].version='^2.0.0';
 assert.deepEqual(makeGraph(mismatched,manifest).nodes.map(x=>x.id),['fixture.view']);
+const preOne=structuredClone(doc);preOne.modules[0].children[0].consumes[0].version='^0.2.0';
+assert.deepEqual(makeGraph(preOne,manifest).nodes.map(x=>x.id),['fixture.view']);
 const external=structuredClone(doc);
 external.modules[0].children[0].consumes[1].optional=false;
 assert.throws(()=>validateModules(external,manifest),/invalid_dependency/);
