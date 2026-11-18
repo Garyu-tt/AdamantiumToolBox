@@ -60,3 +60,12 @@ add_executable(mas_raw_ui_test tests/raw_ui_test.cpp)
 target_link_libraries(mas_raw_ui_test PRIVATE mas_raw_ui Qt6::Test)
 add_test(NAME native_raw_ui COMMAND mas_raw_ui_test)
 set_tests_properties(native_raw_ui PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_library(mas_plugin_loader STATIC plugins/plugin_loader.cpp plugins/plugin_loader.hpp)
+target_include_directories(mas_plugin_loader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+target_link_libraries(mas_plugin_loader PUBLIC Qt6::Widgets)
+add_executable(mas_plugin_loader_test tests/plugin_loader_test.cpp)
+target_link_libraries(mas_plugin_loader_test PRIVATE mas_plugin_loader)
+add_test(NAME native_plugin_policy COMMAND mas_plugin_loader_test
+  $<TARGET_FILE:mas_native_workspace> $<TARGET_FILE:mas_native_window_manager>)
+set_tests_properties(native_plugin_policy PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
