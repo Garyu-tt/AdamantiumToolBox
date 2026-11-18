@@ -1,4 +1,4 @@
-"""Dynamic Mechanicus view for live Mikoshi capability graph."""
+// Dynamic Mechanicus view for live Mikoshi capability graph.
 export async function mount(host,api){
  host.replaceChildren();
  const create=(tag,text,parent=host)=>{
