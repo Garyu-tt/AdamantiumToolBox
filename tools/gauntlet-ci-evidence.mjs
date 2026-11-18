@@ -1,8 +1,8 @@
 import {spawnSync} from 'node:child_process';
 import {writeFile,mkdir} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
-import {hash} from '../apps/gauntlet/shared.mjs';
-import {checkEvidence} from '../apps/gauntlet/ci_evidence.mjs';
+import {hash} from './gauntlet-evidence-contract.mjs';
+import {checkEvidence} from './gauntlet-evidence-contract.mjs';
 const scripts=process.argv.slice(2),valid=/^tests\/gauntlet[a-z_]*\.test\.mjs$/;
 if(!scripts.length||scripts.length>20||scripts.some(s=>!valid.test(s)))
  throw Error('unapproved_qa_script');

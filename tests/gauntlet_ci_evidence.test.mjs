@@ -1,6 +1,6 @@
 import {strict as assert} from 'node:assert';
 import {hash} from '../apps/gauntlet/shared.mjs';
-import {checkEvidence} from '../apps/gauntlet/ci_evidence.mjs';
+import {checkEvidence} from '../tools/gauntlet-evidence-contract.mjs';
 const log='actual stdout fixture',ok={name:'tests/gauntlet.test.mjs',
  exit_code:0,signal:null,status:'PASS',duration_ms:150,
  log,log_sha256:hash(log)};

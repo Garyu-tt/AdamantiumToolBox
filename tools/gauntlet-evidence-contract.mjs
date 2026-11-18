@@ -1,4 +1,5 @@
-import {hash} from './shared.mjs';
+import {createHash} from 'node:crypto';
+export const hash=data=>createHash('sha256').update(data).digest('hex');
 export function checkEvidence(report){
  if(report?.schema!=='gauntlet-ci-evidence-1'||!report.commit_sha||
   !report.run_id||!Array.isArray(report.tests)||!report.tests.length)
