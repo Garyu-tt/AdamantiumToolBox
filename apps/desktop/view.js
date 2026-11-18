@@ -1,114 +1,115 @@
-import {visibleTree,availableViews,flatten,findItem} from './model.js';
+import {visibleTree,availableViews} from './model.js';
+import {empty,decode,folder,pin,move,rename,remove,customItems} from './state.js';
+import {userFolder,rootLinks} from './user_tree.js';
+import {renderIcons} from './canvas.js';
+import {paintStart} from './start_menu.js';
+import {createMenu} from './menu.js';
 import {folderWindow} from './explorer.js';
 import {mountLayouts} from './layouts.js';
-const el=(tag,cls='',text)=>{const node=document.createElement(tag);node.className=cls;if(text!==undefined)node.textContent=text;return node;};
-const pinKey='mas.desktop.pins.v1';
+const el=(tag,cls='',text)=>{
+ const node=document.createElement(tag);node.className=cls;
+ if(text!==undefined)node.textContent=text;return node;
+};
+const key='mas.desktop.layout.v1';
 export async function mount(host,api){
- if(!api.shell){host.append(el('p','','Desktop Workspace запускается как оболочка Toolbox.'));return;}
- const shell=api.shell,style=el('link');style.rel='stylesheet';style.href=new URL('./style.css',import.meta.url).href;
- document.head.append(style);
- const canvas=el('div','ada-canvas'),start=el('section','ada-start'),list=el('div','ada-start-list');
- const search=el('input','ada-search');search.type='search';search.placeholder='Поиск приложений и папок';
- const startButton=el('button','ada-start-button','⊞ Пуск'),tray=el('div','ada-tray');
- const clock=el('time','ada-clock'),state=el('span','ada-tray-status');
- const context=el('div','ada-context');
- start.append(search,list);tray.append(state,clock);
- host.prepend(canvas);document.body.append(start,context);
+ if(!api.shell){host.append(el('p','','Рабочий стол доступен в оболочке Toolbox.'));return;}
+ const shell=api.shell,style=el('link');style.rel='stylesheet';
+ style.href=new URL('./style.css',import.meta.url).href;document.head.append(style);
+ const canvas=el('div','ada-canvas'),start=el('section','ada-start');
+ const list=el('div','ada-start-list'),search=el('input','ada-search');
+ search.type='search';search.placeholder='Найти приложения или папки';
+ const startButton=el('button','ada-start-button','⊞ Пуск');
+ const tray=el('div','ada-tray'),clock=el('time','ada-clock'),status=el('span','ada-tray-status');
+ tray.append(status,clock);start.append(search,list);
+ host.prepend(canvas);document.body.append(start);
  shell.taskbar.prepend(startButton);shell.taskbar.append(tray);
- const layouts=mountLayouts(shell.taskbar,shell.windows);
- let tree=[],views=new Map(),pins=[],opened=new Set();
- try{const saved=JSON.parse(localStorage.getItem(pinKey)||'[]');if(Array.isArray(saved))pins=saved.filter(x=>typeof x==='string');}catch{}
- const save=()=>{try{localStorage.setItem(pinKey,JSON.stringify(pins));}catch{}};
- const toggleStart=show=>{start.classList.toggle('open',show);startButton.setAttribute('aria-expanded',String(show));if(show){search.value='';paintStart();search.focus();}};
+ const layouts=mountLayouts(shell.taskbar,shell.windows),menu=createMenu();
+ let state=empty(),tree=[],views=new Map(),legacy=null;
+ try{state=decode(localStorage.getItem(key));legacy=JSON.parse(localStorage.getItem('mas.desktop.pins.v1')||'[]');}catch{}
+ const save=()=>{try{localStorage.setItem(key,JSON.stringify(state));}catch{}};
+ const createFolder=parent=>{
+  const name=prompt('Название папки','Новая папка');
+  if(name!==null)try{folder(state,name,parent);save();redraw();}catch{}
+ };
+ function toggleStart(on){
+  start.classList.toggle('open',on);startButton.setAttribute('aria-expanded',String(on));
+  if(on){search.value='';showStart();search.focus();}
+ }
  function open(item){
-  toggleStart(false);context.replaceChildren();context.classList.remove('open');
+  toggleStart(false);menu.close();
   if(item.type==='folder'){
-   const w=folderWindow(host,item,view=>view&&shell.openApp(view),shell.icon,views,shell.windows);
-   opened.add(w);return;
-  }
-  const view=views.get(item.view);if(view)shell.openApp(view);
- }
- function popup(event,item){
-  if(item.type!=='app')return;
-  event.preventDefault();
-  const button=el('button','',pins.includes(item.view)?'Открепить от рабочего стола':'Закрепить на рабочем столе');
-  button.onclick=()=>{
-   pins=pins.includes(item.view)?pins.filter(v=>v!==item.view):[...pins,item.view];
-   save();paintDesktop();paintStart();context.classList.remove('open');
-  };
-  context.replaceChildren(button);context.style.left=Math.min(event.clientX,innerWidth-240)+'px';
-  context.style.top=Math.min(event.clientY,innerHeight-55)+'px';context.classList.add('open');
- }
- function shortcut(item,cls='ada-shortcut'){
-  const b=el('button',cls);b.type='button';b.title=item.name;
-  const image=item.type==='folder'?el('span','ada-folder-icon','📁'):shell.icon(views.get(item.view)||{});
-  b.append(image,el('span','ada-shortcut-label',item.name));
-  b.onclick=()=>open(item);b.oncontextmenu=e=>popup(e,item);return b;
- }
- function paintDesktop(){
-  canvas.replaceChildren();
-  const existing=new Set();
-  for(const item of tree){
-   canvas.append(shortcut(item));if(item.type==='app')existing.add(item.view);
-  }
-  for(const id of pins){
-   const item=findItem(tree,id),view=views.get(id);
-   if(!existing.has(id)&&view)canvas.append(shortcut(item||{type:'app',name:view.title,view:id}));
+   const target=item.id?.startsWith('user:')?userFolder(state,item.id,views):item;
+   if(target)folderWindow(host,target,v=>v&&shell.openApp(v),shell.icon,views,shell.windows);
+  }else{
+   const view=views.get(item.view);if(view)shell.openApp(view);
   }
  }
- function paintStart(){
-  list.replaceChildren();
-  const q=search.value.trim().toLocaleLowerCase();
-  const items=q?flatten(tree).filter(x=>x.path.toLocaleLowerCase().includes(q)):tree;
-  const build=(items,container,depth=0)=>{
-   for(const item of items){
-    if(item.type==='folder'&&!q){
-     const folder=el('details','ada-start-folder'),head=el('summary','',item.name);
-     folder.append(head);const inside=el('div','ada-start-children');folder.append(inside);
-     build(item.children,inside,depth+1);container.append(folder);
-    }else{
-     const b=shortcut(item,'ada-start-entry');if(q)b.title=item.path;
-     container.append(b);
-    }
+ function context(event,item){
+  const actions=[];
+  if(!item)actions.push({title:'Создать папку',run:()=>createFolder(null)});
+  else if(item.id?.startsWith('user:')){
+   if(item.type==='folder')actions.push(
+    {title:'Переименовать',run:()=>{
+     const name=prompt('Новое имя папки',item.name);
+     if(name!==null&&rename(state,item.id,name)){save();redraw();}
+    }},
+    {title:'Удалить папку (ярлыки останутся)',run:()=>{
+     if(confirm('Удалить папку? Ярлыки внутри переместятся на рабочий стол.')){
+      remove(state,item.id);save();redraw();
+     }
+    }}
+   );
+   else actions.push({title:'Удалить ярлык',run:()=>{remove(state,item.id);save();redraw();}});
+   if(item.parent)actions.push({title:'На рабочий стол',run:()=>{
+    move(state,item.id,null);save();redraw();
+   }});
+  }else if(item.type==='app')actions.push({title:'Создать ярлык',run:()=>{
+   pin(state,item.view);save();redraw();
+  }});
+  if(actions.length)menu.show(event,actions);
+ }
+ const showStart=()=>paintStart(list,search.value,tree,state,views,{
+  icon:shell.icon,open,context,system:Object.fromEntries(Object.entries(shell.system||{})
+   .map(([name,run])=>[name,()=>{toggleStart(false);run();}])),createFolder
+ });
+ function redraw(){
+  const items=[...rootLinks(tree),...customItems(state,null,views)];
+  renderIcons(canvas,items,state,{
+   icon:item=>shell.icon(views.get(item.view)||{}),open,menu:context,save,
+   moved:(item,target)=>{
+    if(item.id.startsWith('user:'))return move(state,item.id,target.id);
+    if(item.type==='app'){pin(state,item.view,target.id);return true;}
+    return false;
    }
-  };
-  build(items,list);
-  if(!q){
-   const label=el('p','ada-start-caption','Инструменты оболочки');list.append(label);
-   const names={graph:'Графы',codemap:'CodeMap',mesh:'Mesh'};
-   for(const [key,run] of Object.entries(shell.system||{})){
-    const b=el('button','ada-start-entry',names[key]||key);
-    b.onclick=()=>{toggleStart(false);run();};list.append(b);
-   }
-  }
-  if(!list.children.length)list.append(el('p','ada-empty','Ничего не найдено'));
+  });
+  if(start.classList.contains('open'))showStart();
  }
  function update(nextTree,nextViews){
   views=availableViews(nextViews);tree=visibleTree(nextTree,nextViews);
-  pins=pins.filter(id=>views.has(id));paintDesktop();if(start.classList.contains('open'))paintStart();
-  state.textContent=shell.status.textContent;
+  if(Array.isArray(legacy)){
+   for(const view of legacy)if(views.has(view))pin(state,view);
+   legacy=null;save();
+  }
+  redraw();status.textContent=shell.status.textContent;
  }
- function tick(){
+ const tick=()=>{
   const now=new Date();clock.textContent=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit'}).format(now);
   clock.dateTime=now.toISOString();
- }
- const outside=e=>{
-  if(!start.contains(e.target)&&!startButton.contains(e.target))toggleStart(false);
-  if(!context.contains(e.target))context.classList.remove('open');
  };
+ const outside=e=>{if(!start.contains(e.target)&&!startButton.contains(e.target))toggleStart(false);};
  const keyboard=e=>{
-  if(e.ctrlKey&&e.key==='Escape'){
-   e.preventDefault();toggleStart(!start.classList.contains('open'));return;
-  }
-  if(e.key==='Escape'){toggleStart(false);context.classList.remove('open');}
+  if(e.ctrlKey&&e.key==='Escape'){e.preventDefault();toggleStart(!start.classList.contains('open'));}
+  else if(e.key==='Escape')toggleStart(false);
  };
-
- startButton.onclick=()=>toggleStart(!start.classList.contains('open'));
- search.oninput=paintStart;document.addEventListener('pointerdown',outside);document.addEventListener('keydown',keyboard);
+ canvas.oncontextmenu=e=>{if(e.target===canvas)context(e,null);};
+ startButton.onclick=()=>toggleStart(!start.classList.contains('open'));search.oninput=showStart;
+ document.addEventListener('pointerdown',outside);document.addEventListener('keydown',keyboard);
+ const observer=new ResizeObserver(redraw);observer.observe(canvas);
  const timer=setInterval(tick,30000);tick();update(shell.tree,shell.views);
  return {update,dispose(){
-  clearInterval(timer);document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',keyboard);
-  for(const w of opened)w.close();layouts.dispose();
-  for(const node of [canvas,start,context,startButton,tray,style])node.remove();
+  clearInterval(timer);observer.disconnect();
+  document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',keyboard);
+  layouts.dispose();menu.dispose();
+  for(const node of [canvas,start,startButton,tray,style])node.remove();
  }};
 }
