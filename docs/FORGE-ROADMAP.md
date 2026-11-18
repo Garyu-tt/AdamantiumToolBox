@@ -77,3 +77,9 @@ Consecutive requests can revisit a node using revision controls. Unavailable
 providers yield a diagnosed pending state, never a misleading green success.
 
 See [Forge release milestones R02–R06](FORGE-MILESTONES.md).
+
+## R07 — reactive UI publication
+
+Implemented pure `forge.reactive.plan` and `forge.reactive.assess` contracts.
+Host-authorized actual UI diff CAS, durable event cursor, runtime policy
+check and signed readback remain separate independent MAS plugins.

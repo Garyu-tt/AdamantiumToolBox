@@ -68,3 +68,14 @@ atomically before a new action is allowed to appear as executable in UI.
 
 See `docs/FORGE-DISTRIBUTION-R06.md`. No agents, memory, queue, graph store,
 provider runtime, transaction journal or coordinator have been added to Forge.
+
+## R07 additions — reactive UI revision contracts
+
+- `forge.reactive.plan` — pure, ordered external event projection into a staged
+  UI diff, revision CAS commit and durable cursor recipe. Missing events,
+  policy forks and conflicting mounts fail closed with explained remedies.
+- `forge.reactive.assess` — checks untrusted UI/stream receipts for consistent
+  graph/policy/UI revisions, commit status and mount visibility. It never
+  asserts that UI actually updated or any capability became authorized.
+
+Details and deployment gates: `docs/FORGE-REACTIVE-R07.md`.
