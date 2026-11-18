@@ -1,12 +1,9 @@
-"""Example Frank Addon. No privileged APIs, no implicit permissions."""
+"""Example Frank Addon: callable via frankenstein.python.hello.*."""
+from modules.numbers import total
+
 def handle(action, params):
     if action == "echo":
         return {"echo": params}
     if action == "sum":
-        numbers = params.get("numbers", [])
-        if not isinstance(numbers, list) or len(numbers) > 100:
-            raise ValueError("invalid numbers")
-        if any(type(n) not in (int, float) for n in numbers):
-            raise ValueError("numbers only")
-        return {"sum": sum(numbers)}
+        return {"sum": total(params.get("numbers", []))}
     raise ValueError("unknown action")

@@ -7,6 +7,7 @@ directories are created dynamically; recursive `modules/` are supported.
 ```text
 frank-addons/
   bridge/                  # independent source, approval and routing
+    providers/python/      # optional sandboxed Python execution service
   <language>/<addon-id>/
     frank-addon.json       # package manifest
     <entry>                # language entry
@@ -43,11 +44,11 @@ node frank-addons/bridge/manage.mjs approve frank.python.hello --approve
 node frank-addons/bridge/manage.mjs disable frank.python.hello --approve
 ```
 
-Adapter registration does NOT install or start an interpreter. Every language
-requires an independently provisioned trusted loopback adapter service.
-It authenticates `X-Internal-Key`, returns `{"protocol":"frank-adapter-1",
-"adapter":"frankenstein.adapter.python"}` from `GET /health`, accepts a
-package/action/params envelope at `POST /invoke`, and returns `{"result":...}`.
+Python now has an **experimental Linux-only** Bubblewrap provider:
+see [Python adapter](bridge/providers/python/README.md) for prerequisites,
+startup commands and fail-closed behavior. Other languages still need their
+own registered adapters. The Python provider is not an unrestricted host
+Python runner, and it does not automatically start or approve itself.
 The bridge dynamically detects approved, healthy adapters and exposes only
 their intact approved packages. No code executes during discovery.
 
@@ -56,10 +57,11 @@ their intact approved packages. No code executes during discovery.
 - Approval pins SHA-256 of **all** files, including recursive modules.
   Any change revokes visibility until explicit reapproval.
 - This is local owner approval, **not signed publisher provenance**.
-- No language executor or OS-level sandbox is included. Trusted adapters
-  receive package file paths; they must isolate execution themselves.
+- Python uses OS namespaces when Bubblewrap is available; absent on Windows
+  or restricted Linux hosts, the provider does not execute unisolated code.
+  Seccomp, cgroup PIDs, separate identities and signed releases are still absent.
 - Bridge-wide `frankenstein.invoke` scope is coarse. Until per-addon/per-user
   scopes are implemented, only packages with `permissions: []` can be approved.
-  Signed release verification is also not yet implemented.
 - The bridge app is optional. Removing it never breaks classical MAS apps.
-- Tests: `node tests/frank_addons.test.mjs` and `node tests/frank_bridge.test.mjs`.
+- Tests: `node tests/frank_addons.test.mjs`,
+  `node tests/frank_bridge.test.mjs`, `node tests/frank_python.test.mjs`.
