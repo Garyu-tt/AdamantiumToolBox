@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync,randomUUID} from 'node:crypto';
-import {validate} from '../apps/mcp_bridge/config.mjs';
+import {validate} from '../packages/mcp_bridge/config.mjs';
 const key=()=>generateKeyPairSync('ed25519').publicKey.export({format:'pem',type:'spki'});
 test('node registry rejects insecure endpoints and malformed pins',()=>{
  const base={schema:'adamantium.bridge.nodes.v1',nodes:[]};

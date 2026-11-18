@@ -50,3 +50,7 @@ Run `node --test tests/mcp_bridge*.test.mjs`. Tests cover cryptographic signatur
 ## Independent ingress replicas (0.3.0)
 
 The MAS bridge now provides a separate loopback-only authenticated `GET /ready` endpoint requiring `ADA_MCP_PROBE_TOKEN`. The response distinguishes `write_ready` (verified primary), `read_only` (verified standby but no callable actions) and `unavailable`, and exposes a deterministic policy SHA-256 for comparing independently configured bridge replicas. `/health` remains liveness only. The full deployment limitations and no-automatic-POST-retry policy are in `ADAMANTIUM-MCP-INGRESS.md`. This does not deploy HTTPS DNS ingress, authenticated ChatGPT pairing or distributed fencing.
+
+## Dynamic source packaging
+
+Bridge source lives in `packages/mcp_bridge`, NOT in bundled `apps/`. Use `node tools/plugin-stage.mjs prepare packages/mcp_bridge` and review the signed plan; `install ... --approve` performs gated activation. All other apps remain optional.

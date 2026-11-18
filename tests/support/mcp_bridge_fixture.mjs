@@ -2,7 +2,7 @@ import http from 'node:http';
 import {generateKeyPairSync,randomUUID,sign} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {join,resolve} from 'node:path';
-export const app=resolve(import.meta.dirname,'../../apps/mcp_bridge');
+export const app=resolve(import.meta.dirname,'../../packages/mcp_bridge');
 export const auth='test-user-auth-token-long-enough';
 export const key='test-app-internal-token-long-enough';
 export const ext='test-remote-mcp-token-long-enough';

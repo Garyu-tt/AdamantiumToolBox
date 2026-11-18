@@ -29,7 +29,7 @@ test('Core and MCP Bridge work alone with signed identity and real graph invocat
  try{
   await mkdir(join(root,'apps'),{recursive:true});
   await cp(join(source,'core'),join(root,'core'),{recursive:true});
-  await cp(join(source,'apps','mcp_bridge'),join(root,'apps','mcp_bridge'),{recursive:true});
+  await cp(join(source,'packages','mcp_bridge'),join(root,'apps','mcp_bridge'),{recursive:true});
   await mkdir(join(root,'interface'),{recursive:true});await mkdir(home,{recursive:true});
   const manifestPath=join(root,'apps','mcp_bridge','manifest.json');
   const manifest=JSON.parse(await readFile(manifestPath,'utf8'));
