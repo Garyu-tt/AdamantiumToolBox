@@ -1,0 +1,44 @@
+{
+  "id": "scheduler",
+  "name": "Brain Clock",
+  "capability": "genesis.incubator.scheduler/v1",
+  "startup_permission": "genesis.run",
+  "actions": [
+    {
+      "id": "genesis.brains.autostep",
+      "title": "Включить постоянные такты",
+      "permission": "genesis.run",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        },
+        {
+          "name": "steps_per_tick",
+          "label": "Шагов за цикл (1–20)",
+          "type": "number",
+          "default": 1
+        },
+        {
+          "name": "stimulus",
+          "label": "Фоновый сигнал [-1,1]",
+          "type": "number",
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "genesis.brains.pause",
+      "title": "Остановить фоновые такты",
+      "permission": "genesis.run",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
