@@ -3,10 +3,11 @@ import {ready,execute} from '../shared/execution.mjs';
 import {rustToolchain} from './toolchain.mjs';
 const runner=fileURLToPath(new URL('./runner.sh',import.meta.url));
 async function profile(){
- const toolchain=await rustToolchain();
+ const {root:toolchain,linker}=await rustToolchain();
  return {
   extension:'.sh',timeoutMs:12000,
-  mounts:[{source:toolchain,target:'/rust-toolchain'}],
+  mounts:[{source:toolchain,target:'/rust-toolchain'},
+   {source:linker,target:'/frank-linker'}],
   probe:['/bin/sh','-c',
    '/rust-toolchain/bin/rustc --version >/dev/null 2>&1 && printf FRANK_SANDBOX_OK'],
   readyText:'FRANK_SANDBOX_OK',
