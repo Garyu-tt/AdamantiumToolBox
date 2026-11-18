@@ -22,7 +22,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: Source budget
+      - name: Source budget (Git LF source)
+        if: runner.os == 'Linux'
         run: python tools/check-size.py
       - name: Recursive MAS contract
         run: node tests/sdk_modules.test.mjs
