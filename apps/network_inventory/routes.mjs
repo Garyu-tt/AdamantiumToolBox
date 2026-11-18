@@ -5,17 +5,17 @@ const ipv4=s=>[6,4,2,0].map(i=>parseInt(s.slice(i,i+2),16)).join('.');
 const ipv6=s=>Array.from({length:8},(_,i)=>s.slice(i*4,i*4+4)).join(':');
 const contiguous=mask=>{const bits=mask.split('.').map(Number).map(x=>x.toString(2).padStart(8,'0')).join('');
  return /^1*0*$/.test(bits)?bits.indexOf('0')===-1?32:bits.indexOf('0'):null;};
-const rows=(raw,max=4096)=>{
+const rows=(raw,skipHeader=false,max=4096)=>{
  if(typeof raw!=='string'||raw.length>262144)throw Error('invalid_route_source');
- const lines=raw.trim().split(/\r?\n/);if(lines.length>max+1)throw Error('route_limit');
- return lines.slice(1).filter(Boolean);
+ const lines=raw.trim()?raw.trim().split(/\r?\n/):[];
+ if(lines.length>max+(skipHeader?1:0))throw Error('route_limit');
+ return lines.slice(skipHeader?1:0).filter(Boolean);
 };
 export function parseIpv4Routes(raw){
  const routes=[],issues=[];
- for(const [i,line] of rows(raw).entries()){
+ for(const [i,line] of rows(raw,true).entries()){
   const x=line.trim().split(/\s+/),[name,dst,via,flags,,,metric,mask]=x;
-  if(x.length<8||!iface(name)||![dst,via,flags,mask].every((v,j)=>hex(v,j===2?1:8)&&
-   (j!==2||v.length<=8))||!/^[0-9a-fA-F]{1,8}$/.test(flags)||!/^\d+$/.test(metric)){
+  if(x.length<8||!iface(name)||![dst,via,mask].every(v=>hex(v,8))||!/^[0-9a-fA-F]{1,8}$/.test(flags)||!/^\d+$/.test(metric)){
    issues.push({code:'invalid_ipv4_route',row:i+2});continue;
   }
   const dest=ipv4(dst),gateway=ipv4(via),prefix=contiguous(ipv4(mask));
