@@ -8,6 +8,8 @@ const suites=[['graph_dns',39821,'graph_dns.audit','graph_dns.read',
  {zones:[{name:'example.test'}],records:[]}],
  ['graph_firewall',39824,'graph_firewall.inspect','graph_firewall.read',
  {nodes:[],services:[],rules:[]}],
+ ['nftables_preview',39825,'nftables_preview.compile','nftables_preview.read',
+ {targetNode:'host',topology:{nodes:[{id:'host',kind:'server',addresses:[]}],services:[],rules:[]}}],
  ['noosphere',39822,'noosphere.inspect','noosphere.read',{records:[]}]];
 for(const [name,port,action,permission,params] of suites){
  const proc=spawn(process.execPath,[resolve(root,'apps',name,'service.mjs')],{
@@ -24,6 +26,8 @@ for(const [name,port,action,permission,params] of suites){
   const auth={'X-Internal-Key':key,'Content-Type':'application/json'};
   const doc=await (await fetch(origin+'/graph',{headers:auth})).json();
   assert(doc.nodes.some(x=>x.id===action));
+  assert(doc.nodes.some(x=>x.id===name+'.view'&&x.icon&&x.requires?.includes(permission)));
+  assert(doc.nodes.every(x=>x.id.startsWith(name+'.')));
   const r=await fetch(origin+'/invoke',{method:'POST',headers:auth,
    body:JSON.stringify({action,params})});
   assert.equal(r.status,200,name+':invoke');
