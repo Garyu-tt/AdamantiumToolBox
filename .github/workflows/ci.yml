@@ -1,0 +1,39 @@
+name: Architecture and MAS validation
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: CPU-only validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Static architecture checks
+        run: |
+          python tools/architecture-check.py
+          python tests/architecture.test.py
+          python tools/check-size.py
+          node tools/mas-check.mjs
+      - name: Isolated runtime and contract tests
+        run: |
+          set -eu
+          for t in tests/*.test.mjs; do
+            if [ "$t" = "tests/http.test.mjs" ]; then
+              continue
+            fi
+            node "$t"
+          done
