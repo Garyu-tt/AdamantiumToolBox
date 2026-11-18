@@ -64,3 +64,10 @@ Folder renames and new folders affect the menu on the next graph refresh.
 References are small .appref.json pointers to a live view, not copies.
 Optional manifest connections can declare cross-module graph relationships
 but are exposed only when both endpoints are real, active and authorized.
+
+## Extensible base services
+Optional infrastructure services register with a mas-system-service-1 document in
+services/<id>.json. Each declares id, runtime=node, relative entry and enabled.
+The supervisor discovers, starts and stops these services dynamically. No app
+requires a particular base service unless that capability is explicitly declared
+in its own contract. Core + App tests exclude all optional base services.

@@ -1,0 +1,1 @@
+{"schema":"mas-system-service-1","id":"mesh-worker","runtime":"node","entry":"standards/mesh/main.mjs","enabled":true}

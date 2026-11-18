@@ -6,7 +6,7 @@ if($LASTEXITCODE -ne 0){throw 'Architecture policy violation'}
 if($LASTEXITCODE -ne 0){throw 'Architecture gate regression'}
 & python (Join-Path $source 'tools\check-size.py')
 if($LASTEXITCODE -ne 0){throw 'Source size gate failed'}
-foreach($test in @('tests\linkfs.test.mjs','tests\contract.test.mjs','tests\semantic.test.mjs','tests\codegraph.test.mjs','tests\mesh.test.mjs','tests\storage.test.mjs','tests\isolation.test.mjs','tests\assets.test.mjs')){
+foreach($test in @('tests\linkfs.test.mjs','tests\contract.test.mjs','tests\semantic.test.mjs','tests\codegraph.test.mjs','tests\mesh.test.mjs','tests\storage.test.mjs','tests\isolation.test.mjs','tests\assets.test.mjs','tests\services.test.mjs')){
  & node (Join-Path $source $test)
  if($LASTEXITCODE -ne 0){throw ('Test failed: '+$test)}
 }
@@ -19,7 +19,7 @@ if($existing -and $existing.State -eq 'Running'){
  Start-Sleep -Seconds 2
 }
 if(!(Test-Path $target)){New-Item -ItemType Directory -Path $target -Force|Out-Null}
-foreach($folder in @('core','apps','shell','icons','tools','standards','interface','docs','tests')){
+foreach($folder in @('core','services','apps','shell','icons','tools','standards','interface','docs','tests')){
  Copy-Item -LiteralPath (Join-Path $source $folder) -Destination $target -Recurse -Force
 }
 foreach($f in @('launch.ps1','README.md')){

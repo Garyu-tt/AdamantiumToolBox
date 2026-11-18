@@ -19,3 +19,6 @@
 
 - Asset routing now reads declarative standards/architecture/assets.json and validates
   registered app IDs, safe types, traversal, and symlinks. Verified in Core + App runs.
+
+- Optional Mesh API and worker are now loaded through discovered system-service
+  manifests in services/, with add/disable and path validation tests.

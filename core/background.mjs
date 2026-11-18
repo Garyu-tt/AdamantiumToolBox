@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { resolve, join } from 'node:path';
 import { catalog } from './catalog.mjs';
+import { serviceCatalog } from './services.mjs';
 import { fileURLToPath } from 'node:url';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const profile=process.env.LOCALAPPDATA;
@@ -28,18 +29,21 @@ function start(key,file,env={}){
  });
 }
 async function discover(){
- const entries=await catalog(root),wanted=new Set([...entries.map(a=>a.id),'mesh-api','mesh-worker']);
+ const entries=await catalog(root),system=await serviceCatalog(root);
+ const wanted=new Set([...entries.map(a=>'app:'+a.id),...system.map(s=>'service:'+s.id)]);
  for(const [key,entry] of children)if(key!=='kernel'&&!wanted.has(key)){
   children.delete(key);entry.instance.kill();
  }
+ for(const service of system){
+  const key='service:'+service.id;
+  if(!children.has(key))start(key,service.entry);
+ }
  for(const app of entries){
-  if(children.has(app.id))continue;
-  start(app.id,join(root,'apps',app.id,'service.mjs'),{APP_PORT:String(app.service.port)});
+  const key='app:'+app.id;
+  if(!children.has(key))start(key,join(root,'apps',app.id,'service.mjs'),{APP_PORT:String(app.service.port)});
  }
 }
 start('kernel',join(root,'core','kernel.mjs'));
-start('mesh-api',join(root,'standards','mesh','server.mjs'));
-start('mesh-worker',join(root,'standards','mesh','main.mjs'));
 await discover();
 setInterval(()=>discover().catch(()=>{}),5000);
 process.on('SIGTERM',()=>{for(const e of children.values())e.instance.kill();process.exit(0);});

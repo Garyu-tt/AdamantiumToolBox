@@ -57,3 +57,9 @@ See docs/DEDUPARC-STORAGE.md. .darc random-access writes are not implemented.
 Static shell UI and app asset routes are declared in
 standards/architecture/assets.json; core/assets.mjs validates mounts and extensions
 and refuses asset traversal. Tests: node tests/assets.test.mjs.
+
+## Discovered system services
+Base services are registered by independent JSON manifests in services/*.json.
+Core lifecycle discovers modules at runtime and stops removed/disabled services.
+Mesh API and Mesh worker run as optional system services, not hardcoded children.
+Run node tests/services.test.mjs.
