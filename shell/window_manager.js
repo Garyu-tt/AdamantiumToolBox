@@ -94,10 +94,10 @@ export function createWindowManager(desktop,tasks,{keyboardEnabled=true}={}){
   const {width,height}=bounds();if(!width||!height)return;
   for(const item of records.values()){
    if(item.mode?.kind==='snap')position(item,snapRect(width,height,item.mode.zone));
-   if(item.mode?.kind==='tile'){
+   else if(item.mode?.kind==='tile'){
     const {preset,slot}=item.mode;
     position(item,layoutRects(width,height,preset)[slot]);
-   }
+   }else if(!item.win.hidden)position(item,fitFloating(geometry(item.win),width,height));
   }
  }
  const observer=typeof ResizeObserver==='function'?new ResizeObserver(reflow):null;
