@@ -39,6 +39,9 @@ try{
   const graph=await bridgeGraph(root,secret);
   assert(graph.nodes.some(n=>n.id==='frankenstein.rust.hello.echo'));
   const params={text:'Привет 🌍',nested:{a:[1,true,null]}};
+  try{await runRust((await authorizedAddon(root,key,'echo',port,capability,'rust')).pkg,
+   registry.packages[0].digest,'echo',params);}
+  catch(error){console.error('FRANK_RUST_COMPILE_DIAGNOSTIC',error.message);throw error;}
   assert.deepEqual(await bridgeInvoke(root,secret,'frankenstein.rust.hello.echo',params),params);
   console.log('FRANK_RUST_RUNTIME_OK sandbox rustc compile, nested modules, Unicode JSON, bridge');
  }else{
