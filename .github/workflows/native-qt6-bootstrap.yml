@@ -1,0 +1,33 @@
+name: Native Qt6 SDK bootstrap
+on:
+  push:
+    paths:
+      - 'native/qt6-bootstrap/**'
+      - '.github/workflows/native-qt6-bootstrap.yml'
+  pull_request:
+    paths:
+      - 'native/qt6-bootstrap/**'
+      - '.github/workflows/native-qt6-bootstrap.yml'
+permissions:
+  contents: read
+jobs:
+  linux-qt6:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt6 SDK on isolated runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools cmake ninja-build
+          dpkg-query -W qt6-base-dev
+      - name: Configure and compile native surface
+        run: |
+          cmake -S native/qt6-bootstrap -B build/qt6-bootstrap -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/qt6-bootstrap --parallel 2
+      - name: Execute native UI tests (headless)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          ctest --test-dir build/qt6-bootstrap --output-on-failure
+          ./build/qt6-bootstrap/mechanicus_qt_bootstrap --smoke
