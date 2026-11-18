@@ -5,7 +5,7 @@ body.workspace-mode footer>span:first-child{display:none}
 body.workspace-mode #tasks{flex:1;min-width:0;gap:5px;overflow:auto}
 body.workspace-mode #tasks button{font-size:12px;min-height:32px;padding:3px 12px;white-space:nowrap}
 body.workspace-mode #desktop{min-width:0;background:linear-gradient(130deg,var(--bg),var(--surface))}
-.ada-canvas{position:absolute;inset:0;display:grid;grid-auto-flow:column;grid-template-rows:repeat(auto-fill,minmax(90px,90px));grid-auto-columns:92px;justify-content:start;align-content:start;padding:12px;gap:8px;overflow:auto}
+.ada-canvas{position:absolute;inset:0;display:block;overflow:auto}
 .ada-shortcut{width:92px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:transparent;border:1px solid transparent;padding:5px;color:var(--text);text-align:center}
 .ada-shortcut:hover,.ada-shortcut:focus-visible{background:var(--surface);border-color:var(--accent)}
 .ada-shortcut img{width:36px;height:36px;object-fit:contain}.ada-folder-icon{font-size:34px;line-height:1}
@@ -53,3 +53,6 @@ body.workspace-mode #desktop{min-width:0;background:linear-gradient(130deg,var(-
 .ada-layout-glyph[data-preset="focus"]{grid-template:repeat(2,1fr)/3fr 2fr}
 .ada-layout-glyph[data-preset="focus"] i:first-child{grid-row:span 2}
 .ada-layout-menu button>span:nth-child(2){flex:1}
+
+.ada-canvas>.ada-shortcut{position:absolute;touch-action:none;z-index:1}
+.ada-canvas>.ada-shortcut.is-dragging{z-index:800;opacity:.85;border-color:var(--accent);background:var(--raised);cursor:grabbing}
