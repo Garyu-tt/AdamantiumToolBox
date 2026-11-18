@@ -35,7 +35,9 @@ export function renderIcons(canvas,items,state,{icon,open,menu,save,moved}){
    if(button.hasPointerCapture(e.pointerId))button.releasePointerCapture(e.pointerId);
    if(!drag.drag)return;
    button.dataset.dragged='1';
+   button.style.pointerEvents='none';
    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('.ada-shortcut');
+   button.style.pointerEvents='';
    const destination=target&&target!==button?items.find(x=>x.id===target.dataset.id):null;
    if(e.type==='pointerup'&&destination?.type==='folder'&&destination.id.startsWith('user:')){
     if(moved(item,destination))save();
