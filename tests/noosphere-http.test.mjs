@@ -1,6 +1,6 @@
 import {strict as assert} from 'node:assert';
 import {spawn} from 'node:child_process';
-import {mkdtemp,readdir,rm} from 'node:fs/promises';
+import {mkdtemp,readdir,rm,readFile} from 'node:fs/promises';
 import {createServer} from 'node:net';
 import {once} from 'node:events';
 import {tmpdir} from 'node:os';
@@ -12,6 +12,7 @@ const free=()=>new Promise(ok=>{const s=createServer();s.listen(0,'127.0.0.1',()
 const pause=ms=>new Promise(ok=>setTimeout(ok,ms));
 const cwd=await mkdtemp(join(tmpdir(),'noosphere-empty-'));
 const secret='synthetic-r03-secret-with-at-least-24-chars';
+const manifest=JSON.parse(await readFile(new URL('../apps/noosphere/manifest.json',import.meta.url),'utf8'));
 async function probe(policy,expectValidate){
  const port=await free(),url='http://127.0.0.1:'+port;
  const child=spawn(process.execPath,[service],{cwd,env:{...process.env,APP_PORT:String(port),
@@ -23,6 +24,7 @@ async function probe(policy,expectValidate){
    if(child.exitCode!==null)throw Error('service_crashed');await pause(100);
   }
   assert(state,'health_timeout');
+  assert.equal(state.version,manifest.version,'health must reflect packaged manifest version');
   assert.equal(state.storage,'not_connected');
   assert.equal(state.mode,'stateless');
   assert.equal(state.persistent,false);
