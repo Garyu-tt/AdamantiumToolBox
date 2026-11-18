@@ -29,5 +29,12 @@
   "updates": {
     "strategy": "semver",
     "migrations": []
-  }
+  },
+  "connections": [
+    {
+      "from": "graph_dns.audit",
+      "to": "network_inventory.reconcile",
+      "type": "related"
+    }
+  ]
 }
