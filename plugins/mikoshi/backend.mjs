@@ -1,4 +1,4 @@
-"""Independent local R16 adapter for pinned Mikoshi Python runtime."""
+// Independent local R16 adapter for pinned Mikoshi Python runtime.
 import {readFileSync,realpathSync,mkdirSync} from 'node:fs';
 import {resolve,join,relative,isAbsolute,sep} from 'node:path';
 import {spawn,spawnSync} from 'node:child_process';
@@ -70,7 +70,7 @@ export function status(){
  return {schema:'mikoshi.mas.backend.v1',plugin:'running',
   native:isReady()?'online':'offline',reason:isReady()?null:reason,
   revision:revision||null,privileges:'read_only',
-  sourcePinnned:Boolean(revision),motorControls:false};
+  sourcePinned:Boolean(revision),motorControls:false};
 }
 export async function request(method,path,payload){
  if(!isReady())throw Error('native_unavailable');
