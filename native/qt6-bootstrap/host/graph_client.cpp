@@ -57,7 +57,8 @@ void GraphClient::refresh() {
   QSet<QString> seen,actions;
   for(const auto& value:object.value("nodes").toArray()) {
    if(!value.isObject()){setAvailable(false);return;}
-   const auto node=value.toObject(),id=node.value("id").toString(),kind=node.value("type").toString();
+   const auto node=value.toObject();
+   const auto id=node.value("id").toString(),kind=node.value("type").toString();
    if(id.isEmpty()||seen.contains(id)||kind.isEmpty()){setAvailable(false);return;}
    seen.insert(id);
    if(kind=="action")actions.insert(id);
