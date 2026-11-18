@@ -57,7 +57,7 @@ function launch(args,input='',timeout=TIMEOUT){
 export async function ready(profile){
  try{return (await launch(sandboxArgs(null,null,profile,true),'',profile.timeoutMs||TIMEOUT)).trim()===
   profile.readyText;}
- catch{return false;}
+ catch(error){if(process.env.CI)console.error('SANDBOX_PROBE_DIAGNOSTIC',error.message);return false;}
 }
 export async function execute(pkg,digest,action,params,runner,profile){
  if(!await ready(profile))throw Error('sandbox_unavailable');
