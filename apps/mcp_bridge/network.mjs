@@ -33,8 +33,9 @@ async function readOne(n,primaryOnly=false){
  }catch(e){faults.push(String(e.message).slice(0,80));}}
  return {id:n.id,status:n.identity?'unreachable':'identity_unconfigured',canInvoke:false,nodes:[],edges:[],errors:faults};
 }
-export async function topology(){
- const declared=await nodes();return Promise.all(declared.map(x=>readOne(x)));
+export async function topology(declared){
+ if(!declared)declared=await nodes();
+ return Promise.all(declared.map(x=>readOne(x)));
 }
 export async function capabilities(target){
  const all=await topology();return target?all.find(n=>n.id===target)??{error:'unknown_node'}:all;
