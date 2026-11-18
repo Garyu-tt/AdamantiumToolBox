@@ -47,7 +47,7 @@ async function invoke(action,p){
    {allowed:available,parallelism:max,signal:ctrl.signal,onUpdate:async r=>{
     job.status='running';job.steps=r.state;await save(job);}})
    .then(async r=>{job.status='completed';job.output=r.outputs;await save(job);},
-   async e=>{ctrl.abort();job.status=job.status==='cancel_requested'?'cancelled':'failed';
+   async e=>{const cancelled=ctrl.signal.aborted;ctrl.abort();job.status=cancelled?'cancelled':'failed';
     job.error=String(e.message).slice(0,180);await save(job);})
    .catch(e=>console.error('orchestrator_persist_failed',e.message))
    .finally(()=>controllers.delete(jobId));
