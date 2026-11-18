@@ -38,6 +38,7 @@ export async function loadModules(root,{policy={},context={}}={}){
     for(const desc of m.provides){
      if(registered.has(desc.name))throw Error('duplicate_capability');
      if(desc.action&&!validAction.test(desc.action))throw Error('bad_action');
+     if(desc.action&&actions.has(desc.action))throw Error('duplicate_action');
      if(desc.action&&typeof act[desc.action]!=='function')throw Error('missing_action');
      if(!desc.action&&!(desc.name in svc))throw Error('missing_service');
     }
