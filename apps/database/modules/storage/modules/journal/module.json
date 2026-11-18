@@ -14,25 +14,29 @@
       "name": "storage.graph.read",
       "permission": "database.read",
       "action": "database.query",
-      "version": "1.0"
+      "version": "1.0",
+      "operation": "read"
     },
     {
       "name": "storage.graph.write",
       "permission": "database.write",
       "action": "database.transact",
-      "version": "1.0"
+      "version": "1.0",
+      "operation": "write"
     },
     {
       "name": "storage.graph.history",
       "permission": "database.read",
       "action": "database.history",
-      "version": "1.0"
+      "version": "1.0",
+      "operation": "read"
     },
     {
       "name": "storage.graph.status",
       "permission": "database.read",
       "action": "database.status",
-      "version": "1.0"
+      "version": "1.0",
+      "operation": "read"
     },
     {
       "name": "storage.graph.store",
