@@ -25,7 +25,7 @@ export async function mount(host,api){
  host.prepend(canvas);document.body.append(start);
  shell.taskbar.prepend(startButton);shell.taskbar.append(tray);
  const layouts=mountLayouts(shell.taskbar,shell.windows),menu=createMenu();
- let state=empty(),tree=[],views=new Map(),legacy=null;
+ let state=empty(),tree=[],views=new Map(),legacy=null,opened=new Set();
  try{state=decode(localStorage.getItem(key));legacy=JSON.parse(localStorage.getItem('mas.desktop.pins.v1')||'[]');}catch{}
  const save=()=>{try{localStorage.setItem(key,JSON.stringify(state));}catch{}};
  const createFolder=parent=>{
@@ -40,7 +40,8 @@ export async function mount(host,api){
   toggleStart(false);menu.close();
   if(item.type==='folder'){
    const target=item.id?.startsWith('user:')?userFolder(state,item.id,views):item;
-   if(target)folderWindow(host,target,v=>v&&shell.openApp(v),shell.icon,views,shell.windows);
+   if(target)opened.add(folderWindow(host,target,v=>v&&shell.openApp(v),
+    shell.icon,views,shell.windows,id=>userFolder(state,id,views)));
   }else{
    const view=views.get(item.view);if(view)shell.openApp(view);
   }
@@ -63,6 +64,7 @@ export async function mount(host,api){
     return false;
    }
   });
+  for(const w of opened)if(w.element.isConnected)w.refresh();else opened.delete(w);
   if(start.classList.contains('open'))showStart();
  }
  function update(nextTree,nextViews){
@@ -91,7 +93,7 @@ export async function mount(host,api){
  return {update,dispose(){
   clearInterval(timer);observer.disconnect();
   document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',keyboard);
-  layouts.dispose();menu.dispose();
+  for(const w of opened)w.close();layouts.dispose();menu.dispose();
   for(const node of [canvas,start,startButton,tray,style])node.remove();
  }};
 }
