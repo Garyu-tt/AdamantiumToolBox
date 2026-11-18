@@ -1,0 +1,36 @@
+body.workspace-mode header,body.workspace-mode #launcher{display:none}
+body.workspace-mode main{height:calc(100vh - 44px);min-height:220px}
+body.workspace-mode footer{height:44px;justify-content:flex-start;padding:4px 8px;gap:8px}
+body.workspace-mode footer>span:first-child{display:none}
+body.workspace-mode #tasks{flex:1;min-width:0;gap:5px;overflow:auto}
+body.workspace-mode #tasks button{font-size:12px;min-height:32px;padding:3px 12px;white-space:nowrap}
+body.workspace-mode #desktop{min-width:0;background:linear-gradient(130deg,var(--bg),var(--surface))}
+.ada-canvas{position:absolute;inset:0;display:grid;grid-auto-flow:column;grid-template-rows:repeat(auto-fill,minmax(90px,90px));grid-auto-columns:92px;justify-content:start;align-content:start;padding:12px;gap:8px;overflow:auto}
+.ada-shortcut{width:92px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:transparent;border:1px solid transparent;padding:5px;color:var(--text);text-align:center}
+.ada-shortcut:hover,.ada-shortcut:focus-visible{background:var(--surface);border-color:var(--accent)}
+.ada-shortcut img{width:36px;height:36px;object-fit:contain}.ada-folder-icon{font-size:34px;line-height:1}
+.ada-shortcut-label{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.2}
+.ada-start-button{min-width:92px;height:34px;border-radius:5px;font-size:14px;font-weight:600;border-color:var(--line)}
+.ada-tray{display:flex;align-items:center;gap:10px;white-space:nowrap;font-size:12px;color:var(--muted);min-width:0}
+.ada-tray-status{max-width:200px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.ada-start{display:none;position:fixed;left:8px;bottom:50px;width:min(420px,calc(100vw - 16px));height:min(560px,calc(100vh - 70px));z-index:15000;background:var(--raised);border:1px solid var(--line);border-radius:9px;padding:14px;box-shadow:0 12px 36px #0003;flex-direction:column;gap:12px}
+.ada-start.open{display:flex}
+.ada-search{width:100%;height:36px;border:1px solid var(--line);border-radius:5px;background:var(--bg);padding:6px 10px}
+.ada-start-list{flex:1;overflow:auto;min-height:0}
+.ada-start-entry{display:flex;align-items:center;text-align:left;gap:12px;padding:8px 10px;min-height:40px;width:100%;border:1px solid transparent;background:transparent;border-radius:5px}
+.ada-start-entry:hover{background:var(--surface);border-color:var(--line)}
+.ada-start-entry img{width:23px;height:23px}.ada-start-entry .ada-folder-icon{font-size:22px}
+.ada-start-entry .ada-shortcut-label{font-size:13px}
+.ada-start-folder{margin:5px 0;padding:2px 0}.ada-start-folder>summary{cursor:pointer;padding:7px;font-weight:600}
+.ada-start-children{margin-left:13px;border-left:1px solid var(--line);padding-left:8px}
+.ada-start-caption{margin:12px 8px 4px;color:var(--muted);font-size:12px}
+.ada-empty{padding:16px;color:var(--muted)}
+.ada-context{display:none;position:fixed;z-index:16000;min-width:220px;background:var(--raised);border:1px solid var(--line);padding:4px;box-shadow:0 6px 20px #0003}
+.ada-context.open{display:block}.ada-context button{width:100%;text-align:left;border:0;background:transparent;padding:9px}.ada-context button:hover{background:var(--surface)}
+.ada-explorer{z-index:300;min-width:290px;min-height:220px}
+.ada-explorer-toolbar{padding:5px;border-bottom:1px solid var(--line);background:var(--surface)}
+.ada-explorer-body{flex:1;display:grid;align-content:start;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;padding:12px;overflow:auto}
+.ada-file{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:90px;background:transparent;border-color:transparent;overflow-wrap:anywhere}
+.ada-file img{width:32px;height:32px}.ada-file:hover{background:var(--surface);border-color:var(--line)}
+.ada-explorer .titlebar strong{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:650px){.ada-canvas{grid-template-rows:repeat(auto-fill,80px);grid-auto-columns:80px}.ada-shortcut{width:80px;height:80px}.ada-tray-status{display:none}.ada-start-button{min-width:65px}}
