@@ -1,6 +1,5 @@
 import {layoutRects,snapRect,fitFloating} from './window_geometry.js';
 import {attachWindowDrag} from './window_drag.js';
-/** One window registry for applications, system tools and folder explorers. */
 export function createWindowManager(desktop,tasks){
  const records=new Map();let selected=null,z=100;
  const bounds=()=>({width:desktop.clientWidth,height:desktop.clientHeight});
@@ -27,20 +26,21 @@ export function createWindowManager(desktop,tasks){
  function focus(item){
   if(!records.has(item.key))return;
   item.win.hidden=false;item.win.style.zIndex=String(++z);
-  selected=item;repaint();
+  selected=item;for(const r of records.values())r.win.classList.toggle('is-focused',r===item);
+  repaint();
  }
  function restore(item){
   item.win.hidden=false;
   if(item.mode){
    item.mode=null;delete item.win.dataset.mode;
-   if(item.normal)position(item,fitFloating(item.normal,...Object.values(bounds())));
+   if(item.normal){const {width,height}=bounds();position(item,fitFloating(item.normal,width,height));}
   }
   focus(item);
  }
  function minimize(item){
   item.win.hidden=true;
   if(selected===item)selected=null;
-  repaint();
+  item.win.classList.remove('is-focused');repaint();
  }
  function rectangle(zone){
   const {width,height}=bounds();return snapRect(width,height,zone);
@@ -75,8 +75,7 @@ export function createWindowManager(desktop,tasks){
   item.cleanup=attachWindowDrag(desktop,win,bar,{focus:()=>focus(item),
    isDocked:()=>!!item.mode,restore:()=>restore(item),
    snap:zone=>dock(item,zone),rectangle});
-  const handle={focus:()=>focus(item),close:()=>close(item),
-   minimize:()=>minimize(item),restore:()=>restore(item),
+  const handle={focus:()=>focus(item),close:()=>close(item),minimize:()=>minimize(item),restore:()=>restore(item),
    maximize:()=>maximize(item),snap:zone=>dock(item,zone),element:win};
   focus(item);return handle;
  }
