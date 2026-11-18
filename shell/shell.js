@@ -29,6 +29,9 @@ function icon(view){const img=document.createElement('img');
  img.src=view.iconUrl||'/icons/'+encodeURIComponent(view.icon||'workbench')+'.svg';
  img.alt='';return img;}
 async function openApp(view){
+ const current=graph.nodes.find(n=>n.type==='view'&&n.id===view?.id&&n.entry===view?.entry);
+ if(!current)return;
+ view=current;
  if(windows.has(view.id))return focus(windows.get(view.id));
  const win=el('section',undefined,'window');win.dataset.entry=view.entry;win.style.left=(25+windows.size*24)+'px';win.style.top=(25+windows.size*19)+'px';
  const bar=el('div',undefined,'titlebar'),name=el('strong');name.append(icon(view),el('span',view.title));
