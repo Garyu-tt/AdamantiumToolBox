@@ -24,14 +24,14 @@ export function windowLayouts(desktop,records,position,geometry,focus){
  function draw(){
   if(!group){handles.clear();return;}
   group.items=group.items.filter(item=>records.has(item.key));
-  if(group.items.length<2){group.items.forEach(reset);group=null;handles.clear();return;}
+  if(!group.items.length){group=null;handles.clear();return;}
   const {width,height}=bounds();
   const rects=layoutRects(width,height,group.preset,group.items.length,group.splits);
   group.items.forEach((item,i)=>{
    item.mode={kind:'tile',preset:group.preset,slot:i};
    item.win.dataset.mode='tile';position(item,rects[i]);
   });
-  handles.draw(guides(group.preset,width,height,group.splits));
+  handles.draw(group.items.length>=2?guides(group.preset,width,height,group.splits):[]);
  }
  function leave(item){
   if(!group||!group.items.includes(item))return;
