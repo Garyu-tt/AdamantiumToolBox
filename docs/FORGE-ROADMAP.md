@@ -84,3 +84,14 @@ providers yield a diagnosed pending state, never a misleading green success.
 - A10 `forge.incident.validate`: cause/evidence/impact/remedies validator — implemented locally.
 - A11 Live provider discovery, actual transaction commit, UI hot-reload — **not**
   implemented by Forge; must be independently implemented by runtime/UI/graph apps.
+
+## R03 — source implemented / mock-only verification
+
+- `[x]` Stateless provider snapshot negotiation for publication and reconciliation
+  steps; contract/permission/identity checks are *claims*, not host authorization.
+- `[x]` Strict external-cursor event projection and revision-bound invalidation
+  recipes, with no listener, queue, index, graph, UI mutation or state.
+- `[x]` Error diagnostics: expired snapshot, missing/disabled provider, ambiguous
+  write primary, missing event, unexplained incident; always with remedies.
+- `[ ]` Integration with authenticated runtime discovery, transactional event
+  transport and actual UI refresh **outside Forge**.
