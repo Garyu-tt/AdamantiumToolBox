@@ -42,7 +42,12 @@ try{
  await writeFile(join(dir,'modules','nested.py'),'changed');
  assert.equal((await bridgeGraph(root,secret)).nodes.length,2);
  await assert.rejects(bridgeInvoke(root,secret,'frankenstein.python.hello.echo'),/capability_unavailable/);
- console.log('FRANK_BRIDGE_OK approval, adapter, graph, recursive integrity');
+ m.permissions=['secret.read'];
+ await writeFile(join(dir,'frank-addon.json'),JSON.stringify(m));
+ d.packages[0].digest=await packageDigest(dir);
+ await saveRegistry(d);
+ assert.equal((await bridgeGraph(root,secret)).nodes.length,2);
+ console.log('FRANK_BRIDGE_OK approval, adapter, graph, recursive integrity, scoped denial');
 }finally{
  if(server)await new Promise(ok=>server.close(ok));
  await rm(root,{recursive:true,force:true});
