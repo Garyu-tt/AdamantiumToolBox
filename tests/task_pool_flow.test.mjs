@@ -10,21 +10,21 @@ try{
  const task=await pool.submit({title:'Summarize an incident',requires:['ai.text.generate'],
   payload:{prompt:'Summarize the incident'},idempotencyKey:'incident-test'});
  let calls=0;
- const allowed=new Set(['tasks.claim','claude.start','claude.status','tasks.complete']);
+ const allowed=new Set(['task_pool.claim','claude.start','claude.status','task_pool.complete']);
  const result=await execute({steps:[
-  {id:'claim',action:'tasks.claim',params:{workerId:'claude-worker-1',capabilities:['ai.text.generate']}},
+  {id:'claim',action:'task_pool.claim',params:{workerId:'claude-worker-1',capabilities:['ai.text.generate']}},
   {id:'run',action:'claude.start',after:['claim'],params:{prompt:{$step:'claim',path:['payload','prompt']}},
    poll:{action:'claude.status',intervalMs:100,maxAttempts:3}},
-  {id:'done',action:'tasks.complete',after:['run'],params:{
+  {id:'done',action:'task_pool.complete',after:['run'],params:{
    taskId:{$step:'claim',path:['taskId']},workerId:'claude-worker-1',
    token:{$step:'claim',path:['token']},result:{$step:'run',path:['result','content']}}}
  ]},async(id,params)=>{
   calls++;
-  if(id==='tasks.claim')return pool.claim(params);
+  if(id==='task_pool.claim')return pool.claim(params);
   if(id==='claude.start'){assert.equal(params.prompt,'Summarize the incident');
    return {status:'queued',jobId:'fake-job'};}
   if(id==='claude.status')return {status:'completed',result:{content:'Incident summary'}};
-  if(id==='tasks.complete')return pool.transition(params,'completed');
+  if(id==='task_pool.complete')return pool.transition(params,'completed');
   throw Error('unexpected_action');
  },{allowed});
  assert.equal(result.status,'completed');assert.equal(calls,4);
