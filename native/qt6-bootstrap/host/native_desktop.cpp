@@ -30,7 +30,8 @@ int main(int argc,char** argv) {
  GraphClient client;
  QMainWindow shell;
  shell.setWindowTitle("Mechanicus Native Desktop");
- auto* base=new QWidget(&shell),*layout=new QHBoxLayout(base);
+ auto* base=new QWidget(&shell);
+ auto* layout=new QHBoxLayout(base);
  layout->setContentsMargins(0,0,0,0);
  QWidget* workspace=extensions.workspace?
   extensions.workspace->createWorkspace(base,&bridge):createRawWorkspace(base,&bridge);
