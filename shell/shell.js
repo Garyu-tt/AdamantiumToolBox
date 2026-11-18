@@ -20,7 +20,7 @@ function drag(bar,win){
   if(ev.target.closest('button')||standalone)return;
   const rect=win.getBoundingClientRect(),dx=ev.clientX-rect.left,dy=ev.clientY-rect.top;
   bar.setPointerCapture(ev.pointerId);focus(win);
-  const move=e=>{win.style.left=Math.max(0,e.clientX-dx)+'px';win.style.top=Math.max(0,e.clientY-dy)+'px';};
+  const move=e=>{const area=desktop.getBoundingClientRect();win.style.left=Math.max(0,e.clientX-area.left-dx)+'px';win.style.top=Math.max(0,e.clientY-area.top-dy)+'px';};
   const stop=()=>{bar.removeEventListener('pointermove',move);bar.removeEventListener('pointerup',stop);};
   bar.addEventListener('pointermove',move);bar.addEventListener('pointerup',stop);
  });
@@ -54,6 +54,7 @@ function paintTasks(){
 async function refresh(){
  try{
   graph=await rpc('/api/graph');const views=graph.nodes.filter(n=>n.type==='view');
+  if(!standalone)status.textContent=views.length+' приложений · '+graph.nodes.length+' API';
   const ids=new Set(views.map(v=>v.id));
   const reload=[];
   for(const [id,win] of windows){
