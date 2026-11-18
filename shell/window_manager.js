@@ -80,7 +80,7 @@ export function createWindowManager(desktop,tasks){
   focus(item);return handle;
  }
  function arrange(preset){
-  const shown=[...records.values()].filter(item=>!item.win.hidden).slice(0,preset);
+  const count=preset==='focus'?3:preset,shown=[...records.values()].filter(item=>!item.win.hidden).slice(0,count);
   if(!shown.length)return 0;
   const {width,height}=bounds(),rects=layoutRects(width,height,preset,shown.length);
   for(let i=0;i<shown.length;i++){
