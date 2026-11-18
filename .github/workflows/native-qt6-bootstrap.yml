@@ -10,6 +10,9 @@ on:
       - '.github/workflows/native-qt6-bootstrap.yml'
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   linux-qt6:
     runs-on: ubuntu-24.04
@@ -25,6 +28,25 @@ jobs:
         run: |
           cmake -S native/qt6-bootstrap -B build/qt6-bootstrap -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build build/qt6-bootstrap --parallel 2
+      - name: Verify approved native plugins in running desktop
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          directory = Path('build/qt6-bootstrap/plugins')
+          files = sorted(directory.glob('libmas_native_*.so'))
+          assert len(files) == 3, [str(p) for p in files]
+          pins = [{"file":p.name, "sha256":hashlib.sha256(p.read_bytes()).hexdigest()}
+                  for p in files]
+          (Path(os.environ["RUNNER_TEMP"])/"native-pins.json").write_text(
+            json.dumps({"schema":"mas-native-plugin-pins-1","plugins":pins}))
+          PY
+          ./build/qt6-bootstrap/mas_native_desktop \
+            --plugins build/qt6-bootstrap/plugins \
+            --plugin-policy "$RUNNER_TEMP/native-pins.json" \
+            --require-native-modules --smoke-test
       - name: Execute native UI tests (headless)
         env:
           QT_QPA_PLATFORM: offscreen

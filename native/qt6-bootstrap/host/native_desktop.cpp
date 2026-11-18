@@ -22,10 +22,13 @@ int main(int argc,char** argv) {
  args.addOption({"plugins","Approved plugin directory","path"});
  args.addOption({"plugin-policy","Operator-supplied SHA-256 pin policy","file"});
  args.addOption({"smoke-test","Open native desktop and exit without a backend"});
+ args.addOption({"require-native-modules","CI assertion: approved native UI providers are loaded"});
  args.process(app);
  const auto root=args.value("plugins").isEmpty()?
   QCoreApplication::applicationDirPath()+"/plugins":args.value("plugins");
  const auto extensions=loadApprovedUiPlugins(&app,root,args.value("plugin-policy"));
+ if(args.isSet("require-native-modules")&&
+  (!extensions.workspace||!extensions.manager||extensions.views.isEmpty()))return 6;
  HostBridge bridge;
  GraphClient client;
  QMainWindow shell;
