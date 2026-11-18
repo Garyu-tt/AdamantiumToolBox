@@ -1,5 +1,6 @@
 #include "registry.hpp"
 #include <cppmicroservices/FrameworkFactory.h>
+#include <cppmicroservices/FrameworkEvent.h>
 #include <chrono>
 #include <memory>
 #include <set>
