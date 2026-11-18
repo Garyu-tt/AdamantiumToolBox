@@ -21,7 +21,10 @@ const apply=(base,ops)=>{
  }
  return next;
 };
-export async function openStore(location){
+export async function openStore(location,policy={}){
+ const maxBytes=policy.maxJournalBytes??Number.MAX_SAFE_INTEGER;
+ if(!Number.isSafeInteger(maxBytes)||maxBytes<1)throw Error('invalid_journal_quota');
+ const allowWrites=policy.allowWrites!==false;
  const dir=resolve(location);await mkdir(dir,{recursive:true,mode:0o700});
  const lock=join(dir,'writer.lock'),journal=join(dir,'facts.ndjson');
  let guard;try{guard=await open(lock,'wx',0o600);}catch(e){if(e.code==='EEXIST')throw Error('writer_locked');throw e;}
@@ -30,6 +33,7 @@ export async function openStore(location){
   const buf=await readFile(journal).catch(e=>{if(e.code==='ENOENT')return Buffer.alloc(0);throw e;});
   if(buf.length&&!buf.toString('utf8').endsWith('\n'))throw Error('incomplete_journal_tail');
   lines=buf.toString('utf8').split('\n').filter(Boolean);
+  let usedBytes=buf.length;
   for(const line of lines){
    const f=JSON.parse(line),{hash,...payload}=f;
    if(f.seq!==seq+1||f.prev!==prev||sha(payload)!==hash||!nsValid(f.namespace))throw Error('journal_integrity_failure');
@@ -41,6 +45,7 @@ export async function openStore(location){
    queue=queue.then(async()=>{
     try{
      if(closed)throw Error('store_closed');
+     if(!allowWrites)throw Error('write_disabled');
      if(!nsValid(namespace)||!Array.isArray(operations)||!operations.length||operations.length>100)throw Error('invalid_mutation');
      if(!Number.isInteger(observed_seq)||observed_seq!==seq)throw Error('conflict');
      if(typeof mutation_uid!=='string'||!mutation_uid||mutation_uid.length>128)throw Error('invalid_mutation_id');
@@ -51,7 +56,9 @@ export async function openStore(location){
      const next=apply(state.get(namespace)||new Map(),ops);
      const payload={seq:seq+1,prev,mutation_uid,namespace,ts:new Date().toISOString(),ops};
      const frame={...payload,hash:sha(payload)};
-     await handle.writeFile(JSON.stringify(frame)+'\n');await handle.sync();
+     const record=JSON.stringify(frame)+'\n',bytes=Buffer.byteLength(record);
+     if(usedBytes+bytes>maxBytes)throw Error('storage_quota_exceeded');
+     await handle.writeFile(record);await handle.sync();usedBytes+=bytes;
      state.set(namespace,next);frames.push(frame);seq=frame.seq;prev=frame.hash;
      ok({seq,hash:prev,mutation_uid,assigned_uids:ops.filter(x=>x.kind==='ASSERT').map(x=>x.fact.uid)});
     }catch(e){fail(e);}
@@ -71,6 +78,7 @@ export async function openStore(location){
    return {frames:frames.filter(f=>f.namespace===namespace&&f.seq>after_seq).slice(0,limit),seq};
   };
   const close=async()=>{if(closed)return;closed=true;await queue;await handle.close();await guard.close();await unlink(lock);};
-  return {transact,query,history,close,status:()=>({seq,hash:prev,namespaces:state.size})};
+  return {transact,query,history,close,status:()=>({seq,hash:prev,namespaces:state.size,
+   usedBytes,maxJournalBytes:maxBytes,allowWrites,backupCopies:0})};
  }catch(e){await guard.close();await unlink(lock).catch(()=>{});throw e;}
 }
