@@ -1,5 +1,5 @@
 {
- "mas":"1.0","id":"database","name":"Database / Graph Fabric Store","version":"0.1.0",
+ "mas":"1.0","id":"database","name":"Database / Graph Fabric Store","version":"0.1.1",
  "icon":"database","lifecycle":"independent",
  "service":{"protocol":"mas-http-1","port":8895,"invokeTimeoutMs":12000},
  "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},
