@@ -34,6 +34,7 @@ export async function openStore(location,policy={}){
   if(buf.length&&!buf.toString('utf8').endsWith('\n'))throw Error('incomplete_journal_tail');
   lines=buf.toString('utf8').split('\n').filter(Boolean);
   let usedBytes=buf.length;
+  if(usedBytes>maxBytes)throw Error('journal_over_quota');
   for(const line of lines){
    const f=JSON.parse(line),{hash,...payload}=f;
    if(f.seq!==seq+1||f.prev!==prev||sha(payload)!==hash||!nsValid(f.namespace))throw Error('journal_integrity_failure');
