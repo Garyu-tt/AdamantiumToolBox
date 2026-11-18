@@ -26,6 +26,8 @@ try{
  await assert.rejects(db.transact(tx(0,'read-only')),/write_disabled/);
  assert.equal(db.status().usedBytes,0);
  await db.close();
+ await assert.rejects(stat(join(root,'writer.lock')),/ENOENT/);
+ await assert.rejects(stat(join(root,'facts.ndjson')),/ENOENT/);
  db=await openStore(root,{maxJournalBytes:800,allowWrites:true});
  await db.transact(tx(0,'small'));
  assert.equal(db.status().seq,1);
