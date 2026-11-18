@@ -13,7 +13,7 @@ function body(req,limit=131072){return new Promise((resolve,reject)=>{
 const graph={app:m.id,version:1,nodes:[{id:m.id+'.view',type:'view',title:'MCP Bridge',icon:m.icon,requires:['mcp_bridge.read']},
  {id:m.id+'.status',type:'action',title:'Bridge status',requires:['mcp_bridge.read']}],edges:[{from:m.id+'.view',to:m.id+'.status',type:'uses'}]};
 http.createServer(async(req,res)=>{
- const pathname=new URL(req.url,'http://localhost').pathname;
+ const pathname=(req.url||'').split('?')[0];
  if(req.method==='GET'&&pathname==='/health')return json(res,200,{app:m.id,protocol:'mcp-streamable-http',exposed:'loopback',mcp:active?'ready':'disabled'});
  if(pathname==='/mcp'){
   if(!active)return json(res,503,{error:'mcp_not_configured'});
