@@ -102,6 +102,7 @@ export async function mount(host,api){
   else if(e.key==='Escape')toggleStart(false);
  };
  canvas.oncontextmenu=e=>{if(e.target===canvas)context(e,null);};
+ canvas.addEventListener('ada-icons-changed',redraw);
  startButton.onclick=()=>toggleStart(!start.classList.contains('open'));search.oninput=showStart;
  document.addEventListener('pointerdown',outside);document.addEventListener('keydown',keyboard);
  const observer=new ResizeObserver(redraw);observer.observe(canvas);
