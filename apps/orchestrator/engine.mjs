@@ -1,3 +1,4 @@
+import {setTimeout as sleep} from 'node:timers/promises';
 const key=/^[a-z][a-z0-9_-]{0,63}$/;
 const action=/^[a-z][a-z0-9_-]{1,39}(?:\.[a-z0-9_-]+)+$/;
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
@@ -51,7 +52,7 @@ export async function execute(flow,invoke,{allowed,parallelism=4,signal,onUpdate
    const delay=s.poll.intervalMs||1000,jobId=result.jobId,maxAttempts=s.poll.maxAttempts||600;
    for(let attempt=0;attempt<maxAttempts;attempt++){
     if(signal?.aborted)throw Error('cancelled');
-    await new Promise((resolve,reject)=>{const timer=setTimeout(resolve,delay);if(signal)signal.addEventListener('abort',()=>{clearTimeout(timer);reject(Error('cancelled'));},{once:true});});
+    try{await sleep(delay,undefined,{signal});}catch{throw Error('cancelled');}
     result=await invoke(s.poll.action,{jobId},signal);
     if(['completed','failed','cancelled'].includes(result?.status))break;
     if(!['queued','running'].includes(result?.status))throw Error('bad_async_status');
