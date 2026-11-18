@@ -46,8 +46,8 @@ try{
  const action=await fetch(base+'/api/invoke',{method:'POST',headers:{Authorization:'Bearer '+token,
   'Content-Type':'application/json'},body:JSON.stringify({action:'fixture.ping'})});
  assert.equal(action.status,200);assert.deepEqual((await action.json()).result,{pong:true});
- const typed=async(params)=>fetch(base+'/api/invoke',{method:'POST',headers:{
-  Authorization:'Bearer '+token,'Content-Type':'application/json'},
+ const typed=async(params)=>fetch('http://127.0.0.1:'+servicePort+'/invoke',{
+  method:'POST',headers:{'X-Internal-Key':secret,'Content-Type':'application/json'},
   body:JSON.stringify({action:'fixture.ping',params})});
  assert.equal((await typed({unexpected:true})).status,422);
  const typeFile=join(tmp,'apps','fixture','modules.json');
