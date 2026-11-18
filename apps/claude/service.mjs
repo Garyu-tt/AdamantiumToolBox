@@ -5,6 +5,7 @@ import {readFile} from 'node:fs/promises';
 import {DurableJobs} from '../../core/durable_jobs.mjs';
 import {configured} from './provider.mjs';
 import {runAgent} from './agent.mjs';
+import {startWorkers} from './task_worker.mjs';
 const manifest=JSON.parse(await readFile(join(import.meta.dirname,'manifest.json'),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';if(secret.length<24)throw Error('internal_key_missing');
 const caps=new Set((process.env.ADA_CAPS||'').split(','));
@@ -71,3 +72,14 @@ http.createServer((req,res)=>{
  }
  send(res,404,{error:'not_found'});
 }).listen(Number(process.env.APP_PORT||manifest.service.port),'127.0.0.1');
+const taskWorkers=Number(process.env.ADA_CLAUDE_TASK_WORKERS||0);
+if(!Number.isInteger(taskWorkers)||taskWorkers<0||taskWorkers>32)throw Error('invalid_task_worker_count');
+if(taskWorkers&&!configured())throw Error('claude_task_provider_not_configured');
+if(taskWorkers){
+ const stop=new AbortController();
+ process.once('SIGTERM',()=>stop.abort());
+ process.once('SIGINT',()=>stop.abort());
+ void startWorkers({count:taskWorkers,signal:stop.signal})
+  .catch(e=>console.error('task_worker_fatal',e.message));
+}
+
