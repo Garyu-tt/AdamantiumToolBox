@@ -5,8 +5,10 @@ const fragment=new URLSearchParams(location.hash.slice(1));
 if(fragment.has('token')){sessionStorage.setItem('ada-token',fragment.get('token'));history.replaceState(null,'',location.pathname+location.search);}
 import {systemViews} from '/shell/builtin.js';
 import {drawNavigation} from '/shell/navigation.js';
+import {bindWorkspace} from '/shell/workspace.js';
 const token=sessionStorage.getItem('ada-token')||'';
 let graph={nodes:[],edges:[]},z=10;const windows=new Map();
+const builtins=systemViews(desktop,rpc,()=>graph);
 const el=(tag,text,cls)=>{const x=document.createElement(tag);if(text!==undefined)x.textContent=text;if(cls)x.className=cls;return x;};
 async function rpc(url,data){
  const response=await fetch(url,{method:data?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined});
@@ -62,7 +64,13 @@ async function refresh(){
   }
   for(const view of reload)await openApp(view);
   launcher.replaceChildren();
-  if(!standalone)drawNavigation(launcher,await rpc('/api/navigation'),graph,openApp);
+  if(!standalone){
+   const tree=await rpc('/api/navigation');
+   const mounted=await bindWorkspace(views,tree,{
+    desktop,taskbar:document.querySelector('footer'),openApp,icon,system:builtins,status
+   });
+   if(!mounted)drawNavigation(launcher,tree,graph,openApp);
+  }
   if(standalone){document.body.classList.add('standalone');const v=views.find(v=>v.id===standalone);if(v)await openApp(v);else status.textContent='Приложение недоступно';}
   if(!standalone)status.textContent=views.length+' приложений · '+graph.nodes.length+' API';
   paintTasks();
@@ -72,6 +80,6 @@ document.querySelector('#refresh').onclick=refresh;
 if(!token)status.textContent='Требуется токен запуска';else await refresh();
 setInterval(refresh,12000);
 
-const builtins=systemViews(desktop,rpc,()=>graph);document.querySelector('#backend-graph').onclick=builtins.graph;document.querySelector('#code-map').onclick=builtins.codemap;
+document.querySelector('#backend-graph').onclick=builtins.graph;document.querySelector('#code-map').onclick=builtins.codemap;
 
 document.querySelector('#mesh-status').onclick=builtins.mesh;
