@@ -1,0 +1,10 @@
+{
+  "mas":"1.0", "id":"network_policy", "name":"Network Policy Manager", "version":"0.1.0",
+  "icon":"network_policy", "lifecycle":"independent",
+  "service":{"protocol":"mas-http-1", "port":8929, "invokeTimeoutMs":5000},
+  "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},
+  "auth":{"mode":"host-delegated"},
+  "permissions":["network_policy.read","network_policy.evaluate"],
+  "events":{"schema":"mas-event-1"},"data":{"refs":"mas-ref-1"},
+  "updates":{"strategy":"semver","migrations":[]}
+}
