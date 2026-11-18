@@ -5,6 +5,7 @@ from pathlib import PurePosixPath
 CAP=re.compile(r"^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+$")
 def collect(root,known):
     result=[]
+    def many(value):return value[:128] if isinstance(value,list) else []
     def add(file,source,target,kind):
         if isinstance(source,str) and isinstance(target,str):
             result.append({"file":file,"from":source,"to":target,"type":kind})
@@ -24,7 +25,7 @@ def collect(root,known):
                                   ("modules.json","modules")):
                     target="/".join((*parts[:2],name))
                     if target in known:add(path,path,target,kind)
-                for edge in (doc.get("connections") or [])[:128]:
+                for edge in many(doc.get("connections")):
                     if not isinstance(edge,dict):continue
                     source,target=edge.get("from"),edge.get("to")
                     if isinstance(source,str) and isinstance(target,str) and \
@@ -39,18 +40,18 @@ def collect(root,known):
                     if not isinstance(identity,str) or not CAP.fullmatch(identity):return
                     subject="module://"+identity
                     if parent:add(path,"module://"+parent,subject,"contains")
-                    for cap in (module.get("provides") or [])[:128]:
+                    for cap in many(module.get("provides")):
                         ident=cap.get("id") if isinstance(cap,dict) else None
                         if isinstance(ident,str) and CAP.fullmatch(ident):
                             add(path,subject,"capability://"+ident,"provides")
-                    for cap in (module.get("consumes") or [])[:128]:
+                    for cap in many(module.get("consumes")):
                         ident=cap.get("id") if isinstance(cap,dict) else None
                         if isinstance(ident,str) and CAP.fullmatch(ident):
                             kind="consumes_optional" if cap.get("optional") is True else "consumes_required"
                             add(path,subject,"capability://"+ident,kind)
-                    for child in (module.get("children") or [])[:128]:
+                    for child in many(module.get("children")):
                         walk(child,identity,depth+1)
-                for module in (doc.get("modules") or [])[:128]:walk(module)
+                for module in many(doc.get("modules")):walk(module)
         if parts[0]=="frank-addons" and len(parts)==4 and parts[-1]=="frank-addon.json":
             doc=load(path)
             if not isinstance(doc,dict) or doc.get("schema")!="frank-addon-1" or \
