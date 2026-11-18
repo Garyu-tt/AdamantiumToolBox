@@ -2,7 +2,9 @@
 
 Status: independent runtime integration, NOT a compiled Godot fork, physics RPC
 bridge, renderer implementation, or an installed binary. Base version is the
-official Godot 4.7.2 stable release. Do not claim actual 3D or VR capabilities
+official Godot 4.7.2 stable release (source commit
+ed1daf0bf001b61586d9930840f2f1394092c079). Binary --version inspection does
+not by itself attest the compiled binary SHA. Do not claim actual 3D or VR capabilities
 until an engine is configured, launched and integration tests pass.
 
 ## Isolation
@@ -25,6 +27,8 @@ Runtime environment, NOT source control:
 - ADA_GODOT_SESSION_LIMIT: optional maximum 1..8, default 1.
 - ADA_CORE_URL, ADA_TOKEN, ADA_INTERNAL_KEY, ADA_CAPS: provided by Toolbox.
 
+Authorize after review with: node tools/authorize-app.mjs grant godot --approve
+and node tools/authorize-app.mjs grant godot_local --approve.
 Owner policy requires explicit opt-in to godot.read, godot.launch and
 engine.provider and engine.launch. Existing private policy is never overwritten. Review each
 executable, project script and dependency before granting launch permission.
