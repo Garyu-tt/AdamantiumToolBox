@@ -4,7 +4,7 @@ import {pathToFileURL} from 'node:url';
 const idPattern=/^[a-z][a-z0-9_-]{1,39}$/;
 export async function discoverModules(base,app){
  const nodes=[{id:'genesis.view',type:'view',title:app.name,icon:app.icon,
-  requires:['genesis.read']}],edges=[],actions=new Map();
+  requires:['genesis.read']}],edges=[],actions=new Map(),starters=[];
  async function visit(directory,parent){
   let entries;
   try{entries=await readdir(directory,{withFileTypes:true});}
@@ -22,6 +22,8 @@ export async function discoverModules(base,app){
    edges.push({from:parent,to:id,type:'contains'});
    const handler=await import(pathToFileURL(join(folder,'handler.mjs')).href);
    if(typeof handler.invoke!=='function')throw Error('missing_handler');
+   if(typeof handler.start==='function'&&app.permissions.includes(def.startup_permission))
+    starters.push({permission:def.startup_permission,start:handler.start});
    for(const operation of def.actions){
     if(typeof operation.id!=='string'||!/^genesis\.[a-z0-9_.-]+$/.test(operation.id)||
        actions.has(operation.id)||!app.permissions.includes(operation.permission))throw Error('bad_action');
@@ -34,5 +36,5 @@ export async function discoverModules(base,app){
   }
  }
  await visit(join(base,'modules'),'genesis.view');
- return {graph:{app:'genesis',version:1,nodes,edges},actions};
+ return {graph:{app:'genesis',version:1,nodes,edges},actions,starters};
 }
