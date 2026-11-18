@@ -12,7 +12,7 @@ try{
  let calls=0;
  const allowed=new Set(['task_pool.claim','claude.start','claude.status','task_pool.complete']);
  const result=await execute({steps:[
-  {id:'claim',action:'task_pool.claim',params:{workerId:'claude-worker-1',capabilities:['ai.text.generate']}},
+  {id:'claim',action:'task_pool.claim',params:{workerId:'claude-worker-1',capabilities:['ai.text.generate'],requiresContract:'ai.text.generate'}},
   {id:'run',action:'claude.start',after:['claim'],params:{prompt:{$step:'claim',path:['payload','prompt']}},
    poll:{action:'claude.status',intervalMs:100,maxAttempts:3}},
   {id:'done',action:'task_pool.complete',after:['run'],params:{
