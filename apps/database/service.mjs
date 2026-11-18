@@ -7,7 +7,7 @@ import {parseStoragePolicy} from './storage-policy.mjs';
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('Missing internal key');
 const home=process.env.LOCALAPPDATA||process.env.XDG_DATA_HOME||join(homedir(),'.local','share');
-const dataDir=resolve(process.env.DATABASE_DATA_DIR||join(home,'Adamantium Toolbox','database'));
+const dataDir=resolve(process.env.ADA_PROBE_DATA_DIR||process.env.DATABASE_DATA_DIR||join(home,'Adamantium Toolbox','database'));
 const source=resolve(fileURLToPath(new URL('modules/',import.meta.url)));
 let policy={};try{policy=JSON.parse(process.env.DATABASE_MODULE_POLICY||'{}');}catch{throw Error('invalid_module_policy');}
 if(!policy||Array.isArray(policy)||typeof policy!=='object')throw Error('invalid_module_policy');
