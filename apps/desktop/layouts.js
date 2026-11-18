@@ -6,10 +6,10 @@ export function mountLayouts(taskbar,windows){
  toggle.setAttribute('aria-label','Раскладка окон');toggle.setAttribute('aria-expanded','false');
  const menu=document.createElement('div');menu.className='ada-layout-menu';
  const presets=[
-  [2,'2 окна рядом','Alt+Shift+2'],
-  [4,'4 окна, сетка 2×2','Alt+Shift+4'],
-  [8,'8 окон, сетка 4×2','Alt+Shift+8'],
-  ['focus','Главное + два','Alt+Shift+3']
+  [2,'2 окна рядом','Ctrl+Alt+2'],
+  [4,'4 окна, сетка 2×2','Ctrl+Alt+4'],
+  [8,'8 окон, сетка 4×2','Ctrl+Alt+8'],
+  ['focus','Главное + два','Ctrl+Alt+3']
  ];
  function show(open){
   menu.classList.toggle('open',open);
