@@ -1,0 +1,4 @@
+
+add_executable(mas_graph_client_epoch_test tests/graph_client_epoch_test.cpp)
+target_link_libraries(mas_graph_client_epoch_test PRIVATE mechanicus_graph Qt6::Test)
+add_test(NAME graph_client_revocation_race COMMAND mas_graph_client_epoch_test)

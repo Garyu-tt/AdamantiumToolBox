@@ -17,7 +17,8 @@ GraphClient::GraphClient(QObject* parent):QObject(parent) {
  });
 }
 void GraphClient::setAvailable(bool yes) {
- if(available_==yes)return;available_=yes;emit availabilityChanged(yes);
+ if(available_==yes)return;
+ ++authorizationEpoch_;available_=yes;emit availabilityChanged(yes);
 }
 void GraphClient::revoke() {
  ++revision_;setAvailable(false);authorizedActions_.clear();
@@ -63,6 +64,7 @@ void GraphClient::refresh() {
    seen.insert(id);
    if(kind=="action")actions.insert(id);
   }
+  if(authorizedActions_!=actions)++authorizationEpoch_;
   authorizedActions_=actions;
   const bool wasAvailable=available_;
   setAvailable(true);
@@ -78,9 +80,10 @@ void GraphClient::invoke(const QString& requestId,const QString& action,const QJ
  request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
  request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,QNetworkRequest::ManualRedirectPolicy);
  request.setTransferTimeout(15000);
+ const auto dispatchEpoch=authorizationEpoch_;
  const QJsonObject payload{{"action",action},{"params",params}};
  auto* reply=network_.post(request,QJsonDocument(payload).toJson(QJsonDocument::Compact));
- connect(reply,&QNetworkReply::finished,this,[this,reply,requestId,action] {
+ connect(reply,&QNetworkReply::finished,this,[this,reply,requestId,action,dispatchEpoch] {
   const int code=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
   if(code==401||code==403)revoke();
   const auto data=reply->readAll();
@@ -88,7 +91,8 @@ void GraphClient::invoke(const QString& requestId,const QString& action,const QJ
   const auto doc=QJsonDocument::fromJson(data,&parse);
   const auto value=doc.isObject()?doc.object():QJsonObject{};
   QString error;
-  if(!available_||!authorizedActions_.contains(action))error="permission_revoked";
+  if(dispatchEpoch!=authorizationEpoch_||!available_||!authorizedActions_.contains(action))
+   error="permission_revoked";
   else if(reply->error()!=QNetworkReply::NoError||code!=200)
    error=value.value("error").toString("invoke_http_error");
   else if(parse.error!=QJsonParseError::NoError||!value.contains("result"))

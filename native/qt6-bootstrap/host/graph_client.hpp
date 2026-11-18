@@ -31,4 +31,5 @@ private:
  QJsonObject previous_;
  bool pending_=false,available_=false,dirty_=false;
  std::uint64_t revision_=0;
+ std::uint64_t authorizationEpoch_=0;
 };
