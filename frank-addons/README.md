@@ -7,7 +7,9 @@ directories are created dynamically; recursive `modules/` are supported.
 ```text
 frank-addons/
   bridge/                  # independent source, approval and routing
-    providers/python/      # optional sandboxed Python execution service
+    providers/shared/      # reusable auth, sandbox and HTTP lifecycle
+    providers/python/      # optional Python executor
+    providers/javascript/  # optional JavaScript/Node executor
   <language>/<addon-id>/
     frank-addon.json       # package manifest
     <entry>                # language entry
@@ -15,53 +17,43 @@ frank-addons/
 apps/frankenstein/         # optional MAS gateway, NOT Frank package storage
 ```
 
-Example `frank-addon.json`:
-```json
-{
- "schema":"frank-addon-1", "id":"hello", "language":"python",
- "name":"Hello", "version":"0.1.0", "entry":"main.py",
- "adapter":"frankenstein.adapter.python", "lifecycle":"independent",
- "permissions":[], "actions":[{"id":"echo","title":"Echo"}]
-}
-```
-
-Actions appear in MAS as `frankenstein.<language>.<addon>.<action>`.
-The package identity stays `frank.<language>.<addon>`. The optional MAS
-Frankenstein application is only a gateway; packages never join the
-classic MAS application catalog or signed plugin activation registry.
+The language-independent ABI is specified by
+[FRANK-ADAPTER-1](../standards/FRANK-ADAPTER-1.md). Both Python and
+JavaScript implement it. Neither is required by the microkernel.
+The bridge discovers languages from declared package capabilities and
+operator-approved adapter registrations, not a fixed list.
 
 ## Approval workflow
 
-Provide a private `ADA_FRANK_STATE_DIR` or use the existing
-`LOCALAPPDATA/Adamantium Toolbox/frank` on Windows or
+Use an owner-private `ADA_FRANK_STATE_DIR`, or the existing
+`LOCALAPPDATA/Adamantium Toolbox/frank` on Windows /
 `XDG_STATE_HOME/adamantium-toolbox/frank` on Linux.
 
 ```sh
 node frank-addons/bridge/manage.mjs status
-node frank-addons/bridge/manage.mjs adapter frankenstein.adapter.python 9100 --approve
-node frank-addons/bridge/manage.mjs plan frank.python.hello
-node frank-addons/bridge/manage.mjs approve frank.python.hello --approve
-node frank-addons/bridge/manage.mjs disable frank.python.hello --approve
+node frank-addons/bridge/manage.mjs adapter frankenstein.adapter.javascript 9101 --approve
+node frank-addons/bridge/manage.mjs plan frank.javascript.hello
+node frank-addons/bridge/manage.mjs approve frank.javascript.hello --approve
+node frank-addons/bridge/manage.mjs disable frank.javascript.hello --approve
 ```
 
-Python now has an **experimental Linux-only** Bubblewrap provider:
-see [Python adapter](bridge/providers/python/README.md) for prerequisites,
-startup commands and fail-closed behavior. Other languages still need their
-own registered adapters. The Python provider is not an unrestricted host
-Python runner, and it does not automatically start or approve itself.
-The bridge dynamically detects approved, healthy adapters and exposes only
-their intact approved packages. No code executes during discovery.
+Adapter registration does not install an interpreter or start its process.
+See [Python provider](bridge/providers/python/README.md) or
+[JavaScript provider](bridge/providers/javascript/README.md) for startup.
+Only approved, intact packages with a healthy provider appear in MAS as
+`frankenstein.<language>.<addon-id>.<action>`.
+The package identity remains `frank.<language>.<addon-id>`.
 
 ## Security limits
 
-- Approval pins SHA-256 of **all** files, including recursive modules.
-  Any change revokes visibility until explicit reapproval.
-- This is local owner approval, **not signed publisher provenance**.
-- Python uses OS namespaces when Bubblewrap is available; absent on Windows
-  or restricted Linux hosts, the provider does not execute unisolated code.
-  Seccomp, cgroup PIDs, separate identities and signed releases are still absent.
-- Bridge-wide `frankenstein.invoke` scope is coarse. Until per-addon/per-user
-  scopes are implemented, only packages with `permissions: []` can be approved.
-- The bridge app is optional. Removing it never breaks classical MAS apps.
-- Tests: `node tests/frank_addons.test.mjs`,
-  `node tests/frank_bridge.test.mjs`, `node tests/frank_python.test.mjs`.
+- Approval pins a local SHA-256 of all files, including nested modules.
+  Changes revoke visibility until reapproval.
+- Neither signatures nor sandboxed execution of arbitrary hostile code are
+  production-ready. No unsigned remote automatic activation.
+- Python uses Linux namespaces and Python resource limits. JavaScript uses
+  Linux namespaces and Node's V8 heap cap. Missing Bubblewrap means execution
+  is disabled, never silently downgraded.
+- Bridge-wide `frankenstein.invoke` is coarse: only packages with
+  `permissions: []` can currently be approved. Per-action grants remain TODO.
+- Classic MAS loader and its registries remain independent; removing the
+  Bridge does not affect classic plugins.

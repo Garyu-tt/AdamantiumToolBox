@@ -1,0 +1,21 @@
+{
+  "schema": "frank-addon-1",
+  "id": "hello",
+  "language": "javascript",
+  "name": "JavaScript Hello",
+  "version": "0.1.0",
+  "entry": "main.mjs",
+  "adapter": "frankenstein.adapter.javascript",
+  "lifecycle": "independent",
+  "permissions": [],
+  "actions": [
+    {
+      "id": "echo",
+      "title": "Echo JSON"
+    },
+    {
+      "id": "sum",
+      "title": "Sum Numbers"
+    }
+  ]
+}
