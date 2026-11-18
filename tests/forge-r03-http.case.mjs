@@ -18,7 +18,7 @@ export async function runHttpR03({flow,batch}){
  assert.equal(e.result.actions.length,3);
  assert.equal((await query('/invoke',{action:'forge.events.project',params:batch},false)).status,401);
  const desc=await (await query('/invoke',{action:'forge.describe'})).json();
- assert.equal(desc.result.schema,'mechanicus.forge.adapter.v6');
+ assert.equal(desc.result.schema,'mechanicus.forge.adapter.v7');
  assert.equal(desc.result.external_effects,false);assert.equal(desc.result.stores_state,false);
  console.log('FORGE_R03_TEST_OK: fail-closed negotiation, no silent write failover, strict event projection, standalone HTTP');
  });

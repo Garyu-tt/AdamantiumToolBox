@@ -1,4 +1,5 @@
-// Minimal contract inspector. No graph engine, client memory, provider calls or UI composer.
+import {makeReactiveSamples} from './view-r07-samples.js';
+// Pure contract inspector; no backend state.
 export async function mount(host,api){
  const add=(tag,text,parent=host)=>{const el=document.createElement(tag);
   if(text!==undefined)el.textContent=text;parent.append(el);return el;};
@@ -47,8 +48,6 @@ export async function mount(host,api){
  out.style.whiteSpace='pre-wrap';out.style.overflowWrap='anywhere';
  try{
   const info=await api.call('forge.describe');
-  // Demo-only generated drafts, never operator routes. The actual node/provider
-  // registry is supplied by MAS host discovery, not embedded in Forge.
   try{
    const composite=await api.call('forge.composite.plan',samples['forge.composite.plan']);
    if(composite?.ok){
@@ -63,7 +62,8 @@ export async function mount(host,api){
       node_ref:'demo.coordinator',provider_ref:'demo.transaction',
       action_id:'publication.transaction.commit',contract_version:'1.0.0'}};
    }
-  }catch{/* No provider dependency: other contract inspector actions remain usable. */}
+  }catch{/* Optional peer unavailable. */}
+  Object.assign(samples,await makeReactiveSamples(api,functionNode));
   samples['forge.distribution.recover']={schema:'forge.distribution.recovery.request.v1',
    operation_id:'demo-operation-0001',request_id:'demo-distribution-request-0001',
    graph_revision:'demo-graph-revision',policy_revision:'demo-policy-revision',mode:'publish',
