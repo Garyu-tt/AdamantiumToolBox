@@ -26,12 +26,15 @@ Required local dependencies deactivate only the dependent capability when absent
 `^MAJOR.MINOR.PATCH` and exact versions are supported; no broader semver ranges.
 
 `sdk/modules.mjs` validates documents; `sdk/graph.mjs` computes MAS 1.0-compatible
-graphs and dependency negotiation. Generated service dynamically reads its own
-`modules.json` on GET `/graph`, so disabling an optional module removes its
-capabilities without another plugin's source changing. Invokes are checked
-against the latest exposed action set. **Limitation:** generated service is a
-minimal runtime and does not yet run the full SDK dependency resolver or enforce
-JSON Schema input/output at runtime. Do not claim full type-safe execution.
+graphs and dependency negotiation. The generator packages these two files with
+each application under `runtime/`, so no SDK installation or Core import is
+needed at runtime. It reads `modules.json` on every graph/invoke request,
+validates the document, rejects dependency cycles and incompatible required
+local dependencies, and hides disabled modules with their descendants.
+Malformed modules fail closed; missing active action handlers invalidate the graph.
+**Limitations:** JSON Schema input/output enforcement and module-state persistence
+are separate work. This resolver does not yet implement live cross-app provider
+subscriptions, automatic migration or production-grade atomic module updates.
 
 ## Existing integration / acceptance
 
