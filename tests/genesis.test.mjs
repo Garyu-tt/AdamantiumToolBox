@@ -37,6 +37,18 @@ try{
  assert.notEqual(clone.id,brain.id);
  assert.equal(clone.parent.brainId,brain.id);
  assert.equal((await store.list()).length,2);
+ const clock=await import('../apps/genesis/modules/scheduler/handler.mjs');
+ clock.start(store);
+ await clock.invoke('genesis.brains.autostep',
+  {id:brain.id,steps_per_tick:2,stimulus:0.5},store);
+ const tick0=(await store.load(brain.id)).ticks;
+ await new Promise(r=>setTimeout(r,1250));
+ const tick1=(await store.load(brain.id)).ticks;
+ assert(tick1>=tick0+2,'background_clock_did_not_tick');
+ await clock.invoke('genesis.brains.pause',{id:brain.id},store);
+ const paused=(await store.load(brain.id)).ticks;
+ await new Promise(r=>setTimeout(r,1150));
+ assert.equal((await store.load(brain.id)).ticks,paused,'pause_did_not_stop_clock');
  assert.throws(()=>grow(brain,{count:100}),/growth_limit/);
  console.log('GENESIS_R01_OK',graph.nodes.length,'graph nodes');
 }finally{await rm(root,{recursive:true,force:true});}
