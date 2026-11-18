@@ -1,7 +1,12 @@
 import http from 'node:http';
+import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {loadModules} from './runtime/loader.mjs';
+const manifest=JSON.parse(readFileSync(new URL('./manifest.json',import.meta.url),'utf8'));
+if(manifest.id!=='noosphere'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(manifest.version))throw Error('invalid_noosphere_manifest');
+const port=Number(process.env.APP_PORT);
+if(!Number.isInteger(port)||port<1024||port>65535)throw Error('APP_PORT_required');
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('Missing internal key');
 let policy={};
@@ -10,7 +15,7 @@ catch{throw Error('invalid_module_policy');}
 if(!policy||Array.isArray(policy)||typeof policy!=='object')throw Error('invalid_module_policy');
 const source=resolve(fileURLToPath(new URL('modules/',import.meta.url)));
 const runtime=await loadModules(source,{policy});
-const state=()=>({schema:'noosphere-status-v1',app:'noosphere',version:'0.3.0',
+const state=()=>({schema:'noosphere-status-v1',app:'noosphere',version:manifest.version,
  mode:'stateless',persistent:false,storage:'not_connected',modules:runtime.status});
 const nodes=[{id:'noosphere.view',type:'view',title:'Noosphere 3.0',
  icon:'graph',requires:['noosphere.read']}];
@@ -42,4 +47,4 @@ http.createServer((req,res)=>{
   });return;
  }
  return send(res,404,{error:'not_found'});
-}).listen(Number(process.env.APP_PORT||8896),'127.0.0.1');
+}).listen(port,'127.0.0.1');
