@@ -56,3 +56,5 @@ body.workspace-mode #desktop{min-width:0;background:linear-gradient(130deg,var(-
 
 .ada-canvas>.ada-shortcut{position:absolute;touch-action:none;z-index:1}
 .ada-canvas>.ada-shortcut.is-dragging{z-index:800;opacity:.85;border-color:var(--accent);background:var(--raised);cursor:grabbing}
+
+.ada-context{max-height:min(65vh,520px);overflow:auto}
