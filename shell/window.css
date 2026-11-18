@@ -14,3 +14,10 @@ body.standalone .win-controls{display:none!important}
 #tasks .win-task.active{border-color:var(--accent);background:var(--raised)}
 #tasks .win-task{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
 @media(max-width:670px){.window:not([data-mode]){max-width:95%}}
+
+.win-split-layer{position:absolute;inset:0;z-index:10000;pointer-events:none}
+.win-split{position:absolute;pointer-events:auto;transform:translate(-4px,-4px);
+ background:color-mix(in srgb,var(--accent) 22%,transparent);border-radius:4px}
+.win-split[data-axis="xs"]{cursor:col-resize}
+.win-split[data-axis="ys"]{cursor:row-resize}
+.win-split:hover,.win-split:focus-visible{background:var(--accent)}
