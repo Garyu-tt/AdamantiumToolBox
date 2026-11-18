@@ -1,5 +1,5 @@
 /** LinkFS folder explorer uses the same window manager as every other tool. */
-export function folderWindow(desktop,folder,openApp,iconFor,views,manager){
+export function folderWindow(desktop,folder,openApp,iconFor,views,manager,resolveFolder=()=>null){
  const node=(tag,cls,text)=>{
   const x=document.createElement(tag);x.className=cls;
   if(text!==undefined)x.textContent=text;
@@ -10,7 +10,7 @@ export function folderWindow(desktop,folder,openApp,iconFor,views,manager){
  const toolbar=node('div','ada-explorer-toolbar'),body=node('div','ada-explorer-body');
  let stack=[folder];
  function draw(){
-  const here=stack.at(-1);title.textContent=here.name;
+  const here=resolveFolder(stack.at(-1).id)||stack.at(-1);title.textContent=here.name;
   back.disabled=stack.length===1;body.replaceChildren();
   for(const item of here.children||[]){
    const b=node('button','ada-file');b.type='button';
@@ -28,5 +28,5 @@ export function folderWindow(desktop,folder,openApp,iconFor,views,manager){
  win.style.width='min(700px,88%)';win.style.height='min(500px,80%)';
  desktop.append(win);
  const handle=manager.register(win,bar,{key:'folder:'+crypto.randomUUID(),title:folder.name});
- draw();return handle;
+ draw();return {...handle,refresh:draw};
 }
