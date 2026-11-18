@@ -1,0 +1,63 @@
+# Noosphere 3.0: clean-slate distributed memory (design contract)
+
+Status: planned, NOT DEPLOYED. R02 ships the first local semantic capability router, not Noosphere's persistence, distributed recovery or legacy migration.
+
+## Ownership boundary
+
+- **Noosphere plugin**: knowledge graph semantics, memory envelopes, temporal metadata, provenance, retrieval context, life-cycle policies and relationships. It contains no database engine, database credentials or physical storage paths.
+- **Database plugin**: journals, snapshots, indices, query execution, storage adapters, durability and replication. Physical Database data directories belong to Database only.
+- **Adamantium Core**: recursive modules, capability negotiation, authorization/routing, plugin life-cycle and minimal isolation. Core must not own Noosphere records.
+- **Storage provider**: discovered at runtime by versioned semantic capabilities and caller permissions. Provider identity and transport are deployment choices, never hardcoded into Noosphere source.
+
+Core + Noosphere alone must start in reduced mode. Without a compatible storage provider, persistent memory actions are absent or explicitly unavailable; Noosphere must not silently open its own SQLite database.
+
+## Recursive plugin organization (illustrative, discoverable)
+
+```
+Noosphere plugin
+  memory
+    envelope
+    relations
+    temporal
+  ingestion
+    deduplication
+    provenance
+  retrieval
+    context
+    summarization
+  lifecycle
+    retention
+    migration
+  recovery
+    manifests
+    verification
+```
+
+Modules may be further nested, disabled or promoted into independent plugins. Dependencies follow capability contracts, never directory ancestry.
+
+## Memory envelope
+
+Every persisted record needs a stable object ID, schema version, payload reference/hash, provenance, `observed_at`, `recorded_at`, `updated_at`, and optional `valid_from` / `valid_to`. Preserve source IDs and ambiguity; never overwrite conflicting facts solely because their text looks similar. Schemas are versioned and typed; a memory is not assumed to be a plain text embedding.
+
+## Legacy import process
+
+1. Deploy a brand-new empty Noosphere 3.0 namespace in Database. No blind copying of old database files.
+2. Discover each legacy Noosphere instance and other archives through read-only adapters; take an inventory and source snapshot.
+3. Import one bounded, idempotent batch with source ID, checksum, migration job ID and source provenance.
+4. Verify object counts, content integrity, relationships and temporal semantics. Record failed/ambiguous items for review.
+5. Test restore from independent Database backup or sufficient erasure-coded fragments, not merely an index.
+6. Leave old sources untouched until explicit separate decommission authorization.
+
+## Distribution and recovery invariants
+
+A node may retain only a cache and placement manifest; it is not automatically capable of reconstructing all data alone. Critical durable information needs enough independent recovery material and keys to restore after the specified failure scenario. Replication should avoid excessive churn during temporary outages; distinguish unavailable from definitively lost nodes. Reject conflicting writers unless primary/consensus and idempotency policies explicitly authorize them.
+
+## Next acceptance gates
+
+- R03: Core + Noosphere independent plugin, no embedded datastore, degraded-mode graph with no fictitious memory actions.
+- R04: Database-backed CRUD through `storage.graph.*` via Core routing with per-caller identity and ACL.
+- R05: read-only incremental legacy adapter plus manifest, provenance and replay-safe checkpoints.
+- R06: two independently restorable copies and verified restore drills before durable real-world migration.
+- R07: trusted remote provider dispatch through authenticated pre-pinned Mesh identity, with explicit write destination and no ambiguous retries.
+
+No old Noosphere data should be modified by these implementation or smoke-test phases.
