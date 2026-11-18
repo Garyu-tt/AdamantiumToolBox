@@ -23,6 +23,9 @@ const bad=[
  {tooBig:'a'.repeat(40000)}
 ];
 for(const input of bad)assert.throws(()=>assertFrankValue(input),/invalid_frank_value/);
+assert.throws(()=>frankI64(Number.MAX_SAFE_INTEGER+2),/invalid_frank_value/);
+assert.deepEqual(frankI64(9223372036854775807n),
+ {$frank:'i64',value:'9223372036854775807'});
 const cycle={};cycle.self=cycle;
 assert.throws(()=>assertFrankValue(cycle),/invalid_frank_value/);
 let deep={};for(let i=0;i<20;i++)deep={a:deep};
