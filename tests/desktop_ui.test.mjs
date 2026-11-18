@@ -79,7 +79,14 @@ try{
  await evaluate('document.querySelector(".ada-layout-button").click()');
  await evaluate('document.querySelector(".ada-layout-menu button").click()');
  assert(await evaluate('document.querySelector(".window").dataset.mode==="tile"'));
- console.log('DESKTOP_UI_OK actual Chromium Start shortcut app min/max taskbar and Snap Layout');
+ await evaluate('window.prompt=()=>"QA Folder"');
+ await evaluate('document.querySelector(".ada-start-button").click()');
+ assert(await evaluate('(()=>{const b=[...document.querySelectorAll(".ada-start-entry")].find(x=>x.textContent.includes("Создать папку"));b?.click();return !!b})()'));
+ assert(await evaluate('[...document.querySelectorAll(".ada-canvas .ada-shortcut-label")].some(x=>x.textContent==="QA Folder")'));
+ ws.send(JSON.stringify({id:++sequence,method:'Page.reload'}));
+ await until(()=>evaluate('performance.getEntriesByType("navigation")[0]?.type==="reload"&&document.body.classList.contains("workspace-mode")'),'reload');
+ assert(await evaluate('[...document.querySelectorAll(".ada-canvas .ada-shortcut-label")].some(x=>x.textContent==="QA Folder")'));
+ console.log('DESKTOP_UI_OK Start, layout and folder persistence');
 }finally{
  ws?.close();
  for(const cp of children)if(cp.exitCode===null)cp.kill();
