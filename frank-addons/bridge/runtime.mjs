@@ -65,7 +65,8 @@ export async function bridgeInvoke(root,secret,action,params){
  const {packages,routes}=await snapshot(root,secret);
  if(action===base+'.list')return {packages};
  if(action===base+'.pipe'){
-  if(routes.size<2||!params||typeof params!=='object'||
+  if(routes.size<2)throw Error('capability_unavailable');
+  if(!params||typeof params!=='object'||
    typeof params.from!=='string'||typeof params.to!=='string'||
    !Object.hasOwn(params,'input'))throw Error('invalid_pipeline');
   const source=routes.get(params.from);
