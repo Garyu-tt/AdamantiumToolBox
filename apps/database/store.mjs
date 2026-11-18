@@ -80,6 +80,7 @@ export async function openStore(location,policy={}){
   };
   const close=async()=>{if(closed)return;closed=true;await queue;await handle.close();await guard.close();await unlink(lock);};
   return {transact,query,history,close,status:()=>({seq,hash:prev,namespaces:state.size,
-   usedBytes,maxJournalBytes:maxBytes,allowWrites,backupCopies:0})};
+   usedBytes,maxJournalBytes:maxBytes,allowWrites,
+   backupCopies:0,maxBackupCopies:policy.maxBackups??0})};
  }catch(e){await guard.close();await unlink(lock).catch(()=>{});throw e;}
 }
