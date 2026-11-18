@@ -1,9 +1,11 @@
+import {ratios} from './window_ratios.js';
 /** Pure window geometry: all coordinates are relative to the workspace. */
 const dimensions={2:[2,1],4:[2,2],8:[4,2]};
-export function layoutRects(width,height,preset,count=preset==='focus'?3:preset){
+export function layoutRects(width,height,preset,count=preset==='focus'?3:preset,splits=null){
+ const state=ratios(preset,splits);
  if(preset==='focus'){
-  const n=Math.max(0,Math.min(count,3)),split=Math.round(width*.6);
-  const middle=Math.round(height/2);
+  const n=Math.max(0,Math.min(count,3)),split=Math.round(width*state.xs[0]);
+  const middle=Math.round(height*state.ys[0]);
   return [
    {x:0,y:0,width:split,height},
    {x:split,y:0,width:width-split,height:middle},
@@ -13,11 +15,11 @@ export function layoutRects(width,height,preset,count=preset==='focus'?3:preset)
  const shape=dimensions[preset];
  if(!shape)throw Error('invalid_layout');
  const [cols,rows]=shape,n=Math.max(0,Math.min(count,preset));
+ const xEdges=[0,...state.xs,1].map(v=>Math.round(width*v));
+ const yEdges=[0,...state.ys,1].map(v=>Math.round(height*v));
  return Array.from({length:n},(_,i)=>{
-  const col=i%cols,row=Math.floor(i/cols);
-  const x=Math.round(width*col/cols),y=Math.round(height*row/rows);
-  return {x,y,width:Math.round(width*(col+1)/cols)-x,
-   height:Math.round(height*(row+1)/rows)-y};
+  const col=i%cols,row=Math.floor(i/cols),x=xEdges[col],y=yEdges[row];
+  return {x,y,width:xEdges[col+1]-x,height:yEdges[row+1]-y};
  });
 }
 export function snapRect(width,height,zone){
