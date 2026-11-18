@@ -108,3 +108,12 @@ providers yield a diagnosed pending state, never a misleading green success.
 - `[ ]` Host-signed discovery/authorization and real invocation (external).
 - `[ ]` Atomic graph/capability/UI publication and hot UI reconciliation (external).
 - `[ ]` Transactional external event cursor and replay (external).
+
+## R05 composite contract layer
+
+- [x] Recursive composition draft with one request/work intent per unique atomic function.
+- [x] Shared function references across composite groups without duplicate handlers.
+- [x] Local typed dependency cycle rejection, reverse index preview, unresolved external ports.
+- [x] Pure revision-scoped impact propagation across dependencies, groups and UI drafts.
+- [ ] External graph owner authentication, CAS, final atomic activation and rollback.
+- [ ] Live UI Graph integration and verified readback, with separate platform end-to-end tests.

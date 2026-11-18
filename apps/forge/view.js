@@ -32,6 +32,12 @@ export async function mount(host,api){
    request_id:'request-inspect-0001',function_ref:functionNode.id,
    expected_revision:'graph-rev-1',capability_action:functionNode.capability.action,
    evidence:{host:{},commit:{},capability:{},ui:{}}},
+  'forge.composite.plan':{schema:'forge.composite.request.v1',request_id:'forge-req-composite-1',
+   functions:[functionNode],root:{kind:'group',id:'mechanicus.example.group',version:'1.0.0',
+    label:'Example functions',children:[{kind:'function',ref:functionNode.id}]}},
+  'forge.composite.impact':{schema:'forge.composite.impact.request.v1',observed_revision:'host-rev-1',
+   trigger:'function.updated',changed_refs:[functionNode.id],graph_intent:{nodes:[
+    {id:functionNode.id,kind:'function'}],edges:[]}},
   'forge.incident.validate':{incident_id:'incident-1',node_ref:functionNode.id,
    cause:{code:'NO_PROVIDER',explanation:'Compatible provider was not discovered'},
    evidence:[{ref:'diagnostic:trace-1'}],impact:{direct:[functionNode.id]},

@@ -39,3 +39,18 @@ services or agents. Read `docs/FORGE-PROTOCOL-R03.md` for contracts and gates.
 
 The runtime/graph/UI owners alone may invoke or activate a capability.
 See `docs/FORGE-INTEGRATION-R04.md` for the host protocol and security gates.
+
+## R05 additions
+
+- `forge.composite.plan` — recursively validates an externally supplied group tree and
+  catalog of atomic functions, rejects cycles and ambiguous local capability definitions,
+  and produces graph/Raw UI drafts plus one unexecuted work intent per function.
+  Functions may appear in more than one group without duplication of handlers or requests.
+- `forge.composite.impact` — projects reverse dependency, containment and UI impact
+  against an externally supplied revision-bound graph snapshot. Returns unexecuted
+  re-verification, UI-revocation and group-refresh intents. It does not alter that graph.
+
+Composite groups are organizational non-executable nodes. The active capability graph,
+UI composer, access policy, event cursor and history are owned by **other plugins**.
+An external runtime must authenticate the data, authorize the exact provider and commit
+atomically before a new action is allowed to appear as executable in UI.
