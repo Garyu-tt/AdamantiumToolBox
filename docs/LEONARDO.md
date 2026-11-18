@@ -97,3 +97,12 @@ Cancelled/completed jobs are reported only after the provider confirms status.
 v0.3 does not stream video bytes or install media generation backends.
 Asynchronous icon regeneration is explicitly rejected pending an atomic
 finalization protocol. This avoids reporting icons saved when they are not.
+
+## v0.4 media preview and provider options
+
+Leonardo UI offers formats discovered at runtime from the provider graph and a
+structured JSON options field. A vector provider can receive `options.scene` with
+validated geometry. Small completed PNG and SVG results display as image previews;
+large artifacts and video jobs use job status or external storage contracts.
+The preview accepts only base64 `image/png` or `image/svg+xml`, not HTML or remote
+URLs. The app version is 0.2.0 to allow a compatible dynamic plugin upgrade.

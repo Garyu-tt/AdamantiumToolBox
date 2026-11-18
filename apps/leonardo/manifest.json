@@ -1,5 +1,5 @@
 {
-  "mas": "1.0", "id": "leonardo", "name": "Leonardo Graphics", "version": "0.1.0",
+  "mas": "1.0", "id": "leonardo", "name": "Leonardo Graphics", "version": "0.2.0",
   "icon": "leonardo", "lifecycle": "independent",
   "service": { "protocol": "mas-http-1", "port": 8894, "invokeTimeoutMs": 18000 },
   "ui": { "standard": "mas-ui-1", "mode": "embedded-and-standalone" },
