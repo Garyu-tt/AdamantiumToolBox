@@ -65,3 +65,15 @@ but provisions bounded 45/60-second limits inside the Rust CI test,
 raises the sandbox CPU ulimit to 30 seconds, and exposes safe adapter error
 codes for diagnostics. Only independent repeated CI runs can confirm
 whether this remedies the intermittent failure.
+
+## R02 signable MAS stage
+After a signed passing report, Gauntlet converts UTF-8 source files to a
+canonical `mas-package-1` base64 payload (the same schema accepted by
+`standards/mesh/bundle.mjs`) and writes its content-addressed JSON into
+private `release-payloads`. It stores the canonical Mesh payload digest
+`mesh_payload_sha256` in RC and delivery outbox, with explicit approval
+required. CI checks the staged payload with the authoritative
+`validatePayload`. This is still **unsigned**: the trusted Ed25519 owner
+signer, envelope store, Lifecycle plan/approval and activation receipt
+are separate unconnected steps. Source digest and payload digest differ
+by design because the byte encodings differ.

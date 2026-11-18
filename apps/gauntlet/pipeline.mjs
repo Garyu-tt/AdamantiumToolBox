@@ -1,4 +1,5 @@
 import {inspect} from './inspect.mjs';
+import {stagePackage} from './package.mjs';
 import {attest as validateAttestation} from './attestation.mjs';
 import {limits,publicView,validTask} from './shared.mjs';
 import {load,store,put,blocker} from './state.mjs';
@@ -48,14 +49,24 @@ export async function accept(root,input,key){
    stamp(c,c.attempts>=c.budget.attempts||c.spent_usd>=c.budget.cost?'FAILED':'BLOCKED');
    c.diagnostic=await blocker(root,c,c.issues);
   }else{
+   let stage;
+   try{stage=stagePackage(c);}
+   catch(e){
+    c.issues=['package_staging_failed:'+String(e.message).slice(0,60)];
+    stamp(c,'BLOCKED');c.diagnostic=await blocker(root,c,c.issues);
+    await store(root,c);return publicView(c);
+   }
    stamp(c,'VERIFIED');
+   const releasePayload=await put(root,'release-payloads',c.task_id+c.sha256,stage.payload);
    const rc={schema:'gauntlet-rc-1',task_id:c.task_id,sha256:c.sha256,
-    files:c.files,attestation:input.report,signature:input.signature};
+    files:c.files,attestation:input.report,signature:input.signature,
+    release_payload:releasePayload,mesh_payload_sha256:stage.mesh_payload_sha256};
    const artifact=await put(root,'candidates',c.task_id+c.sha256,rc);
    stamp(c,'RELEASE_READY');
    await put(root,'delivery-outbox',c.task_id+c.sha256,{
     schema:'gauntlet-delivery-request-1',task_id:c.task_id,sha256:c.sha256,
-    artifact,approval:'REQUIRED',status:'PENDING_DELIVERY'});
+    artifact,release_payload:releasePayload,mesh_payload_sha256:stage.mesh_payload_sha256,
+    approval:'REQUIRED',status:'PENDING_DELIVERY'});
   }
   await store(root,c);return publicView(c);
  });

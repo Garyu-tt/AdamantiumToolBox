@@ -4,6 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {generateKeyPairSync,sign} from 'node:crypto';
 import {bundleHash,hash} from '../apps/gauntlet/shared.mjs';
+import {validatePayload} from '../standards/mesh/bundle.mjs';
 import {inspect} from '../apps/gauntlet/inspect.mjs';
 import {submit,accept} from '../apps/gauntlet/pipeline.mjs';
 import {list} from '../apps/gauntlet/state.mjs';
@@ -46,5 +47,13 @@ try{
  const candidate=(await readdir(join(root,'candidates')))[0];
  const rc=JSON.parse(await readFile(join(root,'candidates',candidate),'utf8'));
  assert.equal(rc.sha256,input.sha256);
+ const delivery=(await readdir(join(root,'delivery-outbox')))[0];
+ const deliveryDoc=JSON.parse(await readFile(join(root,'delivery-outbox',delivery),'utf8'));
+ assert.equal(deliveryDoc.approval,'REQUIRED');
+ assert.equal(deliveryDoc.status,'PENDING_DELIVERY');
+ const payload=JSON.parse(await readFile(join(root,'release-payloads',
+  deliveryDoc.release_payload),'utf8'));
+ assert.equal(validatePayload(payload).manifest.id,'specimen');
+ assert.equal(hash(JSON.stringify(payload)),deliveryDoc.mesh_payload_sha256);
  console.log('GAUNTLET_R01_OK sha256 evidence signature diagnostic Fixiki delivery');
 }finally{await rm(root,{recursive:true,force:true});}
