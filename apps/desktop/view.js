@@ -95,10 +95,10 @@ export async function mount(host,api){
   if(!context.contains(e.target))context.classList.remove('open');
  };
  const keyboard=e=>{
-  if(e.key==='Escape'){toggleStart(false);context.classList.remove('open');}
   if(e.ctrlKey&&e.key==='Escape'){
-   e.preventDefault();toggleStart(!start.classList.contains('open'));
+   e.preventDefault();toggleStart(!start.classList.contains('open'));return;
   }
+  if(e.key==='Escape'){toggleStart(false);context.classList.remove('open');}
  };
 
  startButton.onclick=()=>toggleStart(!start.classList.contains('open'));
