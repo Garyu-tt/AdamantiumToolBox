@@ -1,3 +1,4 @@
+import {attachLeonardoLayout} from './compose-schema.js';
 export function previewUrl(artifact){
  if(!artifact||!['image/png','image/svg+xml'].includes(artifact.mime)||
   artifact.encoding!=='base64'||typeof artifact.data!=='string'||
@@ -15,7 +16,7 @@ export async function mount(host,api){
  const add=(tag,text,parent=host)=>{const e=document.createElement(tag);
   if(text!==undefined)e.textContent=text;parent.append(e);return e;};
  const has=id=>api.graph().nodes.some(n=>n.type==='action'&&n.id===id);
- add('h2','Leonardo · Graphics Router');
+ const heading=add('h2','Leonardo · Graphics Router');
  const info=add('p','Проверка графических движков…');
  const form=add('div'),prompt=add('textarea',undefined,form);
  prompt.placeholder='Описание графической задачи';prompt.rows=3;
@@ -30,7 +31,7 @@ export async function mount(host,api){
  const refresh=add('button','Обновить провайдеры',host);
  const output=add('pre','',host),preview=add('img',undefined,host);
  preview.alt='Предпросмотр графики';preview.style.maxWidth='100%';preview.hidden=true;
- add('h3','Задания',host);const reloadJobs=add('button','Обновить задания',host);
+ const jobsHeading=add('h3','Задания',host);const reloadJobs=add('button','Обновить задания',host);
  const jobsList=add('div','',host);
  let available=[];
  const show=value=>{
@@ -105,4 +106,6 @@ export async function mount(host,api){
  };
  await updateProviders().catch(e=>info.textContent=e.message);
  await refreshJobs().catch(e=>output.textContent=e.message);
+ attachLeonardoLayout(host,api,heading,{prompt,kinds,providers,formats,key,details,
+  remoteLabel,submit,info,refresh,output,preview,jobsHeading,reloadJobs,jobsList});
 }
