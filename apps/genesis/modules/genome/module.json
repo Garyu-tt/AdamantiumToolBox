@@ -1,0 +1,20 @@
+{
+  "id": "genome",
+  "name": "Genome Validation",
+  "capability": "genesis.genome.validate/v1",
+  "actions": [
+    {
+      "id": "genesis.genome.validate",
+      "title": "Проверить геном",
+      "permission": "genesis.read",
+      "inputs": [
+        {
+          "name": "genome",
+          "label": "Genome JSON",
+          "type": "json",
+          "default": "{\"initial_neurons\":8,\"target_neurons\":32,\"maximum_neurons\":256}"
+        }
+      ]
+    }
+  ]
+}
