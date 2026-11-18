@@ -1,0 +1,5 @@
+{
+ "mas":"1.0","kind":"module","id":"ingestion","version":"0.3.0",
+ "lifecycle":"container","isolation":"in-process","entry":null,
+ "requires":[],"provides":[],"events":[],"settings":{}
+}
