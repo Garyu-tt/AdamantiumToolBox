@@ -35,6 +35,8 @@ export async function accept(root,input,key){
   const c=await load(root,input.task_id);
   if(!c||!['BUILDING','TESTING'].includes(c.status))throw Error('not_awaiting_tests');
   const checked=validateAttestation(input,c,key);
+  c.qa_evidence=await put(root,'qa-evidence',c.task_id+c.sha256+input.report.run_id,
+   {report:input.report,signature:input.signature});
   c.spent_usd+=checked.cost;stamp(c,'TESTING');c.issues=checked.issues;
   if(c.spent_usd>c.budget.cost)c.issues.push('cost_budget_exhausted');
   if(c.issues.length){

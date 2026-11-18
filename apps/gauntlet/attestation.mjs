@@ -34,7 +34,8 @@ export function attest(payload,c,publicKey){
    failed.push('dependency_impact_unverified');
   else for(const id of report.dependent_plugins)
    if(!report.dependent_results.some(x=>x.plugin_id===id&&x.status==='PASS'&&
-    validHash(x.log_sha256)))failed.push('dependent_unverified:'+id);
+    typeof x.log==='string'&&x.log.length>0&&
+    validHash(x.log_sha256)&&hash(x.log)===x.log_sha256))failed.push('dependent_unverified:'+id);
  }
  return {issues:failed,cost};
 }

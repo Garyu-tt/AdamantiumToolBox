@@ -19,6 +19,7 @@ function importsOutside(name,text){
 export function inspect(input,active=[]){
  const issues=[],files=input?.files;
  if(!validTask(input?.task_id))issues.push('invalid_task_id');
+ if(!validTask(input?.author_id))issues.push('invalid_author_id');
  if(!files||Array.isArray(files)||typeof files!=='object')return {issues:['invalid_files']};
  const entries=Object.entries(files);
  if(entries.length<3||entries.length>80)issues.push('invalid_file_count');

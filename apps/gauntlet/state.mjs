@@ -14,7 +14,7 @@ export async function store(root,c){
 }
 export async function put(root,type,keypart,value){
  const dir=join(root,type);await mkdir(dir,{recursive:true});
- const name=hash(keypart)+'.json';
+ const name=hash(JSON.stringify(value))+'.json';
  try{await writeFile(join(dir,name),JSON.stringify(value),{flag:'wx'});}
  catch(e){if(e.code!=='EEXIST')throw e;}
  return name;
@@ -29,7 +29,8 @@ export async function list(root){
 }
 export async function blocker(root,c,issues){
  const report={schema:'gauntlet-diagnostic-1',task_id:c.task_id,
-  sha256:c.sha256,attempt:c.attempts,issues,at:new Date().toISOString()};
+  sha256:c.sha256,attempt:c.attempts,issues,qa_evidence:c.qa_evidence||null,
+  at:new Date().toISOString()};
  const file=await put(root,'diagnostics',c.task_id+c.sha256+String(c.attempts),report);
  await put(root,'fixiki-outbox',c.task_id+c.sha256+String(c.attempts),{
   schema:'gauntlet-fix-request-1',target:'capability:fixiki.triage',task_id:c.task_id,
