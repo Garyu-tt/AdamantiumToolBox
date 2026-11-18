@@ -52,6 +52,10 @@ export function assertFrankValue(value){
  if(!json||Buffer.byteLength(json,'utf8')>32768)reject();
  return value;
 }
-export const frankI64=value=>assertFrankValue({$frank:'i64',value:String(value)});
+export const frankI64=value=>{
+ if(typeof value==='number'&&(!Number.isSafeInteger(value)))reject();
+ if(typeof value!=='bigint'&&typeof value!=='string'&&typeof value!=='number')reject();
+ return assertFrankValue({$frank:'i64',value:String(value)});
+};
 export const frankBytes=bytes=>assertFrankValue({
  $frank:'bytes',value:Buffer.from(bytes).toString('base64')});
