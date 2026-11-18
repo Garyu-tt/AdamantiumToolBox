@@ -47,7 +47,28 @@ try{
   'Content-Type':'application/json'},body:JSON.stringify({action:'fixture.ping'})});
  assert.equal(action.status,200);assert.deepEqual((await action.json()).result,{pong:true});
  const path=join(tmp,'apps','fixture','modules.json');
- const modules=JSON.parse(await readFile(path,'utf8'));modules.modules[0].enabled=false;
+ const modules=JSON.parse(await readFile(path,'utf8'));
+ modules.modules[0].children=[{id:'fixture.nested',kind:'submodule',version:'0.1.0',
+  provides:[{id:'fixture.extra',type:'resource',title:'Extra',version:'1.0.0',
+   permissions:['fixture.read']}],consumes:[{id:'fixture.ping',version:'^1.0.0',
+   optional:false}]}];
+ await writeFile(path,JSON.stringify(modules));
+ const active=await fetch(base+'/api/graph',{headers:{Authorization:'Bearer '+token}});
+ assert.deepEqual((await active.json()).nodes.map(n=>n.id).sort(),
+  ['fixture.extra','fixture.ping','fixture.view']);
+ modules.modules[0].children[0].consumes[0].version='^2.0.0';
+ await writeFile(path,JSON.stringify(modules));
+ const incompatible=await fetch(base+'/api/graph',{headers:{Authorization:'Bearer '+token}});
+ assert.deepEqual((await incompatible.json()).nodes.map(n=>n.id).sort(),
+  ['fixture.ping','fixture.view']);
+ modules.modules[0].children[0].consumes[0].version='^1.0.0';
+ modules.modules[0].children[0].provides[0].permissions=['foreign.admin'];
+ await writeFile(path,JSON.stringify(modules));
+ const invalid=await fetch('http://127.0.0.1:'+servicePort+'/graph',{
+  headers:{'X-Internal-Key':secret}});
+ assert.equal(invalid.status,503); // malformed live spec fails closed
+ modules.modules[0].children[0].provides[0].permissions=['fixture.read'];
+ modules.modules[0].enabled=false;
  await writeFile(path,JSON.stringify(modules));
  const changed=await fetch(base+'/api/graph',{headers:{Authorization:'Bearer '+token}});
  assert.deepEqual((await changed.json()).nodes,[]);
