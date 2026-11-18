@@ -2,6 +2,7 @@ import http from 'node:http';
 import {catalog} from './catalog.mjs';
 import {validateGraph} from './contract.mjs';
 import {standardApi} from './api.mjs';
+import {signedIdentity,assertTargetNode} from './identity.mjs';
 import {semanticApi} from './semantic_api.mjs';
 import {linkTree} from './linkfs.mjs';
 import {resolveAsset} from './assets.mjs';
@@ -71,6 +72,12 @@ http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');
  if(await standardApi(req,res,{reply,token,secret,caps}))return;
  if(await semanticApi(req,res,{reply,token,secret,caps,backend:async()=>(await graph()).doc}))return;
+ if(url.pathname==='/api/identity'){
+  if(req.method!=='GET')return reply(res,405,{error:'method'});
+  if(!authorized(req))return reply(res,401,{error:'unauthorized'});
+  try{return reply(res,200,await signedIdentity(url.searchParams.get('challenge')));}
+  catch(e){return reply(res,e.message==='invalid_challenge'?400:503,{error:String(e.message).slice(0,80)});}
+ }
  if(url.pathname==='/health')return reply(res,200,{service:'Adamantium Toolbox',version:1});
  if(req.method==='GET'&&url.pathname==='/api/navigation'){
   if(!authorized(req))return reply(res,401,{error:'unauthorized'});
@@ -83,6 +90,10 @@ http.createServer(async(req,res)=>{
  }
  if(req.method==='POST'&&url.pathname==='/api/invoke'){
   if(!authorized(req))return reply(res,401,{error:'unauthorized'});
+  if(req.headers['x-adamantium-target-node']){
+   try{await assertTargetNode(req.headers['x-adamantium-target-node']);}
+   catch{return reply(res,409,{error:'node_identity_mismatch'});}
+  }
   let raw='';req.on('data',d=>{raw+=d;if(raw.length>262144)req.destroy();});
   req.on('end',async()=>{try{
    const body=JSON.parse(raw),routes=(await graph()).routes;

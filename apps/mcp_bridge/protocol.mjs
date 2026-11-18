@@ -14,7 +14,7 @@ export async function dispatch(p){
  if(id===null)return error(null,-32600,'id_required');
  const result=async()=>{
   if(p.method==='initialize'){const requested=p.params?.protocolVersion;
-   return {protocolVersion:versions.includes(requested)?requested:versions.at(-1),capabilities:{tools:{}},serverInfo:{name:'adamantium-mcp-bridge',version:'0.1.0'}};}
+   return {protocolVersion:versions.includes(requested)?requested:versions.at(-1),capabilities:{tools:{}},serverInfo:{name:'adamantium-mcp-bridge',version:'0.2.0'}};}
   if(p.method==='ping')return {};
   if(p.method==='tools/list')return {tools};
   if(p.method==='tools/call'){

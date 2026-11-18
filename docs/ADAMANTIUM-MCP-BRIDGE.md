@@ -1,58 +1,48 @@
-# Adamantium MCP Bridge, MAS plugin 0.1.0
+# Adamantium MCP Bridge: signed identity and explicit cutover (MAS App 0.2.0)
 
-## Current scope
+## Stable client ABI
 
-This is one independent MAS application under `apps/mcp_bridge`. It requires **Core + this app only** and no other optional app. It runs on the machine hosting the Adamantium runtime; it is not a new centralized orchestrator. Read-only network discovery, dynamic capability routing and explicit invocations use Adamantium's existing `/api/graph` and `/api/invoke` contract.
+The independent `mcp_bridge` MAS App accepts only the fixed MCP operations `adamantium_nodes`, `adamantium_capabilities`, and `adamantium_invoke`. Backends determine actual apps dynamically from their Core capability graph. It requires `Core + mcp_bridge` only, with no browser, Mesh worker, optional app or specific ChatGPT model as a runtime dependency.
 
-MCP tool names are stable across ChatGPT model versions:
+The returned graph contains **only currently exposed action nodes also present in the operator allowlist**. Missing permissions or stale/absent actions do not create phantom buttons. A configured node must prove its existing Mesh Ed25519 identity using authenticated, nonce-bound `GET /api/identity?challenge=<48 hex>` before its graph can be treated as reachable. The core signs `adamantium.core.identity.v1\n<mesh-uuid>\n<challenge>` with its existing Mesh private key. The bridge checks the pinned public key and the exact nonce; the private key never leaves the Core. `POST /api/invoke` additionally receives `X-Adamantium-Target-Node` and Core denies a mismatch with HTTP 409 before any action is run.
 
-- `adamantium_nodes`: approved logical nodes and observed reachability
-- `adamantium_capabilities`: current graph from all or one node
-- `adamantium_invoke`: exact `{node_id, action, params}`; refuses undeclared/unapproved actions
+## Operator-approved registry
 
-Browser automation, editors, CMS and any future MAS app are **not hardcoded**: if they expose actions in the Core graph, they become discoverable. Calls require operator-configured exact action allowlists AND each node's native permissions. This is not a universal shell and not a bridge to unrestricted execution.
-
-## Deployment (not performed)
-
-The gateway binds only `127.0.0.1` and requires independent strong `ADA_MCP_BEARER`, internal MAS key and node credentials. Use an operator-managed HTTPS reverse proxy with authentication, access controls and stable service DNS. A *real* remote endpoint must be verified before adding `mcp.json` to a ChatGPT plugin. There is NO production endpoint or DNS name hardcoded in this package.
-
-Environment inputs:
-
-- `ADA_INTERNAL_KEY`: same key used by the local MAS Core
-- `ADA_MCP_BEARER`: independently generated long random token for this gateway, not stored in source
-- `ADA_BRIDGE_CONFIG`: path to operator-controlled trusted node registry JSON, hot-reloaded each request
-- `ADA_CORE_URL` and `ADA_TOKEN`: local Core bootstrap (only when registry absent), no arbitrary remote fallback
-- `APP_PORT`: runtime-assigned listener, default from `manifest.json`
-
-Example of a **configuration template, not live addresses**:
+Registry schema remains `adamantium.bridge.nodes.v1`. The following is a structural **template**, not a real deployment. Replace all example fields with verified runtime facts without embedding credentials in the file:
 
 ```json
 {
   "schema": "adamantium.bridge.nodes.v1",
   "nodes": [
     {
-      "id": "logical-machine-a",
+      "id": "logical_node",
       "approved": true,
-      "urls": ["https://REAL-OPERATOR-VERIFIED-ENDPOINT/"],
-      "tokenEnv": "ADA_NODE_A_TOKEN",
-      "allow": ["browser.tabs", "browser.screenshot"]
+      "urls": ["https://OPERATOR_VERIFIED_CORE_HOST/"],
+      "tokenEnv": "ADA_REMOTE_CORE_TOKEN",
+      "identity": {
+        "id": "MESH_UUID_FROM_TRUSTED_PROVISIONING",
+        "publicKey": "ED25519_SPKI_PEM_WITH_NEWLINES"
+      },
+      "allow": ["browser.tabs"]
     }
   ]
 }
 ```
 
-The registry is reloaded on each request. The same node ID can map to a new endpoint after migration without changes to the MCP tool schema or ChatGPT plugin code. Node IDs must match the MAS ID restrictions (use `node_a`, not example placeholders with embedded URLs). Backend code is independent of the ChatGPT model version. The bridge currently uses a **manually trusted operator registry**: it does not yet verify signed Mesh membership, and DNS/HTTPS validation and policy are the operator's responsibility. Do not auto-enroll untrusted nodes.
+`identity.id` is the Mesh UUID from trusted provisioning and `identity.publicKey` is its PEM public key (not an API token). They are **pinned by the operator**, never self-enrolled from an untrusted network response. Reject unknown IDs, unexpected keys, insecure HTTP outside loopback and URL credentials. `ADA_BRIDGE_CONFIG` selects the hot-reloaded registry, while `ADA_MCP_BEARER` independently protects the localhost MCP listener. Node access tokens are separately loaded from environment variables named by `tokenEnv`, never stored in the registry or returned to ChatGPT.
 
-## Failure and migration semantics
+The Core identity state uses the already defined Mesh storage under `LOCALAPPDATA/Adamantium Toolbox/mesh` or a configured `ADA_MESH_IDENTITY_DIR` when the Mesh identity was provisioned elsewhere. Both Core and Mesh must point to **the same protected identity directory**. A fresh identity is created only on first use by the existing built-in Mesh identity module. Do not duplicate private identities between simultaneously active hosts.
 
-The graph is retrieved from all configured nodes without assuming their availability. Missing nodes are reported as `unreachable`, not silently omitted. A logical node can have multiple trusted endpoints. Discovery can try the next configured endpoint after a read-only failure; **mutating `adamantium_invoke` is NEVER retried automatically after POST**. HTTP errors and timeouts can represent an uncertain commit. Require idempotent task IDs and an independent status check before replaying remote operations in a future protocol revision.
+## Safe relocation / partial failure
 
-This does **not** turn the existing signed-package Mesh into a distributed capability router. The current repo describes that as a future task, not something deployed. Full cross-node mobility needs signed node identity, certificate pinning or trusted identity federation, distributed service discovery/leases, replication, stable HTTPS ingress with independent gateways, and per-node authorization/observability. No single control node can be guaranteed available without that work.
+1. Inspect current permissions, runtime state and the destination's signed identity **out of band**. Migrate or restore durable data; do not assume a successful API response means data moved.
+2. Preserve the logical Mesh identity **only for an intentional relocation**, with secure key transfer, or treat the destination as a separate node if its identity differs. Securely deactivate or fence the previous writer before traffic switches.
+3. Read-only capability discovery may try another approved address of the same identity. It returns which index responded and does not claim full availability of the primary.
+4. **Mutations never automatically switch endpoints.** The first configured URL is the only primary target for `adamantium_invoke`; an offline, wrong-key or unverified primary fails closed. To switch, explicitly promote the verified destination by editing the trusted registry and re-reading current capabilities.
+5. Never auto-retry POST after an uncertain timeout; require idempotency and independent readback. Keep the old endpoint available for read-only audit until cleanly retired.
 
-## Chromium browser integration
+This is **not** true HA: current Adamantium Mesh transports signed packages, not distributed live capability RPC. Distributed leases/fencing, signed membership, replicated storage, redundant ingress, browser profiles and real ChatGPT MCP pairing remain separate tasks. Browser interactions must use only the discovered, authorized MAS Browser actions. Do not copy cookies/passwords or bypass host-key checks.
 
-The existing MAS Browser plugin exposes `browser.tabs`, `browser.open`, `browser.navigate`, `browser.click`, `browser.type`, and other capability IDs. These can be routed without importing Browser from the MCP plugin. Browser's current profiles are temporary and **do not preserve logins across nodes**. Session portability requires a separately designed encrypted profile and secrets manager; do not copy raw passwords, cookies or OS-bound encryption material over the mesh.
+## Local tests and production gates
 
-## Acceptance
-
-Run `node --test tests/mcp_bridge*.test.mjs`. The tests launch a real standalone MCP Bridge service with mock Core APIs on independent ports and cover two nodes, policy denial, hot-reload after migration, MCP `initialize`, `tools/list` and `tools/call`. Full Core + App integration and cross-node production routing must still be checked in the actual Windows runtime before activation. Respect `docs/ADR-0001-ARCHITECTURE.md` and the 120-line/6144-byte file budget. Do not activate or distribute unsigned packages automatically.
+Run `node --test tests/mcp_bridge*.test.mjs`. Tests cover cryptographic signatures, mismatch handling, allowlist visibility, two nodes, hot registry migration, spoofed endpoints, alternate read paths and explicit primary cutover. Each core/bridge production source file stays within 120 lines / 6144 bytes. These tests use loopback mock Core instances and a real loopback MCP listener; they do **not** prove a deployed cross-host HTTPS environment. Do not merge or deploy until the full Windows Core+App regression suite, source scanner, security review and authorized staging ingress checks pass.

@@ -10,6 +10,13 @@ async function get(path,headers={}){
  return {status:res.status,body:await res.json()};
 }
 const headers={Authorization:'Bearer '+auth.token};
+const identityProbe=await get('/api/identity?challenge='+('a'.repeat(48)),headers);
+assert.equal(identityProbe.status,200);
+assert.equal(identityProbe.body.schema,'adamantium.core.identity.v1');
+assert.equal(identityProbe.body.challenge,'a'.repeat(48));
+assert.match(identityProbe.body.signature,/^[A-Za-z0-9+/]+={0,2}$/);
+assert.equal((await get('/api/identity?challenge=bad',headers)).status,400);
+assert.equal((await get('/api/identity?challenge='+('a'.repeat(48)))).status,401);
 const health=await get('/health');
 assert.equal(health.body.service,'Adamantium Toolbox');
 assert.equal((await get('/api/semantic')).status,401);

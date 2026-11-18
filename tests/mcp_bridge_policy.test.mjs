@@ -1,10 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {generateKeyPairSync,randomUUID} from 'node:crypto';
 import {validate} from '../apps/mcp_bridge/config.mjs';
-test('node registry denies unapproved or insecure endpoints',async()=>{
+const key=()=>generateKeyPairSync('ed25519').publicKey.export({format:'pem',type:'spki'});
+test('node registry rejects insecure endpoints and malformed pins',()=>{
  const base={schema:'adamantium.bridge.nodes.v1',nodes:[]};
  assert.deepEqual(validate(base),[]);
- assert.throws(()=>validate({...base,nodes:[{id:'node_x',approved:false,urls:['https://x.example/'],tokenEnv:'ADA_TOKEN',allow:[]}]}),/unapproved_node/);
- assert.throws(()=>validate({...base,nodes:[{id:'node_x',approved:true,urls:['http://10.0.0.2/'],tokenEnv:'ADA_TOKEN',allow:[]}]}),/https_required/);
- assert.throws(()=>validate({...base,nodes:[{id:'node_x',approved:true,urls:['https://x.example/secret'],tokenEnv:'ADA_TOKEN',allow:[]}]}),/unsafe_endpoint/);
+ const node={id:'node_x',approved:true,urls:['https://x.example/'],tokenEnv:'ADA_TOKEN',allow:[]};
+ assert.throws(()=>validate({...base,nodes:[{...node,approved:false}]}),/unapproved_node/);
+ assert.throws(()=>validate({...base,nodes:[{...node,urls:['http://10.0.0.2/']}]}),/https_required/);
+ assert.throws(()=>validate({...base,nodes:[{...node,urls:['https://x.example/secret']}]}),/unsafe_endpoint/);
+ assert.throws(()=>validate({...base,nodes:[{...node,identity:{id:'wrong',publicKey:key()}}]}),/invalid_mesh_identity/);
+ assert.throws(()=>validate({...base,nodes:[{...node,identity:{id:randomUUID(),publicKey:'fake'}}]}),/invalid_mesh_identity/);
+ assert.equal(validate({...base,nodes:[node]})[0].identity,null);
+ assert.equal(validate({...base,nodes:[{...node,identity:{id:randomUUID(),publicKey:key()}}]})[0].identity.publicKey.includes('PUBLIC KEY'),true);
 });
