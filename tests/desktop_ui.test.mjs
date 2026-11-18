@@ -33,7 +33,7 @@ const until=async(fn,what)=>{
 let ws=null;
 try{
  const browser=await engine();
- launch('apps/desktop/service.mjs',{APP_PORT:'8893'});
+ launch('apps/desktop/service.mjs',{APP_PORT:'8894'});
  launch('apps/editor/service.mjs',{APP_PORT:'8881'});
  launch('core/kernel.mjs');
  await until(async()=>{const r=await fetch(base+'/api/graph',{headers:{Authorization:'Bearer '+token},
