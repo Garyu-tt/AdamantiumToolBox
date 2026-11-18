@@ -8,7 +8,7 @@
   "service": {
     "protocol": "mas-http-1",
     "port": 8893,
-    "invokeTimeoutMs": 12000
+    "invokeTimeoutMs": 20000
   },
   "ui": {
     "standard": "mas-ui-1",
