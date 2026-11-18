@@ -48,7 +48,7 @@ function launch(args,input='',timeout=TIMEOUT){
    if(failure)return reject(Error('sandbox_unavailable'));
    if(timedOut)return reject(Error('sandbox_timeout'));
    if(overflow)return reject(Error('sandbox_output_limit'));
-   if(code!==0)return reject(Error('sandbox_failed:'+stderr.slice(0,160)));
+   if(code!==0)return reject(Error('sandbox_failed:'+stderr.slice(0,3000)));
    resolve(stdout);
   });
   child.stdin.end(input);
