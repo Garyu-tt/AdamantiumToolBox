@@ -31,9 +31,11 @@ Only approve independently reviewed code. OS-level isolation, scoped service
 identities, resource limits, process-level permission enforcement and
 independent adversarial review are still needed for untrusted plugin execution.
 The successful preflight probe does not prove runtime stability afterward.
+The supervisor now checks runtime health and quarantines repeated failures.
 The first release does not support data migrations, breaking major updates,
-distributed activation, or guaranteed automatic rollback after post-commit
-runtime failures. Filesystem locks may need manual recovery after process crash.
+distributed activation, or OS-enforced execution isolation. Persistent crash
+quarantine and post-activation rollback are described in docs/RUNTIME-RECOVERY.md.
+Filesystem locks may need manual recovery after process crash.
 
 ## Headless workflow
 Run from the toolbox installation directory:

@@ -38,11 +38,12 @@ export async function activate(project,runtime,plan,approval=false){
    probe:'passed',runtime:'supervisor_discovers_next_poll'};
  });
 }
-export async function rollback(project,runtime,id,approval=false){
+export async function rollback(project,runtime,id,approval=false,expectedHash=null){
  if(approval!==true)throw Error('explicit_approval_required');
  if(typeof id!=='string'||!/^[a-z][a-z0-9_-]{1,39}$/.test(id))throw Error('invalid_app_id');
  return locked(runtime,async()=>{
   const doc=await current(runtime),now=doc.apps.find(a=>a.id===id)?.hash||null;
+  if(expectedHash&&now!==expectedHash)return {schema:'mas-lifecycle-result-1',state:'stale',app:id};
   const latest=[...(doc.history||[])].reverse().find(e=>e.app===id);
   if(!latest||latest.after!==now||latest.before===now)throw Error('no_rollback_candidate');
   if(latest.before){
@@ -56,4 +57,9 @@ export async function rollback(project,runtime,id,approval=false){
   return {schema:'mas-lifecycle-result-1',state:'rolled_back',app:id,
    hash:latest.before,previous:now,revision:saved.revision};
  });
+}
+
+export async function automaticRollback(project,runtime,id,expectedHash){
+ if(!/^[0-9a-f]{64}$/.test(expectedHash||''))throw Error('bad_expected_hash');
+ return rollback(project,runtime,id,true,expectedHash);
 }

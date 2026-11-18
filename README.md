@@ -70,3 +70,10 @@ Select signed versions with activate <plan.json> --approve; rollback <id> --appr
 The registry is atomic and preserves previous hashes; the supervisor picks up changes.
 Executable third-party plugins run with current OS-user privileges. No sandbox yet.
 See docs/LIFECYCLE.md. Never activate received packages automatically.
+
+## Runtime Recovery
+The supervisor monitors each app's health and API graph, rate-limits retries,
+quarantines repeated crashes, and automatically rolls back signed external
+plugins to the last selected version when enabled by the runtime policy.
+Read docs/RUNTIME-RECOVERY.md and inspect node tools/lifecycle.mjs status.
+Runtime recovery is NOT a sandbox or protection against malicious code.

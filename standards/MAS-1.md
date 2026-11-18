@@ -80,3 +80,11 @@ absence of migrations; the candidate is health/graph-probed before atomic select
 Versioned assets and retained bundles permit manual rollback without modifying
 bundled applications. See docs/LIFECYCLE.md. This is not a sandbox and this gate
 is not a formal backward-compatibility proof for API actions.
+
+## Runtime Recovery contract
+System services and apps are supervised by fingerprint and version; unexpected
+exit and malformed/absent health/graph trigger bounded retries and quarantine.
+Configured automatic rollback applies ONLY to previously approved, signed
+external plugins, with an expected active-hash check and auditable event.
+Base services and bundled apps are quarantined, not silently replaced.
+See docs/RUNTIME-RECOVERY.md. This does not restrict OS-level privileges.

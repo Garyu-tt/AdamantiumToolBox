@@ -6,7 +6,7 @@ if($LASTEXITCODE -ne 0){throw 'Architecture policy violation'}
 if($LASTEXITCODE -ne 0){throw 'Architecture gate regression'}
 & python (Join-Path $source 'tools\check-size.py')
 if($LASTEXITCODE -ne 0){throw 'Source size gate failed'}
-foreach($test in @('tests\linkfs.test.mjs','tests\contract.test.mjs','tests\semantic.test.mjs','tests\codegraph.test.mjs','tests\mesh.test.mjs','tests\storage.test.mjs','tests\isolation.test.mjs','tests\assets.test.mjs','tests\services.test.mjs','tests\lifecycle.test.mjs')){
+foreach($test in @('tests\linkfs.test.mjs','tests\contract.test.mjs','tests\semantic.test.mjs','tests\codegraph.test.mjs','tests\mesh.test.mjs','tests\storage.test.mjs','tests\isolation.test.mjs','tests\assets.test.mjs','tests\services.test.mjs','tests\lifecycle.test.mjs','tests\runtime_guard.test.mjs','tests\runtime_recovery.test.mjs')){
  & node (Join-Path $source $test)
  if($LASTEXITCODE -ne 0){throw ('Test failed: '+$test)}
 }

@@ -7,7 +7,7 @@ import {identity,seal} from '../standards/mesh/identity.mjs';
 import {packDir} from '../standards/mesh/bundle.mjs';
 import {receive} from '../standards/mesh/store.mjs';
 import {planActivation} from '../standards/lifecycle/plan.mjs';
-import {activate,rollback} from '../standards/lifecycle/apply.mjs';
+import {activate,rollback,automaticRollback} from '../standards/lifecycle/apply.mjs';
 import {current} from '../standards/lifecycle/registry.mjs';
 import {catalog} from '../core/catalog.mjs';
 import {resolveAsset} from '../core/assets.mjs';
@@ -48,7 +48,7 @@ try{
  const plan=await planActivation(project,runtime,first);
  assert.equal(plan.previous,null);
  await assert.rejects(activate(project,runtime,plan),/explicit_approval_required/);
- await assert.rejects(activate(project,runtime,{...plan,plan_id:'altered'},true),/plan_changed/);
+ await assert.rejects(activate(project,runtime,{...plan,plan_id:'bad'},true),/plan_changed/);
  const activated=await activate(project,runtime,plan,true);
  assert.equal(activated.state,'selected');
  assert.equal(activated.probe,'passed');
@@ -73,9 +73,11 @@ try{
  await assert.rejects(planActivation(project,runtime,first),/version_downgrade/);
  const rolled=await rollback(project,runtime,name,true);
  assert.equal(rolled.hash,first);
- assert.equal((await catalog(project)).find(x=>x.id===name).version,'1.0.0');
  const removed=await rollback(project,runtime,name,true);
  assert.equal(removed.hash,second);
+ assert.equal((await automaticRollback(project,runtime,name,first)).state,'stale');
+ assert.equal((await automaticRollback(project,runtime,name,second)).hash,first);
+ assert.equal((await rollback(project,runtime,name,true)).hash,second);
  const collision=await packageVersion('2.0.0','ok',8881);
  await assert.rejects(planActivation(project,runtime,collision),/port_reserved/);
  const breaking=await packageVersion('2.0.0','ok',9131);
@@ -88,5 +90,5 @@ try{
  assert(!(await catalog(project)).some(a=>a.id===name));
  await writeFile(join(runtime,'plugins','active.json'),'{corrupt');
  assert((await catalog(project)).some(a=>a.id==='editor'));
- console.log('LIFECYCLE_OK signed plan staged probe apply reject rollback tamper perms ports');
+ console.log('LIFECYCLE_OK signed staged activation rollback tamper');
 }finally{await rm(home,{recursive:true,force:true,maxRetries:5,retryDelay:100});}

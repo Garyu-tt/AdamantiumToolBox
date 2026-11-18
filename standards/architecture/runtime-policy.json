@@ -1,0 +1,12 @@
+{
+  "schema": "mas-runtime-policy-1",
+  "checkIntervalMs": 5000,
+  "startupGraceMs": 5000,
+  "healthTimeoutMs": 2200,
+  "crashLimit": 4,
+  "windowMs": 180000,
+  "backoffBaseMs": 2000,
+  "backoffMaxMs": 60000,
+  "stableResetMs": 120000,
+  "autoRollback": true
+}
