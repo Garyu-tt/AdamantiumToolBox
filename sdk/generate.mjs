@@ -34,39 +34,44 @@ export async function generateApp(root,{id,name=id,port,icon='studio'}){
  };
  for(const [file,source] of Object.entries(files))await writeFile(join(directory,file),source,'utf8');
  await mkdir(join(directory,'runtime'));
- for(const file of ['modules.mjs','graph.mjs'])
+ for(const file of ['modules.mjs','graph.mjs','schema.mjs','invoke.mjs'])
   await copyFile(new URL('./'+file,import.meta.url),join(directory,'runtime',file));
- return {directory,files:[...Object.keys(files),'runtime/modules.mjs','runtime/graph.mjs'],manifest,modules};
+ return {directory,files:[...Object.keys(files),...['modules','graph','schema','invoke'].map(f=>'runtime/'+f+'.mjs')],manifest,modules};
 }
 const serviceSource=`import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {handlers} from './handlers.mjs';
 import {makeGraph} from './runtime/graph.mjs';
+import {invokeTyped} from './runtime/invoke.mjs';
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url)));
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('missing_internal_key');
 const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data));};
-async function graph(){
+async function snapshot(){
  const doc=JSON.parse(await readFile(new URL('./modules.json',import.meta.url)));
  const spec=makeGraph(doc,manifest);
  if(spec.nodes.some(n=>n.type==='action'&&typeof handlers[n.id]!=='function'))
   throw Error('missing_action_handler');
- return spec;
+ return {doc,spec};
 }
 http.createServer(async(req,res)=>{
  if(req.url==='/health')return send(res,200,{app:manifest.id});
  if(req.headers['x-internal-key']!==secret)return send(res,401,{error:'unauthorized'});
  if(req.method==='GET'&&req.url==='/graph'){
-  try{return send(res,200,await graph());}catch{return send(res,503,{error:'bad_graph'});}
+  try{return send(res,200,(await snapshot()).spec);}catch{return send(res,503,{error:'bad_graph'});}
  }
  if(req.method==='POST'&&req.url==='/invoke'){
   let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>262144)
    return send(res,413,{error:'too_large'});}
-  try{const body=JSON.parse(raw),available=await graph();
-   if(!available.nodes.some(n=>n.id===body.action&&n.type==='action'))
-    return send(res,403,{error:'capability_unavailable'});
-   return send(res,200,{result:await handlers[body.action](body.params||{})});
-  }catch(e){return send(res,400,{error:String(e.message).slice(0,120)});}
+  try{
+   const body=JSON.parse(raw),state=await snapshot();
+   const result=await invokeTyped(state,handlers,body.action,body.params??{});
+   return send(res,200,{result});
+  }catch(e){
+   const code=e.message==='capability_unavailable'?403:e.message==='input_invalid'?422:
+    e.message==='output_invalid'?502:e.message==='handler_failed'?500:400;
+   return send(res,code,{error:code===400?'invalid_request':e.message});
+  }
  }
  send(res,404,{error:'not_found'});
 }).listen(Number(process.env.APP_PORT||manifest.service.port),'127.0.0.1');
