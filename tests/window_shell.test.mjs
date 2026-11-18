@@ -30,7 +30,11 @@ try{
  }
  assert(ready,'shell_boot_failed');
  assert(await evalJs("!!document.querySelector('.controls button:not([id])')"));
- await evalJs("document.querySelector('.app-tile')?.click()");
+ const workspace=await evalJs("document.body.classList.contains('workspace-mode')");
+ if(workspace){
+  await evalJs("document.querySelector('.ada-start-button')?.click()");
+  await evalJs("document.querySelector('.ada-start-entry')?.click()");
+ }else await evalJs("document.querySelector('.app-tile')?.click()");
  await evalJs("document.querySelector('#backend-graph').click()");
  await pause(350);
  assert.equal(await evalJs("document.querySelectorAll('#desktop .window').length"),2);

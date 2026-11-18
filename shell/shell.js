@@ -9,9 +9,11 @@ import {createIconAssets} from '/shell/icon_assets.js';
 import {createWindowManager} from '/shell/window_manager.js';
 import {windowLayoutUI} from '/shell/window_layout_ui.js';
 import windowLayouts from '/shell/window-layouts.js';
+import {bindWorkspace} from '/shell/workspace_surface.js';
 const token=sessionStorage.getItem('ada-token')||'';
 let graph={nodes:[],edges:[]};const windows=new Map();
 const manager=createWindowManager(desktop,windowLayouts,()=>paintTasks());
+const builtins=systemViews(desktop,rpc,()=>graph,manager);
 const layoutButton=document.createElement('button');
 layoutButton.textContent='▦ Окна';layoutButton.title='Сетка и размеры окон';
 document.querySelector('.controls').insertBefore(layoutButton,status);
@@ -67,7 +69,15 @@ async function refresh(){
   }
   for(const view of reload)await openApp(view);
   launcher.replaceChildren();
-  if(!standalone)drawNavigation(launcher,await rpc('/api/navigation'),graph,openApp,icon);
+  if(!standalone){
+   const tree=await rpc('/api/navigation');
+   status.textContent=views.length+' приложений · '+graph.nodes.length+' API';
+   const mounted=await bindWorkspace(views,tree,{
+    desktop,taskbar:document.querySelector('footer'),manager,paintTasks,
+    openApp,icon,system:builtins,status
+   });
+   if(!mounted)drawNavigation(launcher,tree,graph,openApp,icon);
+  }
   if(standalone){document.body.classList.add('standalone');const v=views.find(v=>v.id===standalone);if(v)await openApp(v);else status.textContent='Приложение недоступно';}
   if(!standalone)status.textContent=views.length+' приложений · '+graph.nodes.length+' API';
   paintTasks();
@@ -77,6 +87,6 @@ document.querySelector('#refresh').onclick=refresh;
 if(!token)status.textContent='Требуется токен запуска';else await refresh();
 setInterval(refresh,12000);
 
-const builtins=systemViews(desktop,rpc,()=>graph,manager);document.querySelector('#backend-graph').onclick=builtins.graph;document.querySelector('#code-map').onclick=builtins.codemap;
+document.querySelector('#backend-graph').onclick=builtins.graph;document.querySelector('#code-map').onclick=builtins.codemap;
 
 document.querySelector('#mesh-status').onclick=builtins.mesh;
