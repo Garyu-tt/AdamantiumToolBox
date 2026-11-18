@@ -47,6 +47,28 @@ export async function mount(host,api){
  out.style.whiteSpace='pre-wrap';out.style.overflowWrap='anywhere';
  try{
   const info=await api.call('forge.describe');
+  // Demo-only generated drafts, never operator routes. The actual node/provider
+  // registry is supplied by MAS host discovery, not embedded in Forge.
+  try{
+   const composite=await api.call('forge.composite.plan',samples['forge.composite.plan']);
+   if(composite?.ok){
+    const demoPlacement={function_ref:functionNode.id,node_ref:'demo.node',
+     provider_ref:'demo.provider',action_id:functionNode.capability.action,
+     contract_version:functionNode.version,primary:true,status:'reachable',
+     can_invoke:true,identity_pinned:true,policy_allowed:true};
+    samples['forge.distribution.plan']={schema:'forge.distribution.request.v1',
+     request_id:'demo-distribution-request-0001',graph_revision:'demo-graph-revision',
+     policy_revision:'demo-policy-revision',discovery_revision:'demo-discovery-revision',
+     composition:composite,placements:[demoPlacement],coordinator:{...demoPlacement,
+      node_ref:'demo.coordinator',provider_ref:'demo.transaction',
+      action_id:'publication.transaction.commit',contract_version:'1.0.0'}};
+   }
+  }catch{/* No provider dependency: other contract inspector actions remain usable. */}
+  samples['forge.distribution.recover']={schema:'forge.distribution.recovery.request.v1',
+   operation_id:'demo-operation-0001',request_id:'demo-distribution-request-0001',
+   graph_revision:'demo-graph-revision',policy_revision:'demo-policy-revision',mode:'publish',
+   participants:[{node_ref:'demo.node',function_refs:[functionNode.id],status:'unknown'}],
+   coordinator:{status:'unknown'},ui_readback:{state:'unknown'}};
   const actions=info.adapter_actions.filter(id=>id!=='forge.describe'&&samples[id]);
   for(const action of actions){const option=add('option',action,choices);option.value=action;}
   const reset=()=>{area.value=JSON.stringify(samples[choices.value],null,2);out.textContent='';};

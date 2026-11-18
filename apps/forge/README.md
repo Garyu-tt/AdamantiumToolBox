@@ -54,3 +54,17 @@ Composite groups are organizational non-executable nodes. The active capability 
 UI composer, access policy, event cursor and history are owned by **other plugins**.
 An external runtime must authenticate the data, authorize the exact provider and commit
 atomically before a new action is allowed to appear as executable in UI.
+
+## R06 additions — distributed composition (pure, no host calls)
+
+- `forge.distribution.plan` — validates **explicit** candidate primary placements
+  of the R05 atomic function graph on distinct host nodes, previews cross-node
+  dependency contracts and proposed staged UI publication. It does not select
+  physical hosts, sign requests, resolve permissions or commit.
+- `forge.distribution.recover` — interprets untrusted external participant,
+  coordinator and UI readback receipts following partial/ambiguous publication.
+  Returns explained blockers and external-only fence/readback/reconciliation
+  recipes; never blindly retries a write, rolls back or declares a UI active.
+
+See `docs/FORGE-DISTRIBUTION-R06.md`. No agents, memory, queue, graph store,
+provider runtime, transaction journal or coordinator have been added to Forge.
