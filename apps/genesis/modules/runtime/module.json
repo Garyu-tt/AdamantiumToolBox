@@ -1,0 +1,49 @@
+{
+  "id": "runtime",
+  "name": "CPU Neural Runtime",
+  "capability": "genesis.neural.runtime.cpu/v1",
+  "actions": [
+    {
+      "id": "genesis.brains.step",
+      "title": "Вычислить шаги",
+      "permission": "genesis.run",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        },
+        {
+          "name": "stimulus",
+          "label": "Сигнал [-1,1]",
+          "type": "number",
+          "default": 0.5
+        },
+        {
+          "name": "steps",
+          "label": "Число шагов",
+          "type": "number",
+          "default": 5
+        }
+      ]
+    },
+    {
+      "id": "genesis.brains.train",
+      "title": "Обучить выход",
+      "permission": "genesis.run",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        },
+        {
+          "name": "target",
+          "label": "Целевой выход [-1,1]",
+          "type": "number",
+          "default": 1
+        }
+      ]
+    }
+  ]
+}
