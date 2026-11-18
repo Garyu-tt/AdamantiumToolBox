@@ -15,12 +15,12 @@ function sandboxArgs(snapshot,runner,profile,probe=false){
   args.push('--ro-bind',profile.executable,'/frank-executable');
  }
  if(!probe){
-  args.push('--ro-bind',snapshot,'/addon','--ro-bind',runner,'/frank-runner',
+  args.push('--ro-bind',snapshot,'/addon','--ro-bind',runner,'/frank-runner'+profile.extension,
    '--chdir','/addon');
  }
  args.push('--setenv','HOME','/tmp','--setenv','PATH','/usr/local/bin:/usr/bin:/bin',
   '--setenv','LANG','C.UTF-8','--setenv','PYTHONDONTWRITEBYTECODE','1','--');
- return args.concat(probe?profile.probe:profile.command.concat('/frank-runner'));
+ return args.concat(probe?profile.probe:profile.command.concat('/frank-runner'+profile.extension));
 }
 function launch(args,input=''){
  return new Promise((resolve,reject)=>{
