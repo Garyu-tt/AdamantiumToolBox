@@ -1,6 +1,15 @@
 /** Pure window geometry: all coordinates are relative to the workspace. */
 const dimensions={2:[2,1],4:[2,2],8:[4,2]};
-export function layoutRects(width,height,preset,count=preset){
+export function layoutRects(width,height,preset,count=preset==='focus'?3:preset){
+ if(preset==='focus'){
+  const n=Math.max(0,Math.min(count,3)),split=Math.round(width*.6);
+  const middle=Math.round(height/2);
+  return [
+   {x:0,y:0,width:split,height},
+   {x:split,y:0,width:width-split,height:middle},
+   {x:split,y:middle,width:width-split,height:height-middle}
+  ].slice(0,n);
+ }
  const shape=dimensions[preset];
  if(!shape)throw Error('invalid_layout');
  const [cols,rows]=shape,n=Math.max(0,Math.min(count,preset));
