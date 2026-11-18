@@ -60,3 +60,15 @@ The package identity remains `frank.<language>.<addon-id>`.
   `permissions: []` can currently be approved. Per-action grants remain TODO.
 - Classic MAS loader and its registries remain independent; removing the
   Bridge does not affect classic plugins.
+
+## FRANK-VALUES-1 and pipeline
+
+The bridge implements [FRANK-VALUES-1](../standards/FRANK-VALUES-1.md).
+Ordinary JSON values remain interoperable. Exact 64-bit integers and bytes
+are explicitly tagged, so adapters do not silently round them.
+A live `frankenstein.pipe` capability supports one-hop composition between
+two approved addon actions, revalidating the destination before calling it.
+Use `{"from":"frankenstein.python.hello.echo",
+"to":"frankenstein.javascript.hello.echo","input":{"message":"Hi"}}`.
+The target receives `{"input":<source-result>}`. No arbitrary command
+execution, auto-activation, or permanent workflow scheduler is provided.
