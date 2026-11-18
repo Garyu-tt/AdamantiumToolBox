@@ -20,7 +20,8 @@ const spec={app:manifest.id,version:1,nodes:[
   requires:['engine.provider'],provider:{schema:'mas-world-engine-provider-1',
    engine:'godot',version:manifest.engine.upstreamVersion,locality:'local',
    features:['cpu-headless'],operations:Object.entries(ops).map(([kind,action])=>({kind,action}))}},
- ...Object.values(ops).map(id=>({id,type:'action',title:id,requires:['engine.provider']}))
+ ...Object.values(ops).map(id=>({id,type:'action',title:id,requires:[
+  id.endsWith('session.start')||id.endsWith('session.stop')?'engine.launch':'engine.provider']}))
 ],edges:[{from:'godot_local.view',to:'godot_local.provider',type:'uses'},
  ...Object.values(ops).map(id=>({from:'godot_local.provider',to:id,type:'provides'}))]};
 function send(res,code,data){
@@ -28,7 +29,9 @@ function send(res,code,data){
  res.end(JSON.stringify(data));
 }
 async function invoke(action,p){
- if(!caps.has('engine.provider'))throw Error('capability_denied');
+ const permission=action===ops['session.start']||action===ops['session.stop']?
+  'engine.launch':'engine.provider';
+ if(!caps.has(permission))throw Error('capability_denied');
  if(action===ops['engine.inspect'])return engine();
  if(action===ops['project.check'])return check(p.projectId);
  if(action===ops['session.start'])return start(p);
