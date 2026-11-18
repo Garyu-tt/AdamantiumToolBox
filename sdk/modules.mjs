@@ -1,3 +1,4 @@
+import {assertSchema} from './schema.mjs';
 const id=/^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+$/;
 const ver=/^\d+\.\d+\.\d+$/;
 const range=/^\^?\d+\.\d+\.\d+$/;
@@ -30,7 +31,10 @@ export function validateModules(doc,manifest){
     typeof p.title!=='string'||!p.title||p.title.length>100||
     !Array.isArray(p.permissions)||!p.permissions.every(s=>manifest.permissions.includes(s)))
     fail('invalid_capability');
-   if(p.type==='action'&&(!obj(p.input)||!obj(p.output)))fail('untyped_action');
+   if(p.type==='action'){
+    if(!obj(p.input)||!obj(p.output))fail('untyped_action');
+    assertSchema(p.input);assertSchema(p.output);
+   }
    capabilities.add(p.id);owners.set(p.id,m.id);
   }
   for(const c of m.consumes||[]){
