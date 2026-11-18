@@ -97,7 +97,7 @@ try{
  assert.equal(e.result.actions.length,3);
  assert.equal((await query('/invoke',{action:'forge.events.project',params:batch},false)).status,401);
  const desc=await (await query('/invoke',{action:'forge.describe'})).json();
- assert.equal(desc.result.schema,'mechanicus.forge.adapter.v3');
+ assert.equal(desc.result.schema,'mechanicus.forge.adapter.v4');
  assert.equal(desc.result.external_effects,false);assert.equal(desc.result.stores_state,false);
  console.log('FORGE_R03_TEST_OK: fail-closed negotiation, no silent write failover, strict event projection, standalone HTTP');
 }finally{child.kill();}

@@ -4,6 +4,7 @@ import {validateFunction,prepareInvocation} from './contract.mjs';
 import {composeFunction,planPublication,prepareReconciliation,validateIncident} from './pipeline.mjs';
 import {negotiateProviders} from './negotiation.mjs';
 import {projectEvents} from './events.mjs';
+import {prepareIntegration,assessVisibility} from './integration.mjs';
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 const protocol=JSON.parse(await readFile(new URL('./protocol.json',import.meta.url),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
@@ -18,7 +19,9 @@ const actionNodes=[
  {id:'forge.reconcile.prepare',title:'Prepare invalidation/revisit',permission:'forge.validate'},
  {id:'forge.incident.validate',title:'Validate explained blocker',permission:'forge.validate'},
  {id:'forge.providers.negotiate',title:'Negotiate external capability offers',permission:'forge.validate'},
- {id:'forge.events.project',title:'Project external revision events',permission:'forge.validate'}
+ {id:'forge.events.project',title:'Project external revision events',permission:'forge.validate'},
+ {id:'forge.integration.prepare',title:'Prepare authorized host dispatch intents',permission:'forge.validate'},
+ {id:'forge.visibility.assess',title:'Cross-check external publication/UI receipts',permission:'forge.validate'}
 ];
 const graph={app:manifest.id,version:1,nodes:[
  {id:'forge.view',type:'view',title:'Forge Contracts',icon:manifest.icon,requires:['forge.read']},
@@ -39,7 +42,9 @@ function invoke(body){
   spec.id==='forge.publication.plan'?planPublication(body.params):
   spec.id==='forge.reconcile.prepare'?prepareReconciliation(body.params):
   spec.id==='forge.incident.validate'?validateIncident(body.params):
-  spec.id==='forge.providers.negotiate'?negotiateProviders(body.params):projectEvents(body.params);
+  spec.id==='forge.providers.negotiate'?negotiateProviders(body.params):
+  spec.id==='forge.events.project'?projectEvents(body.params):
+  spec.id==='forge.integration.prepare'?prepareIntegration(body.params):assessVisibility(body.params);
  return {status:200,payload:{result}};
 }
 http.createServer((req,res)=>{
