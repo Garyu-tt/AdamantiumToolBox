@@ -1,0 +1,23 @@
+name: Network Audit Witness isolated MAS smoke
+on:
+  push:
+    paths:
+      - 'packages/network_witness/**'
+      - '.github/workflows/network-witness-isolation.yml'
+  pull_request:
+    paths:
+      - 'packages/network_witness/**'
+      - '.github/workflows/network-witness-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  witness-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source checkpoints, bilateral journal compatibility and isolated Core
+        run: node --test packages/network_witness/tests/*.test.mjs
