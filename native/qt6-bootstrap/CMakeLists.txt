@@ -75,3 +75,17 @@ target_link_libraries(mas_native_desktop PRIVATE
   mas_raw_ui mas_plugin_loader mechanicus_graph Qt6::Widgets)
 add_test(NAME native_desktop_smoke COMMAND mas_native_desktop --smoke-test)
 set_tests_properties(native_desktop_smoke PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_library(mas_native_leonardo_view MODULE plugins/leonardo/leonardo_view.cpp
+ plugins/leonardo/svg_canvas.cpp plugins/leonardo/svg_canvas.hpp)
+target_include_directories(mas_native_leonardo_view PRIVATE
+ ${CMAKE_CURRENT_SOURCE_DIR}/plugins ${CMAKE_CURRENT_SOURCE_DIR}/plugins/leonardo)
+target_link_libraries(mas_native_leonardo_view PRIVATE Qt6::Widgets)
+set_target_properties(mas_native_leonardo_view PROPERTIES
+ LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins")
+add_executable(mas_native_leonardo_test tests/leonardo_canvas_test.cpp
+ plugins/leonardo/svg_canvas.cpp)
+target_include_directories(mas_native_leonardo_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/plugins/leonardo)
+target_link_libraries(mas_native_leonardo_test PRIVATE Qt6::Widgets)
+add_test(NAME native_leonardo_canvas COMMAND mas_native_leonardo_test)
+set_tests_properties(native_leonardo_canvas PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
