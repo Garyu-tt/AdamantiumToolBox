@@ -46,6 +46,14 @@ export function compilePreview(input){
    warnings.push({code:'missing_address_binding',source:src,service:target});continue;
   }
   for(const sourceAddress of n.addresses)for(const destinationAddress of s.addresses){
+   if(!nm.get(s.node).addresses.includes(destinationAddress)){
+    warnings.push({code:'service_address_not_on_host',service:target,address:destinationAddress});
+    continue;
+   }
+   if([...nm.values()].some(other=>other.id!==src&&other.addresses.includes(sourceAddress))){
+    warnings.push({code:'ambiguous_address_owner',source:src,address:sourceAddress});
+    continue;
+   }
    const family=isIP(sourceAddress),destinationFamily=isIP(destinationAddress);
    if(family!==destinationFamily)continue;
    if(candidate.length>=1024)throw Error('rule_expansion_limit');
