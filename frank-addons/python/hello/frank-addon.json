@@ -1,0 +1,21 @@
+{
+  "schema": "frank-addon-1",
+  "id": "hello",
+  "language": "python",
+  "name": "Python Hello",
+  "version": "0.1.0",
+  "entry": "main.py",
+  "adapter": "frankenstein.adapter.python",
+  "lifecycle": "independent",
+  "permissions": [],
+  "actions": [
+    {
+      "id": "echo",
+      "title": "Echo JSON"
+    },
+    {
+      "id": "sum",
+      "title": "Sum Numbers"
+    }
+  ]
+}
