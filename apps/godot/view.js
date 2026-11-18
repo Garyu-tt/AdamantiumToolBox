@@ -47,5 +47,6 @@ export async function mount(host,api){
  };
  status.onclick=()=>active&&call('godot.session.status',active);
  stop.onclick=async()=>{if(active)await call('godot.session.stop',active);controls();};
+ api.onGraphChange?.(()=>refresh().catch(e=>state.textContent=e.message));
  await refresh().catch(e=>state.textContent=e.message);
 }
