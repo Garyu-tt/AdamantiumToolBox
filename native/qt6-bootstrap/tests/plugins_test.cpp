@@ -23,11 +23,12 @@ signals:
 };
 int main(int argc,char** argv) {
  QApplication app(argc,argv);
- if(argc!=3)return 1;
- QPluginLoader ws(argv[1]),wm(argv[2]);
+ if(argc!=4)return 1;
+ QPluginLoader ws(argv[1]),wm(argv[2]),lv(argv[3]);
  auto* workspace=qobject_cast<INativeWorkspace*>(ws.instance());
  auto* manager=qobject_cast<INativeWindowManager*>(wm.instance());
- if(!workspace||!manager)return 2;
+ auto* leonardo=qobject_cast<INativeView*>(lv.instance());
+ if(!workspace||!manager||!leonardo||leonardo->viewId()!="leonardo.view")return 2;
  MockHost host;
  QWidget parent;
  auto* desktop=workspace->createWorkspace(&parent,&host);

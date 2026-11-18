@@ -29,8 +29,8 @@ static QString policy(const QTemporaryDir& dir,const QStringList& paths,bool wro
 }
 int main(int argc,char** argv) {
  QApplication app(argc,argv);
- if(argc!=3)return 1;
- const QStringList files={argv[1],argv[2]};
+ if(argc!=4)return 1;
+ const QStringList files={argv[1],argv[2],argv[3]};
  const auto folder=QFileInfo(files.front()).absolutePath();
  QTemporaryDir dir;if(!dir.isValid())return 2;
  const auto absent=loadApprovedUiPlugins(&app,folder,{});
@@ -40,6 +40,6 @@ int main(int argc,char** argv) {
  if(rejected.manager||rejected.workspace)return 4;
  auto correct=policy(dir,files);
  const auto approved=loadApprovedUiPlugins(&app,folder,correct);
- if(!approved.manager||!approved.workspace)return 5;
+ if(!approved.manager||!approved.workspace||!approved.views.contains("leonardo.view"))return 5;
  std::cout<<"NATIVE_LOADER_OK unpinned denied, wrong SHA denied, approved plugins loaded\n";
 }
