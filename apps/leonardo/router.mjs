@@ -1,7 +1,7 @@
 const schema='mas-graphics-provider-1';
 const kinds=new Set(['icon','image','video','render']);
-const base=process.env.ADA_CORE_URL,token=process.env.ADA_TOKEN;
 function coreEndpoint(){
+ const base=process.env.ADA_CORE_URL,token=process.env.ADA_TOKEN;
  if(!base||!token||token.length<24)throw Error('core_connection_unavailable');
  const u=new URL(base);
  if(u.protocol!=='http:'||!['127.0.0.1','[::1]'].includes(u.hostname)||!u.port||u.username||u.password||u.pathname!=='/'||u.search||u.hash)
@@ -9,6 +9,7 @@ function coreEndpoint(){
  return u.origin;
 }
 async function call(path,payload){
+ const token=process.env.ADA_TOKEN;
  const response=await fetch(coreEndpoint()+path,{method:payload?'POST':'GET',
   headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
   body:payload?JSON.stringify(payload):undefined,signal:AbortSignal.timeout(15000)});
