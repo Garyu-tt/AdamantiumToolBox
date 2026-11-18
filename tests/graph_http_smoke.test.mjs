@@ -34,6 +34,15 @@ for(const [name,port,action,permission,params] of suites){
    body:JSON.stringify({action,params})});
   assert.equal(r.status,200,name+':invoke');
   const data=await r.json();assert(data.result);
+  if(name==='nftables_preview'){
+   assert(doc.nodes.some(x=>x.id==='nftables_preview.transaction'));
+   const plan=await fetch(origin+'/invoke',{method:'POST',headers:auth,
+    body:JSON.stringify({action:'nftables_preview.transaction',params})});
+   assert.equal(plan.status,200);
+   const result=(await plan.json()).result;
+   assert.equal(result.applied,false);
+   assert(result.graph.nodes.every(x=>x.status==='blocked'));
+  }
  }finally{proc.kill('SIGTERM');}
 }
 console.log('GRAPH_HTTP_OK authenticated MAS graphs and read-only actions');
