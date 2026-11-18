@@ -1,7 +1,7 @@
 import http from 'node:http';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {loadModules} from '../../core/modules/runtime.mjs';
+import {loadModules} from './runtime/loader.mjs';
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('Missing internal key');
 let policy={};
