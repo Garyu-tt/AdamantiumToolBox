@@ -1,4 +1,5 @@
 #include "graph_client.hpp"
+#include "cppms_mirror.hpp"
 #include "host_bridge.hpp"
 #include "plugin_loader.hpp"
 #include "raw_view.hpp"
@@ -51,6 +52,13 @@ int main(int argc,char** argv) {
  QObject::connect(&client,&GraphClient::graphChanged,&bridge,&HostBridge::publish);
  QObject::connect(&bridge,&HostBridge::invokeRequested,&client,&GraphClient::invoke);
  QObject::connect(&client,&GraphClient::invocationCompleted,&bridge,&HostBridge::complete);
+#ifdef MAS_WITH_CPPMS
+ CppMsMirror nativeRegistry;
+ QObject::connect(&bridge,&HostBridge::graphChanged,&shell,
+  [&nativeRegistry](const QJsonObject& snapshot){nativeRegistry.reconcile(snapshot);});
+ QObject::connect(&bridge,&HostBridge::availabilityChanged,&shell,
+  [&nativeRegistry](bool available){if(!available)nativeRegistry.reconcile({});});
+#endif
  QMap<QString,QPointer<QWidget>> active;
  QObject::connect(&bridge,&HostBridge::openRequested,&shell,[&](const QString& id) {
   if(auto* existing=active.value(id).data()){existing->setFocus();return;}

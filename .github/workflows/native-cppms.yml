@@ -25,8 +25,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++ qt6-base-dev qt6-base-dev-tools
       - name: Fetch pinned CppMicroServices fork and its submodules
         run: |
-          git clone --depth=1 --recursive --branch development https://github.com/Garyu-tt/CppMicroServices.git "$RUNNER_TEMP/cppms"
+          git init "$RUNNER_TEMP/cppms"
+          git -C "$RUNNER_TEMP/cppms" remote add origin https://github.com/Garyu-tt/CppMicroServices.git
+          git -C "$RUNNER_TEMP/cppms" fetch --depth=1 origin 5131b48c034eb7d5340d5ca9c577c634633aa14b
+          git -C "$RUNNER_TEMP/cppms" checkout --detach FETCH_HEAD
           test "$(git -C "$RUNNER_TEMP/cppms" rev-parse HEAD)" = "5131b48c034eb7d5340d5ca9c577c634633aa14b"
+          git -C "$RUNNER_TEMP/cppms" submodule update --init --recursive --depth=1
       - name: Build and install CppMicroServices
         run: |
           cmake -S "$RUNNER_TEMP/cppms" -B "$RUNNER_TEMP/cppms-build" -G Ninja \
