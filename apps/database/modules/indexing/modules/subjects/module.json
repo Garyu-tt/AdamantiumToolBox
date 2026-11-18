@@ -19,7 +19,8 @@
       "name": "storage.graph.subjects",
       "permission": "database.read",
       "action": "database.subjects",
-      "version": "1.0"
+      "version": "1.0",
+      "operation": "read"
     }
   ]
 }
