@@ -2,7 +2,7 @@
   "mas": "1.0",
   "id": "mikoshi",
   "name": "Mikoshi Connectome",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icon": "mikoshi",
   "lifecycle": "independent",
   "service": {
