@@ -1,5 +1,5 @@
 {
-  "schema": "mechanicus.forge.adapter.v4",
+  "schema": "mechanicus.forge.adapter.v5",
   "role": "stateless-contract-adapter",
   "rules": {
     "function_unit": "one independently invokable function per function node",
@@ -15,7 +15,11 @@
     "provider_negotiation": "Pure external snapshot matching; no bound providers or authorization; host must recheck live identity, policy and revision",
     "events": "Pure projection of externally supplied ordered events with externally owned cursor; no subscription, cursor writes or UI effects",
     "integration": "Derived host invocation intents only; every actual call requires exact live runtime re-authorization and compare-and-swap revision checks",
-    "visibility": "Receipt/revision consistency inspection only; UI provider must independently authenticate and confirm actual state"
+    "visibility": "Receipt/revision consistency inspection only; UI provider must independently authenticate and confirm actual state",
+    "composite": "Pure recursive group tree of shared atomic function references; composite groups never execute",
+    "shared_references": "One function can mount in several UI groups without duplicating its handler",
+    "dependency_cycles": "Reject cycles between locally defined function capabilities; external dependencies remain unresolved",
+    "impact": "Pure reverse traversal against supplied snapshot; never claims authoritative invalidation or UI revocation"
   },
   "provider_ports": [
     {
@@ -87,6 +91,11 @@
       "role": "task-revisit",
       "contract": "tasks.work.reconsider",
       "purpose": "revision-bound reprocessing"
+    },
+    {
+      "role": "composition",
+      "contract": "graph.snapshot.read",
+      "purpose": "external-owned composite topology snapshots; no Forge graph persistence"
     }
   ],
   "graph_node_kinds": [
@@ -104,7 +113,8 @@
     "remedy",
     "execution",
     "policy",
-    "host"
+    "host",
+    "composite"
   ],
   "graph_edge_kinds": [
     "contains",
@@ -122,7 +132,8 @@
     "supersedes",
     "executed_on",
     "produces",
-    "derived_from"
+    "derived_from",
+    "mounted_in"
   ],
   "function_states": [
     "proposed",
@@ -156,7 +167,9 @@
     "forge.providers.negotiate",
     "forge.events.project",
     "forge.integration.prepare",
-    "forge.visibility.assess"
+    "forge.visibility.assess",
+    "forge.composite.plan",
+    "forge.composite.impact"
   ],
   "external_effects": false,
   "stores_state": false,

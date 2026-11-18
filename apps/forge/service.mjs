@@ -5,6 +5,7 @@ import {composeFunction,planPublication,prepareReconciliation,validateIncident} 
 import {negotiateProviders} from './negotiation.mjs';
 import {projectEvents} from './events.mjs';
 import {prepareIntegration,assessVisibility} from './integration.mjs';
+import {planComposite,planCompositeImpact} from './composite.mjs';
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 const protocol=JSON.parse(await readFile(new URL('./protocol.json',import.meta.url),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
@@ -21,7 +22,9 @@ const actionNodes=[
  {id:'forge.providers.negotiate',title:'Negotiate external capability offers',permission:'forge.validate'},
  {id:'forge.events.project',title:'Project external revision events',permission:'forge.validate'},
  {id:'forge.integration.prepare',title:'Prepare authorized host dispatch intents',permission:'forge.validate'},
- {id:'forge.visibility.assess',title:'Cross-check external publication/UI receipts',permission:'forge.validate'}
+ {id:'forge.visibility.assess',title:'Cross-check external publication/UI receipts',permission:'forge.validate'},
+ {id:'forge.composite.plan',title:'Compose recursive function/UI graph intents',permission:'forge.validate'},
+ {id:'forge.composite.impact',title:'Plan reverse impact/revisit of composite nodes',permission:'forge.validate'}
 ];
 const graph={app:manifest.id,version:1,nodes:[
  {id:'forge.view',type:'view',title:'Forge Contracts',icon:manifest.icon,requires:['forge.read']},
@@ -44,7 +47,9 @@ function invoke(body){
   spec.id==='forge.incident.validate'?validateIncident(body.params):
   spec.id==='forge.providers.negotiate'?negotiateProviders(body.params):
   spec.id==='forge.events.project'?projectEvents(body.params):
-  spec.id==='forge.integration.prepare'?prepareIntegration(body.params):assessVisibility(body.params);
+  spec.id==='forge.integration.prepare'?prepareIntegration(body.params):
+  spec.id==='forge.visibility.assess'?assessVisibility(body.params):
+  spec.id==='forge.composite.plan'?planComposite(body.params):planCompositeImpact(body.params);
  return {status:200,payload:{result}};
 }
 http.createServer((req,res)=>{
