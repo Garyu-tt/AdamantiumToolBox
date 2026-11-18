@@ -28,14 +28,14 @@ function pump(){while(active<max&&waiting.length){
   controllers.delete(job.jobId);active--;pump();}
  })();
 }}
-const actions={'claude.status':'ai.claude.read','claude.jobs':'ai.claude.read',
- 'claude.start':'ai.claude.run','claude.cancel':'ai.claude.cancel'};
+const actions={'claude.status':'claude.read','claude.jobs':'claude.read',
+ 'claude.start':'claude.run','claude.cancel':'claude.cancel'};
 const enabled=id=>caps.has(actions[id])&&(id!=='claude.start'||configured());
-const nodes=[{id:'claude.view',type:'view',title:manifest.name,icon:manifest.icon,requires:['ai.claude.read']},
+const nodes=[{id:'claude.view',type:'view',title:manifest.name,icon:manifest.icon,requires:['claude.read']},
  ...Object.entries(actions).filter(([id])=>enabled(id)).map(([id,cap])=>({id,type:'action',title:id,requires:[cap]}))];
-if(configured()&&caps.has('ai.claude.run')&&caps.has('ai.claude.read'))nodes.push({id:'claude.provider',
- type:'resource',requires:['ai.claude.run'],provider:{schema:'mas-agent-provider-1',
- startAction:'claude.start',statusAction:'claude.status',cancelAction:caps.has('ai.claude.cancel')?'claude.cancel':null}});
+if(configured()&&caps.has('claude.run')&&caps.has('claude.read'))nodes.push({id:'claude.provider',
+ type:'resource',requires:['claude.run'],provider:{schema:'mas-agent-provider-1',
+ startAction:'claude.start',statusAction:'claude.status',cancelAction:caps.has('claude.cancel')?'claude.cancel':null}});
 const graph={app:manifest.id,version:1,nodes,edges:nodes.slice(1).map(n=>({from:'claude.view',to:n.id,type:'uses'}))};
 const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
 async function invoke(id,p){
