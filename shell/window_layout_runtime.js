@@ -9,7 +9,8 @@ export function windowLayouts(desktop,records,position,geometry,focus){
   if(saved&&typeof saved==='object'&&!Array.isArray(saved))preferences=saved;
  }catch{}
  const bounds=()=>({width:desktop.clientWidth,height:desktop.clientHeight});
- const save=()=>{try{localStorage.setItem(key,JSON.stringify(preferences));}catch{}};
+ const save=()=>{if(group)preferences[group.preset]=group.splits;
+  try{localStorage.setItem(key,JSON.stringify(preferences));}catch{}};
  const handles=createSplitters(desktop,(axis,index,fraction)=>{
   if(!group||!changeRatio(group.preset,group.splits,axis,index,fraction))return;
   draw();
