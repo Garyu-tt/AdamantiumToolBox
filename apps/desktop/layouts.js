@@ -5,12 +5,11 @@ export function mountLayouts(taskbar,windows){
  toggle.className='ada-layout-button';toggle.textContent='▦ Окна';
  toggle.setAttribute('aria-label','Раскладка окон');toggle.setAttribute('aria-expanded','false');
  const menu=document.createElement('div');menu.className='ada-layout-menu';
- const presets=[
-  [2,'2 окна рядом','Ctrl+Alt+2'],
-  [4,'4 окна, сетка 2×2','Ctrl+Alt+4'],
-  [8,'8 окон, сетка 4×2','Ctrl+Alt+8'],
-  ['focus','Главное + два','Ctrl+Alt+3']
- ];
+ const presets=Array.isArray(windows.layouts)&&windows.layouts.length
+  ?windows.layouts.filter(p=>typeof p.id==='string'&&typeof p.label==='string')
+   .map(p=>[p.id,p.label,''])
+  :[[2,'2 окна рядом','Ctrl+Alt+2'],[4,'4 окна, сетка 2×2','Ctrl+Alt+4'],
+   [8,'8 окон, сетка 4×2','Ctrl+Alt+8'],['focus','Главное + два','Ctrl+Alt+3']];
  function show(open){
   menu.classList.toggle('open',open);
   toggle.setAttribute('aria-expanded',String(open));
@@ -19,10 +18,11 @@ export function mountLayouts(taskbar,windows){
   const b=document.createElement('button');b.type='button';
   const glyph=document.createElement('span');glyph.className='ada-layout-glyph';
   glyph.dataset.preset=String(preset);
-  for(let n=0;n<(preset==='focus'?3:preset);n++)glyph.append(document.createElement('i'));
+  const count=typeof preset==='number'?preset:preset==='focus'?3:1;
+  for(let n=0;n<count;n++)glyph.append(document.createElement('i'));
   const name=document.createElement('span');name.textContent=title;
   const key=document.createElement('small');key.textContent=hotkey;
-  b.append(glyph,name,key);b.onclick=()=>{windows.arrange(preset);show(false);};
+  b.append(glyph,name);if(hotkey)b.append(key);b.onclick=()=>{windows.arrange(preset);show(false);};
   menu.append(b);
  }
  const dismiss=event=>{
