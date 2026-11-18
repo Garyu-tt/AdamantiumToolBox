@@ -1,0 +1,9 @@
+{
+  "mas": "1.0", "id": "graph_manager", "name": "Mechanicus Graph Manager",
+  "version": "0.1.0", "icon": "studio", "lifecycle": "independent",
+  "service": {"protocol":"mas-http-1", "port":8924, "invokeTimeoutMs":5000},
+  "ui": {"standard":"mas-ui-1", "mode":"embedded-and-standalone"},
+  "auth": {"mode":"host-delegated"}, "permissions":["graph_manager.read"],
+  "events": {"schema":"mas-event-1"}, "data":{"refs":"mas-ref-1"},
+  "updates": {"strategy":"semver", "migrations":[]}
+}
