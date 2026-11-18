@@ -1,0 +1,37 @@
+{
+  "id": "incubator",
+  "name": "Brain Incubator",
+  "capability": "genesis.brain.instances/v1",
+  "actions": [
+    {
+      "id": "genesis.brains.list",
+      "title": "Список мозгов",
+      "permission": "genesis.read"
+    },
+    {
+      "id": "genesis.brains.create",
+      "title": "Создать мозг",
+      "permission": "genesis.write",
+      "inputs": [
+        {
+          "name": "genome",
+          "label": "Genome JSON",
+          "type": "json",
+          "default": "{\"species\":\"synthetic\",\"initial_neurons\":8,\"target_neurons\":32,\"maximum_neurons\":256}"
+        }
+      ]
+    },
+    {
+      "id": "genesis.brains.inspect",
+      "title": "Исследовать мозг",
+      "permission": "genesis.read",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
