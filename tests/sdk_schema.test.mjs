@@ -12,11 +12,8 @@ for(const bad of [{name:'',data:[1]},{name:'x',data:[1.2]},
 for(const bad of [{type:'object',properties:{x:{$ref:'#/xyz'}}},
  {type:'object',properties:{x:{type:'string',pattern:'.*'}}},
  {type:'array',minItems:-1},{type:'object',required:['missing']},
- {type:'object',properties:{'__proto__':{type:'string'}}}])
- if(Object.keys(bad.properties||{}).includes('__proto__')||
-  JSON.stringify(bad).includes('required')||JSON.stringify(bad).includes('minItems')||
-  JSON.stringify(bad).includes('pattern')||JSON.stringify(bad).includes('$ref'))
-  assert.throws(()=>assertSchema(bad),/schema_/);
+ JSON.parse('{"type":"object","properties":{"__proto__":{"type":"string"}}}')])
+ assert.throws(()=>assertSchema(bad),/schema_/);
 assert(!validateValue({type:'integer'},Number.MAX_SAFE_INTEGER+1));
 assert(!validateValue({type:'number'},Infinity));
 assert.throws(()=>assertSchema({type:'object',additionalProperties:{type:'string'}}),
