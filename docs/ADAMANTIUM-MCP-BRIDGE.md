@@ -37,7 +37,7 @@ The Core identity state uses the already defined Mesh storage under `LOCALAPPDAT
 
 1. Inspect current permissions, runtime state and the destination's signed identity **out of band**. Migrate or restore durable data; do not assume a successful API response means data moved.
 2. Preserve the logical Mesh identity **only for an intentional relocation**, with secure key transfer, or treat the destination as a separate node if its identity differs. Securely deactivate or fence the previous writer before traffic switches.
-3. Read-only capability discovery may try another approved address of the same identity. It returns which index responded and does not claim full availability of the primary.
+3. Read-only capability discovery may try another approved address of the same identity. It returns `read_only_standby` with `canInvoke:false` and hides action nodes when only a standby responds. It does not claim primary availability or show callable buttons until explicit primary promotion.
 4. **Mutations never automatically switch endpoints.** The first configured URL is the only primary target for `adamantium_invoke`; an offline, wrong-key or unverified primary fails closed. To switch, explicitly promote the verified destination by editing the trusted registry and re-reading current capabilities.
 5. Never auto-retry POST after an uncertain timeout; require idempotency and independent readback. Keep the old endpoint available for read-only audit until cleanly retired.
 

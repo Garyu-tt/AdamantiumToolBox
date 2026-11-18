@@ -23,10 +23,15 @@ test('impostor rejected, standby read only, migration requires explicitly promot
  assert.equal(spoof.payload.result.isError,true);assert.match(spoof.payload.result.content[0].text,/primary_unavailable/);
  cfg.nodes[0].urls=[addr(rogue)+'/',addr(migrated)+'/'];await writeFile(path,JSON.stringify(cfg));
  const standby=result(await req(url,rpc(3,'tools/call',{name:'adamantium_capabilities',arguments:{node_id:'logical'}})));
- assert.equal(standby.status,'reachable');assert.equal(standby.endpointIndex,1);
+ assert.equal(standby.status,'read_only_standby');assert.equal(standby.endpointIndex,1);
+ assert.equal(standby.canInvoke,false);
+ assert(standby.nodes.every(node=>node.type!=='action'),'standby advertised unsafe actions');
  const refused=await req(url,rpc(4,'tools/call',{name:'adamantium_invoke',arguments:{node_id:'logical',action:'browser.tabs'}}));
  assert.equal(refused.payload.result.isError,true);
  cfg.nodes[0].urls=[addr(migrated)+'/',addr(rogue)+'/'];await writeFile(path,JSON.stringify(cfg));
+ const promoted=result(await req(url,rpc(8,'tools/call',{name:'adamantium_capabilities',arguments:{node_id:'logical'}})));
+ assert.equal(promoted.status,'reachable');assert.equal(promoted.canInvoke,true);
+ assert(promoted.nodes.some(node=>node.id==='browser.tabs'&&node.type==='action'));
  const success=await req(url,rpc(5,'tools/call',{name:'adamantium_invoke',arguments:{node_id:'logical',action:'browser.tabs'}}));
  assert.equal(result(success).result.result.node,'migrated');
  cfg.nodes[0].identity=undefined;await writeFile(path,JSON.stringify(cfg));

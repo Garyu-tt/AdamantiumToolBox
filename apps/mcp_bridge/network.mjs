@@ -25,12 +25,13 @@ async function readOne(n,primaryOnly=false){
   await authenticate(n,url);
   const graph=await remote(n,url,'/api/graph');
   need(graph.version===1&&Array.isArray(graph.nodes),'incompatible_graph');
-  const visible=graph.nodes.filter(x=>x.type!=='action'||n.allow.has(x.id));
+  const index=n.urls.indexOf(url),canInvoke=index===0;
+  const visible=graph.nodes.filter(x=>x.type!=='action'||(canInvoke&&n.allow.has(x.id)));
   const ids=new Set(visible.map(x=>x.id));
-  return {id:n.id,status:'reachable',identity:'verified',nodes:visible,
-   edges:(graph.edges||[]).filter(x=>ids.has(x.from)&&ids.has(x.to)),endpointIndex:n.urls.indexOf(url)};
+  return {id:n.id,status:canInvoke?'reachable':'read_only_standby',identity:'verified',
+   canInvoke,nodes:visible,edges:(graph.edges||[]).filter(x=>ids.has(x.from)&&ids.has(x.to)),endpointIndex:index};
  }catch(e){faults.push(String(e.message).slice(0,80));}}
- return {id:n.id,status:n.identity?'unreachable':'identity_unconfigured',nodes:[],edges:[],errors:faults};
+ return {id:n.id,status:n.identity?'unreachable':'identity_unconfigured',canInvoke:false,nodes:[],edges:[],errors:faults};
 }
 export async function topology(){
  const declared=await nodes();return Promise.all(declared.map(x=>readOne(x)));
