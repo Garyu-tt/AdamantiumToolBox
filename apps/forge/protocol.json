@@ -1,5 +1,5 @@
 {
-  "schema": "mechanicus.forge.adapter.v1",
+  "schema": "mechanicus.forge.adapter.v2",
   "role": "stateless-contract-adapter",
   "rules": {
     "function_unit": "one independently invokable function per function node",
@@ -7,22 +7,187 @@
     "publication": "provider verification + capability publication + UI contribution; all external",
     "revisit": "revision-driven invalidation and re-verification; all external",
     "blockers": "cause, evidence, impact, remedies, safe attempts, verification; all external",
-    "safe_failover": "missing providers degrade to documentation and validation only"
+    "safe_failover": "missing providers degrade to documentation and validation only",
+    "ui_fallback": "every validated function has a Raw UI draft; unverified functions are not invokable",
+    "commit": "external revision-aware atomic visibility; Forge returns recipes, not commits",
+    "invalidation": "external reverse-index lookup, UI revocation and lease-based reconsideration",
+    "blocker_explanation": "cause + evidence + impact + remedies required before diagnosis is considered complete"
   },
   "provider_ports": [
-    {"role": "graph", "contract": "graph.snapshot.read", "purpose": "external bidirectional dependency and provenance queries"},
-    {"role": "taskpool", "contract": "tasks.work.claim", "purpose": "external queue and leases; no duplicate queue"},
-    {"role": "capabilities", "contract": "capability.resolve", "purpose": "dynamic provider discovery and typed invocation"},
-    {"role": "ui", "contract": "ui.contribution.publish", "purpose": "expose verified actions in Raw UI / composers"},
-    {"role": "diagnostics", "contract": "diagnostic.incident.report", "purpose": "explain blocker, impacts and remedies"},
-    {"role": "remediation", "contract": "remediation.attempt.safe", "purpose": "bounded deterministic repairs and verification"},
-    {"role": "provenance", "contract": "provenance.record.append", "purpose": "immutable evidence and external audit history"}
+    {
+      "role": "graph",
+      "contract": "graph.snapshot.read",
+      "purpose": "external bidirectional dependency and provenance queries"
+    },
+    {
+      "role": "taskpool",
+      "contract": "tasks.work.claim",
+      "purpose": "external queue and leases; no duplicate queue"
+    },
+    {
+      "role": "capabilities",
+      "contract": "capability.resolve",
+      "purpose": "dynamic provider discovery and typed invocation"
+    },
+    {
+      "role": "ui",
+      "contract": "ui.contribution.publish",
+      "purpose": "expose verified actions in Raw UI / composers"
+    },
+    {
+      "role": "diagnostics",
+      "contract": "diagnostic.incident.report",
+      "purpose": "explain blocker, impacts and remedies"
+    },
+    {
+      "role": "remediation",
+      "contract": "remediation.attempt.safe",
+      "purpose": "bounded deterministic repairs and verification"
+    },
+    {
+      "role": "provenance",
+      "contract": "provenance.record.append",
+      "purpose": "immutable evidence and external audit history"
+    },
+    {
+      "role": "runtime",
+      "contract": "capability.invoke",
+      "purpose": "typed invocation via host policy"
+    },
+    {
+      "role": "verification",
+      "contract": "verification.acceptance.evaluate",
+      "purpose": "independent evidence and acceptance checks"
+    },
+    {
+      "role": "graph-stage",
+      "contract": "graph.revision.stage",
+      "purpose": "compare-and-swap graph intent staging"
+    },
+    {
+      "role": "publication",
+      "contract": "publication.transaction.commit",
+      "purpose": "atomic capability/UI visibility revision"
+    },
+    {
+      "role": "graph-reverse",
+      "contract": "graph.reverse_dependencies.read",
+      "purpose": "external impacted-node queries"
+    },
+    {
+      "role": "ui-revoke",
+      "contract": "ui.contribution.revoke",
+      "purpose": "hide invalidated actions"
+    },
+    {
+      "role": "task-revisit",
+      "contract": "tasks.work.reconsider",
+      "purpose": "revision-bound reprocessing"
+    }
   ],
-  "graph_node_kinds": ["project", "plugin", "module", "function", "capability", "task", "revision", "artifact", "test", "ui_contribution", "blocker", "remedy", "execution", "policy", "host"],
-  "graph_edge_kinds": ["contains", "implements", "provides", "requires", "depends_on", "consumes", "invokes", "displayed_as", "verified_by", "blocked_by", "remediated_by", "invalidates", "supersedes", "executed_on", "produces", "derived_from"],
-  "function_states": ["proposed", "validated", "implemented", "verified", "published", "invalidated"],
-  "events": ["function.verified", "function.published", "function.invalidated", "dependency.changed", "incident.detected", "incident.remediation_attempted", "ui.contribution.changed"],
-  "adapter_actions": ["forge.describe", "forge.validate", "forge.prepare"],
+  "graph_node_kinds": [
+    "project",
+    "plugin",
+    "module",
+    "function",
+    "capability",
+    "task",
+    "revision",
+    "artifact",
+    "test",
+    "ui_contribution",
+    "blocker",
+    "remedy",
+    "execution",
+    "policy",
+    "host"
+  ],
+  "graph_edge_kinds": [
+    "contains",
+    "implements",
+    "provides",
+    "requires",
+    "depends_on",
+    "consumes",
+    "invokes",
+    "displayed_as",
+    "verified_by",
+    "blocked_by",
+    "remediated_by",
+    "invalidates",
+    "supersedes",
+    "executed_on",
+    "produces",
+    "derived_from"
+  ],
+  "function_states": [
+    "proposed",
+    "validated",
+    "implemented",
+    "verified",
+    "published",
+    "invalidated"
+  ],
+  "events": [
+    "function.verified",
+    "function.published",
+    "function.invalidated",
+    "dependency.changed",
+    "incident.detected",
+    "incident.remediation_attempted",
+    "ui.contribution.changed"
+  ],
+  "adapter_actions": [
+    "forge.describe",
+    "forge.validate",
+    "forge.prepare",
+    "forge.compose",
+    "forge.publication.plan",
+    "forge.reconcile.prepare",
+    "forge.incident.validate"
+  ],
   "external_effects": false,
-  "stores_state": false
+  "stores_state": false,
+  "publication_phases": [
+    "intent",
+    "provider_resolution",
+    "typed_execution",
+    "independent_verification",
+    "stage_graph",
+    "stage_capability",
+    "stage_ui",
+    "atomic_commit",
+    "audit"
+  ],
+  "graph_projections": {
+    "topology": [
+      "plugin",
+      "module",
+      "function",
+      "capability"
+    ],
+    "development": [
+      "task",
+      "function",
+      "test",
+      "artifact"
+    ],
+    "execution": [
+      "function",
+      "execution",
+      "host",
+      "result"
+    ],
+    "interface": [
+      "capability",
+      "ui_contribution",
+      "policy"
+    ],
+    "diagnostics": [
+      "blocker",
+      "remedy",
+      "execution",
+      "test"
+    ]
+  }
 }

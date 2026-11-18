@@ -1,21 +1,18 @@
-# Forge adapter R01
+# Mechanicus Forge — stateless contract adapter R02
 
-Pure MAS contract adapter. No database, in-memory task queue, graph engine, provider
-execution, memory, agent, retry worker or automated repair. `view.js` is an inspector.
+`forge.describe`, `forge.validate`, `forge.prepare` (R01) plus:
 
-`forge.describe` returns machine-readable proposed ports, relations and rules.
-`forge.validate` validates `params.function` (`forge.function.v1`).
-`forge.prepare` validates `params.function`, `request_id`, and `arguments`, then
-returns an **unexecuted** `forge.invoke.request.v1` envelope for host routing.
+- `forge.compose` — an uncommitted graph/UI intent for exactly one function.
+- `forge.publication.plan` — an unexecuted typed external publication recipe.
+- `forge.reconcile.prepare` — an unexecuted invalidation/revisit recipe.
+- `forge.incident.validate` — explainable blocker contract validator.
 
-Contract shape: `schema`, `id`, `version`, `request.atomic`, `request.goal`,
-`request.acceptance[]`, `capability.action`, `capability.input_schema`,
-`capability.output_schema`, optional `dependencies[]` and `ui` contribution.
+There is **no graph database, memory, agent, queue, provider execution, resolver,
+publication coordinator, dynamic UI composer or background loop** in Forge.
+`forge.view` is a small contract inspector, and `/graph` only exposes adapter APIs.
+An unverified UI draft is not a runnable button. All external names are proposed
+ports, not advertised as installed providers.
 
-Smoke: start with a host-generated `ADA_INTERNAL_KEY` (at least 24 characters),
-`ADA_CAPS=forge.read,forge.validate` and `APP_PORT` on a free local port.
-`GET /health` is public, `/graph` and `/invoke` require the internal key.
-Host auth and capability permissions remain mandatory for actual UI invocation.
-
-See `docs/FORGE-ADAPTER.md`, `docs/FORGE-ROADMAP.md` and
-`docs/FORGE-INCIDENTS.md` for boundaries, composition and future functionality.
+Run within the MAS host with `ADA_INTERNAL_KEY` and `ADA_CAPS=forge.read,forge.validate`.
+Read `docs/FORGE-PUBLICATION-R02.md` for the transaction/revision protocol and
+`docs/FORGE-INCIDENTS.md` for blockers.
