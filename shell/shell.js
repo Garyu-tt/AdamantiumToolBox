@@ -12,7 +12,7 @@ if(fragment.has('token')){
 }
 const token=sessionStorage.getItem('ada-token')||'';
 let graph={nodes:[],edges:[]};
-const manager=createWindowManager(desktop,tasks),windows=new Map();
+const manager=createWindowManager(desktop,tasks,{keyboardEnabled:!standalone}),windows=new Map();
 const builtins=systemViews(desktop,rpc,()=>graph,manager);
 const el=(tag,text,cls)=>{
  const x=document.createElement(tag);
