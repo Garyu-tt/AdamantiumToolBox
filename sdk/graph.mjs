@@ -2,9 +2,12 @@ import {validateModules} from './modules.mjs';
 const compatible=(v,range)=>{
  if(typeof v!=='string'||!/^\d+\.\d+\.\d+$/.test(v))return false;
  const actual=v.split('.').map(Number),expected=range.replace('^','').split('.').map(Number);
- if(range.startsWith('^'))return actual[0]===expected[0]&&
-  (actual[1]>expected[1]||actual[1]===expected[1]&&actual[2]>=expected[2]);
- return actual.every((n,i)=>n===expected[i]);
+ const compare=actual[0]-expected[0]||actual[1]-expected[1]||actual[2]-expected[2];
+ if(!range.startsWith('^'))return compare===0;
+ if(compare<0||actual[0]!==expected[0])return false;
+ if(expected[0]>0)return true;
+ if(actual[1]!==expected[1])return false;
+ return expected[1]>0||actual[2]===expected[2];
 };
 export function makeGraph(doc,manifest,external=[]){
  validateModules(doc,manifest);
