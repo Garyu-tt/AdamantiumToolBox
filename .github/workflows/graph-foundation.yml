@@ -1,0 +1,36 @@
+name: Graph DNS / Noosphere / Composite (isolated)
+on:
+  pull_request:
+    paths:
+      - 'apps/graph_dns/**'
+      - 'apps/noosphere/**'
+      - 'apps/composite/**'
+      - 'tests/graph_*.test.mjs'
+      - 'tools/noosphere_sqlite_export.py'
+      - '.github/workflows/graph-foundation.yml'
+  push:
+    branches:
+      - 'feat/graph-dns-readonly-foundation-20261119'
+permissions:
+  contents: read
+jobs:
+  isolated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify standalone MAS manifests and source budgets
+        run: |
+          python tools/check-size.py
+          node tools/mas-check.mjs
+      - name: Verify pure graph logic and authenticated actions
+        run: |
+          node tests/graph_services.test.mjs
+          node tests/graph_http_smoke.test.mjs
+      - name: Verify export script syntax
+        run: python -m py_compile tools/noosphere_sqlite_export.py
