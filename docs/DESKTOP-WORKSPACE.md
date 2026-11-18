@@ -18,8 +18,14 @@ and a taskbar. It is a UI surface, NOT a new central runtime or an app registry.
 
 ## Behavior
 - Start shows the folders and application references returned by LinkFS.
-- Desktop shows top-level folders and app references plus user-pinned apps.
-- Pinning uses browser-local storage and does not alter LinkFS or filesystem.
+- Desktop shows top-level LinkFS references and user-created shortcuts/folders.
+- New folders support nesting, rename, move-to-folder and deletion without deleting
+  their contents: children are moved to the desktop. App shortcuts remain gated by
+  the live capability graph; unavailable apps are not launched.
+- Drag shortcuts on the desktop to rearrange or drop them into custom folders.
+  Positions snap to a responsive grid, and collisions swap positions.
+- All user desktop preferences are versioned browser-local storage, not LinkFS
+  mutations. The old pinned-app preference list is migrated on first activation.
 - Double-click-free icon activation is deliberate for touch accessibility.
 - A unified window manager controls application, system and folder windows.
   The taskbar switches focus or minimizes a focused window.
@@ -29,6 +35,9 @@ and a taskbar. It is a UI surface, NOT a new central runtime or an app registry.
   four corners snap to quadrants. A click alone never detaches the window.
 - Minimize, maximize/restore, close, double-click titlebar and drag-to-restore
   share one implementation. Snapped layouts reflow when the workspace resizes.
+- Shared tile dividers can be dragged to resize adjacent windows. Each layout's
+  fractional split ratios persist across reloads; window floating coordinates
+  and sizes are saved per app/system window in the same local browser profile.
 - The layout chooser arranges the first 2, 4, or 8 visible windows in grids.
   The asymmetric preset places one primary window beside two smaller windows.
 - Keyboard: Ctrl+Escape opens Start; Escape dismisses menus.
@@ -42,11 +51,18 @@ and a taskbar. It is a UI surface, NOT a new central runtime or an app registry.
 - `apps/desktop`: independent provider, UI, pure tree projection, Explorer.
 - `shell/workspace.js`: generic provider bridge.
 - `tests/desktop.test.mjs`: surface negotiation, unavailable-app filtering.
-- `tests/window_geometry.test.mjs`: tiling coverage and snap geometry.
+- `tests/window_geometry.test.mjs`, `tests/window_ratios.test.mjs`,
+  `tests/window_manager.test.mjs`: geometry, dividers, persisted proportions.
+- `tests/desktop_state.test.mjs`, `tests/window_placements.test.mjs`: state
+  validation, nesting cycle protections and persistence.
+- Windows CI: actual Chromium Start, window controls, folder reload and pointer
+  drag smoke tests.
 - `tests/isolation.test.mjs`: Core + bundled-app isolation including Desktop.
 - `python tools/check-size.py`, `python tools/architecture-check.py`,
   `node tests/desktop.test.mjs`, `node tests/isolation.test.mjs`.
 
-The first version does not yet offer drag-and-drop icon rearrangement, folder
-creation/rename, multiple workspaces, shared-border resizing, or workspace-provider selection in Settings.
-Those should be added through separate typed capabilities, not ad hoc file I/O.
+Remaining limitations: desktop customization is browser-profile-local and
+does not yet sync to Noosphere/other Mesh nodes; it does not provide a real file
+manager or mutate LinkFS. Open application windows are not automatically relaunched
+on reload. Multi-workspace switching and shell-provider selection remain future
+capabilities, requiring versioned contracts and authorized storage providers.
