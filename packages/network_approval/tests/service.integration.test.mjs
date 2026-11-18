@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {message} from '../lib/contract.mjs';
 import {launch} from './http-fixture.mjs';
