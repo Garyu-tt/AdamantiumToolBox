@@ -30,6 +30,11 @@ silently ignored. This is not a full JSON Schema engine.
 | Malformed request | 400 | `invalid_request` |
 | Invalid module/schema graph | 503 on `/graph` | `bad_graph` |
 
+These HTTP statuses apply **at the plugin `/invoke` boundary**. MAS 1.0 Core
+currently maps non-2xx upstream responses to HTTP 400 with an `upstream_NNN`
+error (for example `upstream_422`). No Core error-routing change is included
+in C03; versioned end-to-end typed error propagation is a separate task.
+
 The active state is loaded from one version of `modules.json` per request;
 no action may execute if its declared capability is absent from that graph.
 A typed result gate cannot roll back side effects already performed by a
