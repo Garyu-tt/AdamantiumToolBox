@@ -1,5 +1,5 @@
 {
-  "schema": "mechanicus.forge.adapter.v3",
+  "schema": "mechanicus.forge.adapter.v4",
   "role": "stateless-contract-adapter",
   "rules": {
     "function_unit": "one independently invokable function per function node",
@@ -13,7 +13,9 @@
     "invalidation": "external reverse-index lookup, UI revocation and lease-based reconsideration",
     "blocker_explanation": "cause + evidence + impact + remedies required before diagnosis is considered complete",
     "provider_negotiation": "Pure external snapshot matching; no bound providers or authorization; host must recheck live identity, policy and revision",
-    "events": "Pure projection of externally supplied ordered events with externally owned cursor; no subscription, cursor writes or UI effects"
+    "events": "Pure projection of externally supplied ordered events with externally owned cursor; no subscription, cursor writes or UI effects",
+    "integration": "Derived host invocation intents only; every actual call requires exact live runtime re-authorization and compare-and-swap revision checks",
+    "visibility": "Receipt/revision consistency inspection only; UI provider must independently authenticate and confirm actual state"
   },
   "provider_ports": [
     {
@@ -152,7 +154,9 @@
     "forge.reconcile.prepare",
     "forge.incident.validate",
     "forge.providers.negotiate",
-    "forge.events.project"
+    "forge.events.project",
+    "forge.integration.prepare",
+    "forge.visibility.assess"
   ],
   "external_effects": false,
   "stores_state": false,

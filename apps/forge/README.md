@@ -29,3 +29,13 @@ Read `docs/FORGE-PUBLICATION-R02.md` for the transaction/revision protocol and
 
 R03 retains isolated `Core + Forge` startup and requires no real MAS external
 services or agents. Read `docs/FORGE-PROTOCOL-R03.md` for contracts and gates.
+
+## R04 additions
+
+- `forge.integration.prepare`: stateless, explicit-host-target dispatch intents
+  with idempotency and revision/policy guards; still no external calls.
+- `forge.visibility.assess`: checks revision agreement across *untrusted*
+  external evidence for publish/revoke. Never reports authoritative UI state.
+
+The runtime/graph/UI owners alone may invoke or activate a capability.
+See `docs/FORGE-INTEGRATION-R04.md` for the host protocol and security gates.

@@ -95,3 +95,16 @@ providers yield a diagnosed pending state, never a misleading green success.
   write primary, missing event, unexplained incident; always with remedies.
 - `[ ]` Integration with authenticated runtime discovery, transactional event
   transport and actual UI refresh **outside Forge**.
+
+## R04 — host dispatch and visibility receipt contracts
+
+- `[x]` Stateless `forge.integration.prepare`: produce ordered, revision-bound
+  dispatch intents from dynamically negotiated candidate providers; no calls.
+- `[x]` Stateless `forge.visibility.assess`: cross-check supplied publication or
+  revocation receipts and graph/capability/UI revisions; no authoritative claims.
+- `[x]` Fail closed on no idempotency key, absent expected revision, ambiguous
+  write primary, stale host readback, mismatched policy/commit/UI or missing
+  independent verification; diagnostic remedies always present.
+- `[ ]` Host-signed discovery/authorization and real invocation (external).
+- `[ ]` Atomic graph/capability/UI publication and hot UI reconciliation (external).
+- `[ ]` Transactional external event cursor and replay (external).
