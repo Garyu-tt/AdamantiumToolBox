@@ -25,9 +25,11 @@ export async function openStore(location,policy={}){
  const maxBytes=policy.maxJournalBytes??Number.MAX_SAFE_INTEGER;
  if(!Number.isSafeInteger(maxBytes)||maxBytes<1)throw Error('invalid_journal_quota');
  const allowWrites=policy.allowWrites!==false;
- const dir=resolve(location);await mkdir(dir,{recursive:true,mode:0o700});
+ const dir=resolve(location),readOnly=policy.allowWrites===false;
+ if(!readOnly)await mkdir(dir,{recursive:true,mode:0o700});
  const lock=join(dir,'writer.lock'),journal=join(dir,'facts.ndjson');
- let guard;try{guard=await open(lock,'wx',0o600);}catch(e){if(e.code==='EEXIST')throw Error('writer_locked');throw e;}
+ let guard=null;
+ if(!readOnly)try{guard=await open(lock,'wx',0o600);}catch(e){if(e.code==='EEXIST')throw Error('writer_locked');throw e;}
  let lines=[],frames=[],state=new Map(),seq=0,prev='0'.repeat(64),closed=false,queue=Promise.resolve();
  try{
   const buf=await readFile(journal).catch(e=>{if(e.code==='ENOENT')return Buffer.alloc(0);throw e;});
@@ -41,7 +43,8 @@ export async function openStore(location,policy={}){
    state.set(f.namespace,apply(state.get(f.namespace)||new Map(),f.ops));
    frames.push(f);seq=f.seq;prev=hash;
   }
-  const handle=await open(journal,'a',0o600);await chmod(journal,0o600);
+  const handle=readOnly?null:await open(journal,'a',0o600);
+  if(handle)await chmod(journal,0o600);
   const transact=({namespace,observed_seq,mutation_uid,operations})=>new Promise((ok,fail)=>{
    queue=queue.then(async()=>{
     try{
@@ -78,9 +81,10 @@ export async function openStore(location,policy={}){
    if(!nsValid(namespace)||!Number.isInteger(after_seq)||after_seq<0||!Number.isInteger(limit)||limit<1||limit>500)throw Error('invalid_query');
    return {frames:frames.filter(f=>f.namespace===namespace&&f.seq>after_seq).slice(0,limit),seq};
   };
-  const close=async()=>{if(closed)return;closed=true;await queue;await handle.close();await guard.close();await unlink(lock);};
+  const close=async()=>{if(closed)return;closed=true;await queue;
+   if(handle)await handle.close();if(guard){await guard.close();await unlink(lock);}};
   return {transact,query,history,close,status:()=>({seq,hash:prev,namespaces:state.size,
    usedBytes,maxJournalBytes:maxBytes,allowWrites,
    backupCopies:0,maxBackupCopies:policy.maxBackups??0})};
- }catch(e){await guard.close();await unlink(lock).catch(()=>{});throw e;}
+ }catch(e){if(guard){await guard.close();await unlink(lock).catch(()=>{});}throw e;}
 }
