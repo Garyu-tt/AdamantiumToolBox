@@ -1,0 +1,50 @@
+import http from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {join} from 'node:path';
+import {discover,dispatch} from './router.mjs';
+import {getIcon,saveIcon,validKey} from './icon-store.mjs';
+const secret=process.env.ADA_INTERNAL_KEY||'';
+if(secret.length<24)throw Error('internal_key_missing');
+const caps=new Set((process.env.ADA_CAPS||'').split(','));
+const actions={
+ 'leonardo.providers':'graphics.read',
+ 'leonardo.generate':'graphics.generate',
+ 'leonardo.icons.regenerate':'graphics.icons',
+ 'leonardo.icons.get':'graphics.read'
+};
+const nodes=[{id:'leonardo.view',type:'view',title:'Leonardo Graphics',icon:'leonardo',requires:['graphics.read']},
+ ...Object.entries(actions).map(([id,cap])=>({id,type:'action',title:id.split('.').slice(1).join('.'),requires:[cap]}))];
+const spec={app:'leonardo',version:1,nodes,
+ edges:Object.keys(actions).map(id=>({from:'leonardo.view',to:id,type:'uses'}))};
+const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
+async function invoke(action,p){
+ if(!actions[action])throw Error('action_not_found');
+ if(!caps.has(actions[action]))throw Error('capability_denied');
+ if(action==='leonardo.providers')return discover();
+ if(action==='leonardo.icons.get')return getIcon(p.key);
+ if(action==='leonardo.generate')return dispatch(p);
+ if(action==='leonardo.icons.regenerate'){
+  validKey(p.key);
+  const result=await dispatch({...p,kind:'icon'});
+  if(result.status==='queued')return result;
+  const icon=await saveIcon(p.key,result.artifact,result.providerId);
+  return {...icon,status:'completed'};
+ }
+ throw Error('action_not_found');
+}
+const manifest=JSON.parse(await readFile(join(import.meta.dirname,'manifest.json'),'utf8'));
+http.createServer((req,res)=>{
+ if(req.url==='/health')return send(res,200,{app:manifest.id});
+ if(req.headers['x-internal-key']!==secret)return send(res,401,{error:'unauthorized'});
+ if(req.method==='GET'&&req.url==='/graph')return send(res,200,spec);
+ if(req.method==='POST'&&req.url==='/invoke'){
+  let raw='',tooBig=false;
+  req.on('data',chunk=>{raw+=chunk;if(raw.length>16000){tooBig=true;req.destroy();}});
+  req.on('end',async()=>{
+   if(tooBig)return;
+   try{const body=JSON.parse(raw);send(res,200,{result:await invoke(body.action,body.params||{})});}
+   catch(e){send(res,400,{error:String(e.message).slice(0,140)});}
+  });return;
+ }
+ send(res,404,{error:'not_found'});
+}).listen(Number(process.env.APP_PORT||manifest.service.port),'127.0.0.1');
