@@ -5,24 +5,25 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {packageDigest} from '../../approval.mjs';
 const LIMIT=65536, TIMEOUT=3500;
-function sandboxArgs(snapshot,runner,profile,probe=false){
+function sandboxArgs(snapshot,runner,profile,probe=false,entry=''){
  const args=['--unshare-all','--die-with-parent','--new-session','--clearenv'];
  for(const path of ['/usr','/bin','/lib','/lib64']){
   if(existsSync(path))args.push('--ro-bind',path,path);
  }
  args.push('--proc','/proc','--dev','/dev','--tmpfs','/tmp');
- if(profile.executable){
-  args.push('--ro-bind',profile.executable,'/frank-executable');
- }
+ if(profile.executable)args.push('--ro-bind',profile.executable,'/frank-executable');
+ for(const mount of profile.mounts||[])args.push('--ro-bind',mount.source,mount.target);
  if(!probe){
   args.push('--ro-bind',snapshot,'/addon','--ro-bind',runner,'/frank-runner'+profile.extension,
    '--chdir','/addon');
  }
  args.push('--setenv','HOME','/tmp','--setenv','PATH','/usr/local/bin:/usr/bin:/bin',
   '--setenv','LANG','C.UTF-8','--setenv','PYTHONDONTWRITEBYTECODE','1','--');
- return args.concat(probe?profile.probe:profile.command.concat('/frank-runner'+profile.extension));
+ return args.concat(probe?profile.probe:(profile.commandFor?
+  profile.commandFor(entry,'/frank-runner'+profile.extension):
+  profile.command.concat('/frank-runner'+profile.extension)));
 }
-function launch(args,input=''){
+function launch(args,input='',timeout=TIMEOUT){
  return new Promise((resolve,reject)=>{
   if(process.platform!=='linux')return reject(Error('linux_namespace_required'));
   const child=spawn(process.env.FRANK_BWRAP_BIN||'bwrap',args,{
@@ -33,7 +34,7 @@ function launch(args,input=''){
    try{if(child.pid)process.kill(-child.pid,'SIGKILL');else child.kill('SIGKILL');}
    catch{child.kill('SIGKILL');}
   };
-  const timer=setTimeout(()=>{timedOut=true;kill();},TIMEOUT);
+  const timer=setTimeout(()=>{timedOut=true;kill();},timeout);
   child.on('error',e=>failure=e);
   child.stdin.on('error',()=>{});
   child.stdout.on('data',v=>{
@@ -54,7 +55,7 @@ function launch(args,input=''){
  });
 }
 export async function ready(profile){
- try{return (await launch(sandboxArgs(null,null,profile,true))).trim()===
+ try{return (await launch(sandboxArgs(null,null,profile,true),'',profile.timeoutMs||TIMEOUT)).trim()===
   profile.readyText;}
  catch{return false;}
 }
@@ -67,7 +68,7 @@ export async function execute(pkg,digest,action,params,runner,profile){
   if(await packageDigest(snapshot)!==digest)throw Error('snapshot_integrity_failure');
   const request=JSON.stringify({entry:pkg.manifest.entry,action,params});
   if(request.length>LIMIT)throw Error('request_too_large');
-  const output=JSON.parse(await launch(sandboxArgs(snapshot,runner,profile),request));
+  const output=JSON.parse(await launch(sandboxArgs(snapshot,runner,profile,false,pkg.manifest.entry),request,profile.timeoutMs||TIMEOUT));
   if(!output||!Object.prototype.hasOwnProperty.call(output,'result'))
    throw Error('invalid_adapter_result');
   return output.result;

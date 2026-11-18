@@ -3,7 +3,7 @@ import {loadRegistry,packageDigest} from './approval.mjs';
 const base='frankenstein';
 async function call(port,route,secret,body){
  const res=await fetch('http://127.0.0.1:'+port+route,{
-  method:body?'POST':'GET',signal:AbortSignal.timeout(body?8000:500),
+  method:body?'POST':'GET',signal:AbortSignal.timeout(body?18000:500),
   headers:{'X-Internal-Key':secret,'Content-Type':'application/json'},
   body:body?JSON.stringify(body):undefined
  });

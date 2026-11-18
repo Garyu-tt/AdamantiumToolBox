@@ -37,7 +37,9 @@ shared Linux Bubblewrap worker. Nothing executes in the host process.
 Common worker isolates namespaces/network, read-only package and runner,
 and bounds wall time, serialized input and output. Language-specific
 restrictions belong to the provider (Python uses resource RLIMITs,
-JavaScript currently limits V8 old-space to 64 MiB).
+JavaScript currently limits V8 old-space to 64 MiB; Rust compiles a std-only
+crate with rustc, using its trusted toolchain and linker only inside the
+namespace).
 
 ## Compatibility and security
 Protocol version, package manifest, MAS graph and approval registry are
