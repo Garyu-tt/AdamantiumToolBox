@@ -2,6 +2,7 @@ import {fileURLToPath} from 'node:url';
 import {ready,execute} from '../shared/execution.mjs';
 const runner=fileURLToPath(new URL('./runner.py',import.meta.url));
 const profile={
+ extension:'.py',
  command:['python3','-I','-S'],
  probe:['python3','-I','-S','-c','print("FRANK_SANDBOX_OK")'],
  readyText:'FRANK_SANDBOX_OK'
