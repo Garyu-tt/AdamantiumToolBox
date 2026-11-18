@@ -1,5 +1,6 @@
 import http from 'node:http';
 import {catalog} from './catalog.mjs';
+import {GraphEventHub,routeGraphEvents} from './graph_events_api.mjs';
 import {validateGraph} from './contract.mjs';
 import {standardApi} from './api.mjs';
 import {semanticApi} from './semantic_api.mjs';
@@ -11,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const token=process.env.ADA_TOKEN||'',secret=process.env.ADA_INTERNAL_KEY||'';
 const caps=new Set((process.env.ADA_CAPS||'').split(','));
+const graphEvents=new GraphEventHub();
 if(token.length<24||secret.length<24)throw Error('Missing secure keys');
 const reply=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
 const authorized=req=>req.headers.authorization==='Bearer '+token;
@@ -69,6 +71,7 @@ async function asset(req,res){
 
 http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');
+ if(await routeGraphEvents(req,res,{url,token,secret,reply,hub:graphEvents}))return;
  if(await standardApi(req,res,{reply,token,secret,caps}))return;
  if(await semanticApi(req,res,{reply,token,secret,caps,backend:async()=>(await graph()).doc}))return;
  if(url.pathname==='/health')return reply(res,200,{service:'Adamantium Toolbox',version:1});
@@ -79,7 +82,7 @@ http.createServer(async(req,res)=>{
  }
  if(req.method==='GET'&&url.pathname==='/api/graph'){
   if(!authorized(req))return reply(res,401,{error:'unauthorized'});
-  try{return reply(res,200,(await graph()).doc);}catch{return reply(res,503,{error:'graph_failed'});}
+  try{const snapshot=(await graph()).doc;graphEvents.track(snapshot);return reply(res,200,snapshot);}catch{return reply(res,503,{error:'graph_failed'});}
  }
  if(req.method==='POST'&&url.pathname==='/api/invoke'){
   if(!authorized(req))return reply(res,401,{error:'unauthorized'});
