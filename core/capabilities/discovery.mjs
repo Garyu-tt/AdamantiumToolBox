@@ -1,3 +1,5 @@
+import {hostname} from 'node:os';
+import {createHash} from 'node:crypto';
 import {createCapabilityRegistry} from './registry.mjs';
 const cap=/^[a-z][a-z0-9_-]*(\.[a-z][a-z0-9_-]*)+$/;
 const ver=/^\d+\.\d+$/;
@@ -14,4 +16,11 @@ export function registryFromGraphs(apps,{nodeId,invoke}){
    invoke:(action,params)=>invoke(app,action,params)});
  }
  return registry;
+}
+
+export function localProviders(specs,upstream){
+ const nodeId=process.env.ADA_NODE_ID||'host-'+createHash('sha256').update(hostname()).digest('hex').slice(0,16);
+ return registryFromGraphs(specs,{nodeId,invoke:async(app,action,params)=>
+  (await upstream('http://127.0.0.1:'+app.service.port+'/invoke',{action,params},
+   app.service.invokeTimeoutMs||1200)).result});
 }
