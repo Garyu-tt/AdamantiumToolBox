@@ -43,7 +43,8 @@ export async function loadModules(root,{policy={},context={}}={}){
      if(!desc.action&&!(desc.name in svc))throw Error('missing_service');
     }
     for(const desc of m.provides){
-     if(desc.action)actions.set(desc.action,{run:act[desc.action],permission:desc.permission||'',name:desc.name,owner:name});
+     if(desc.action)actions.set(desc.action,{run:act[desc.action],permission:desc.permission||'',name:desc.name,owner:name,
+      version:desc.version,operation:desc.operation});
      else services.set(desc.name,svc[desc.name]);
      versions.set(desc.name,desc.version);registered.add(desc.name);
     }
