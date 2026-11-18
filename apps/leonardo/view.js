@@ -1,3 +1,16 @@
+export function previewUrl(artifact){
+ if(!artifact||!['image/png','image/svg+xml'].includes(artifact.mime)||
+  artifact.encoding!=='base64'||typeof artifact.data!=='string'||
+  artifact.data.length>180000||!/^[A-Za-z0-9+/]+={0,2}$/.test(artifact.data))return null;
+ return 'data:'+artifact.mime+';base64,'+artifact.data;
+}
+export function parseOptions(text){
+ if(typeof text!=='string'||text.length>12000)throw Error('invalid_options');
+ if(!text.trim())return {};
+ const value=JSON.parse(text);
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('options_must_be_object');
+ return value;
+}
 export async function mount(host,api){
  const add=(tag,text,parent=host)=>{const e=document.createElement(tag);
   if(text!==undefined)e.textContent=text;parent.append(e);return e;};
@@ -7,13 +20,16 @@ export async function mount(host,api){
  const form=add('div'),prompt=add('textarea',undefined,form);
  prompt.placeholder='Описание графической задачи';prompt.rows=3;
  const kinds=add('select',undefined,form),providers=add('select',undefined,form);
+ const formats=add('select',undefined,form);
+ const details=add('textarea',undefined,form);
+ details.rows=4;details.placeholder='Параметры JSON: размеры, scene, настройки движка';
  const key=add('input',undefined,form);key.placeholder='ID иконки приложения';
  const remoteLabel=add('label','Разрешить удалённый движок',form);
  const remote=add('input',undefined,remoteLabel);remote.type='checkbox';
  const submit=add('button','Создать',form);
  const refresh=add('button','Обновить провайдеры',host);
  const output=add('pre','',host),preview=add('img',undefined,host);
- preview.alt='Предпросмотр графики';preview.style.maxWidth='192px';preview.hidden=true;
+ preview.alt='Предпросмотр графики';preview.style.maxWidth='100%';preview.hidden=true;
  add('h3','Задания',host);const reloadJobs=add('button','Обновить задания',host);
  const jobsList=add('div','',host);
  let available=[];
@@ -34,6 +50,8 @@ export async function mount(host,api){
   const found=available.filter(x=>x.kind===kind);
   options(providers,[{value:'',label:'Автоматический выбор'},
    ...found.map(p=>({value:p.id,label:p.id+' ('+p.locality+')'}))]);
+  options(formats,[{value:'',label:'Автоматический формат'},
+   ...[...new Set(found.flatMap(p=>p.formats||[]))].map(f=>({value:f,label:f}))]);
   key.hidden=kind!=='icon';submit.disabled=!found.length;
  }
  async function updateProviders(){
@@ -67,8 +85,10 @@ export async function mount(host,api){
  submit.onclick=async()=>{
   try{
    const isIcon=kinds.value==='icon';
-   const params={kind:kinds.value,prompt:prompt.value,allowRemote:remote.checked};
+   const params={kind:kinds.value,prompt:prompt.value,allowRemote:remote.checked,
+    options:parseOptions(details.value)};
    if(providers.value)params.providerId=providers.value;
+   if(formats.value)params.format=formats.value;
    if(isIcon)params.key=key.value;
    const action=isIcon?'leonardo.icons.regenerate':'leonardo.generate';
    const result=await api.call(action,params);show(result);
@@ -76,9 +96,9 @@ export async function mount(host,api){
    if(isIcon&&result.status==='completed'){
     const icon=await api.call('leonardo.icons.get',{key:key.value});
     if(icon.found){preview.src=icon.dataUri;preview.hidden=false;}
-   }else if(result.artifact?.mime==='image/png'&&
-    result.artifact?.encoding==='base64'){
-    preview.src='data:image/png;base64,'+result.artifact.data;preview.hidden=false;
+   }else{
+    const url=previewUrl(result.artifact);
+    if(url){preview.src=url;preview.hidden=false;}
    }
    if(result.status==='queued')await refreshJobs();
   }catch(e){output.textContent=e.message;}
