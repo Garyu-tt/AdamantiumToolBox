@@ -1,6 +1,6 @@
 :root{--mas-font:Segoe UI,Tahoma,sans-serif;--mas-radius:2px;--mas-space-1:3px;--mas-space-2:6px;--mas-space-3:9px;--mas-space-4:12px;--mas-bg:var(--bg);--mas-surface:var(--surface);--mas-text:var(--text);--mas-muted:var(--muted);--mas-accent:var(--accent);--mas-border:var(--line);--mas-browser-app-min-height:280px;
 --mas-browser-address-min-width:140px;--mas-browser-preview-min-height:160px;
---mas-browser-input-min-width:90px}
+--mas-browser-input-min-width:90px;--mas-layout-panel-top:46px}
 .mas-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:8px;border-bottom:1px solid var(--mas-border);padding-bottom:6px}
 .mas-toolbar h2{margin:0 8px 0 0}.mas-button{border-radius:2px;font:inherit}.mas-primary{border-color:var(--mas-accent)}.mas-danger{color:var(--error)}
 .mas-tabs{display:flex;gap:1px;flex-wrap:wrap;border-bottom:1px solid var(--mas-border);padding:0}

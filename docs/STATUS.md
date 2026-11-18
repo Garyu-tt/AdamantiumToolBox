@@ -47,3 +47,8 @@
   through localhost-only tunnels, keeping browser execution at the identity
   owner. Windows host/client pair passes fake-login handoff test. No actual
   cross-machine tunnel or portable credential vault deployed yet.
+
+- Window Management v1: unified desktop-relative drag, no cursor offset,
+  maximize/restore/minimize, corner/edge snap with preview, six adaptive
+  layouts supporting eight windows and adjustable primary-pane ratio.
+  Browser-based CDP test verifies exact movement and grid placement.

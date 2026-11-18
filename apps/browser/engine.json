@@ -42,6 +42,6 @@
     "format": "jpeg",
     "quality": 62
   },
-  "startupTimeoutMs": 12000,
+  "startupTimeoutMs": 25000,
   "previewRefreshMs": 2500
 }

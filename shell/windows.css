@@ -1,0 +1,21 @@
+/* Window positioning uses coordinates relative to #desktop, never the page. */
+.titlebar{touch-action:none;cursor:grab}
+.titlebar:active{cursor:grabbing}
+.titlebar button{cursor:pointer;touch-action:manipulation}
+.window.tiled{min-width:0;min-height:0;resize:none}
+.layout-panel[hidden]{display:none}
+.layout-panel{position:fixed;right:var(--mas-space-4);top:var(--mas-layout-panel-top);
+ z-index:99999;min-width:240px;max-width:min(320px,calc(100vw - 20px));
+ padding:var(--mas-space-4);border:1px solid var(--mas-border);
+ background:var(--mas-bg);color:var(--mas-text);box-shadow:0 6px 22px var(--mas-border)}
+.layout-panel strong{display:block;margin-bottom:var(--mas-space-3)}
+.layout-panel label{display:grid;gap:var(--mas-space-1);margin-bottom:var(--mas-space-3)}
+.layout-panel select,.layout-panel input{width:100%}
+.layout-panel output{font-variant-numeric:tabular-nums}
+.layout-panel .mas-toolbar{margin-top:var(--mas-space-3)}
+#tasks button.minimized{opacity:.65}
+
+.window-snap-preview[hidden]{display:none}
+.window-snap-preview{position:absolute;pointer-events:none;
+ border:2px dashed var(--mas-accent);background:var(--mas-surface);
+ opacity:.65;z-index:9999}

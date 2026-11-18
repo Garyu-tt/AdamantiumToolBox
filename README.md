@@ -95,3 +95,10 @@ Other nodes can control that browser through a client-side loopback SSH
 forward and a separately scoped relay key; no raw cookies or native profile
 are copied across operating systems. Site-specific device-bound logins may
 still require reauthentication. See docs/BROWSER-CONTINUITY.md.
+
+## Adaptive window manager
+All MAS apps and system tools share viewport-correct title-bar dragging,
+maximize/restore/minimize, edge and corner snap, live snap preview and
+configurable layouts for up to eight windows. Use the "Окна" toolbar menu
+for grid, asymmetric primary-pane layouts and split-size adjustment.
+See docs/WINDOW-MANAGEMENT.md. Test with node tests/window_ui.test.mjs.
