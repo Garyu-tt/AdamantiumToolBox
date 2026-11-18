@@ -1,0 +1,23 @@
+{
+  "schema": "mas-architecture-1",
+  "name": "Adamantium Toolbox / Mechanicus",
+  "principles": [
+    {"id":"incremental","rule":"One complete tested capability per accepted change"},
+    {"id":"independent","rule":"Every application launches in Core + App configuration"},
+    {"id":"evolving-base","rule":"Promote only reusable universal primitives with versioned compatibility"},
+    {"id":"no-hardcode","rule":"All changeable addresses, paths, rights, navigation, themes and dependencies come from discovery or data"}
+  ],
+  "layers": [
+    {"id":"microkernel","must":["bootstrap","lifecycle","registration","permissions","capability-discovery"]},
+    {"id":"base","optional":["files","settings","events","audit","storage","tasks","ui-components"]},
+    {"id":"apps","constraint":"Apps must not require other apps"}
+  ],
+  "allowed_constants": ["wire-protocol-identifiers","schema-versions","value-types","bootstrap-safe-defaults"],
+  "storage": {
+    "api":"mas-storage-provider-1",
+    "virtual_methods":["read_file","write_file","list_files","get_dependencies"],
+    "darc":{"classification":"optional-storage-provider","snapshot":true,"random_access":false,"in_place_write":false}
+  },
+  "release_gates":["context-size","manifest-and-contract","core-plus-app","architecture-ratchet","integration-tests"],
+  "source_budget":{"max_bytes":6144,"max_lines":120}
+}

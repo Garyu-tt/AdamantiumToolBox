@@ -1,0 +1,16 @@
+:root{--mas-font:Segoe UI,Tahoma,sans-serif;--mas-radius:2px;--mas-space-1:3px;--mas-space-2:6px;--mas-space-3:9px;--mas-space-4:12px;--mas-bg:var(--bg);--mas-surface:var(--surface);--mas-text:var(--text);--mas-muted:var(--muted);--mas-accent:var(--accent);--mas-border:var(--line)}
+.mas-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:8px;border-bottom:1px solid var(--mas-border);padding-bottom:6px}
+.mas-toolbar h2{margin:0 8px 0 0}.mas-button{border-radius:2px;font:inherit}.mas-primary{border-color:var(--mas-accent)}.mas-danger{color:var(--error)}
+.mas-tabs{display:flex;gap:1px;flex-wrap:wrap;border-bottom:1px solid var(--mas-border);padding:0}
+.mas-tab{border:1px solid transparent;border-radius:0;background:transparent;min-height:26px}.mas-tab.is-active{border:1px solid var(--mas-border);border-bottom:1px solid var(--mas-bg);background:var(--mas-bg);margin-bottom:-1px}
+.mas-studio{display:flex;gap:8px;min-height:350px;margin-top:8px}.mas-editor{flex:1;min-width:0;overflow:auto}
+.mas-inspector{width:200px;flex:none;border-left:1px solid var(--mas-border);padding:8px}.mas-inspector h3{font-size:13px;margin:0 0 7px}.mas-note{color:var(--mas-muted);min-height:18px}
+.mas-field{display:block;margin:8px 0}.mas-field span{display:block;color:var(--mas-muted);margin-bottom:3px}.mas-field input,.mas-field select{width:100%;border:1px solid var(--mas-border);border-radius:0;color:var(--mas-text);background:var(--mas-bg);padding:5px}
+.studio-canvas{position:relative;min-height:350px;height:450px;min-width:100%;overflow:auto;border:1px solid var(--mas-border);background:var(--mas-bg)}
+.studio-piece{position:absolute;min-width:68px;min-height:25px;padding:4px 8px;border-radius:0;touch-action:none}
+.studio-piece.label{background:transparent;border:1px dotted var(--mas-border)}.studio-piece.connector{border-style:dashed}
+.studio-pair{display:grid;grid-template-columns:1fr .8fr 1fr;gap:5px}
+.studio-pane,.studio-links{min-width:0;padding:6px;background:var(--mas-bg);border:1px solid var(--mas-border);overflow-wrap:anywhere}
+.studio-pane h3,.studio-links h3{font-size:13px;margin:0 0 7px}
+.studio-graph-node,.studio-binding{font-size:11px;padding:4px;border-bottom:1px solid var(--mas-border);margin-bottom:2px}
+.studio-binding.missing{color:var(--error)}@media(max-width:850px){.mas-studio{display:block}.mas-inspector{width:auto;border:0;border-top:1px solid var(--mas-border)}.studio-pair{grid-template-columns:1fr}}

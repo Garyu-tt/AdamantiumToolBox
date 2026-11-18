@@ -1,0 +1,5 @@
+{
+  "app": "editor",
+  "view": "editor.view",
+  "schema": "mas-appref-1"
+}

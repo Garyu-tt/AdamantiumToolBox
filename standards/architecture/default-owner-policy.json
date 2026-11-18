@@ -1,0 +1,17 @@
+{
+  "schema": "mas-owner-policy-1",
+  "version": 1,
+  "capabilities": [
+    "workspace.read",
+    "workspace.write",
+    "graph.read",
+    "frontend.read",
+    "frontend.write",
+    "codemap.read",
+    "studio.read",
+    "studio.write",
+    "semantic.read",
+    "semantic.write",
+    "mesh.read"
+  ]
+}
