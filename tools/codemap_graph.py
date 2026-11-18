@@ -83,6 +83,7 @@ def main():
         return context(sys.argv[2],sys.argv[3] if len(sys.argv)>3 else "",entries,edges,relations)
     raise ValueError("unknown_mode")
 try:
+    sys.stdout.reconfigure(encoding="utf-8")
     print(json.dumps(main(),ensure_ascii=False))
 except (ValueError,OSError,UnicodeError,IndexError) as error:
     print(json.dumps({"error":str(error)[:140]}));sys.exit(2)
