@@ -15,6 +15,7 @@ const api=async(path,body)=>{
  if(action==='task_pool.claim'){
   if(claimed)return {status:'empty'};
   claimed=true;assert.deepEqual(params.capabilities,['ai.text.generate']);
+  assert.equal(params.requiresContract,'ai.text.generate');
   return {status:'claimed',taskId:'task-id',token:'lease-token',payload:{prompt:'Analyze alert',tools:true}};
  }
  if(action==='claude.start'){assert.equal(params.prompt,'Analyze alert');assert.equal(params.tools,false);
