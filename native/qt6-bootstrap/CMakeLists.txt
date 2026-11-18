@@ -50,3 +50,13 @@ target_link_libraries(mas_native_plugins_test PRIVATE Qt6::Widgets Qt6::Test)
 add_test(NAME native_ui_plugins COMMAND mas_native_plugins_test
   $<TARGET_FILE:mas_native_workspace> $<TARGET_FILE:mas_native_window_manager>)
 set_tests_properties(native_ui_plugins PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_library(mas_raw_ui STATIC host/host_bridge.hpp host/raw_view.hpp
+ host/raw_view.cpp host/raw_workspace.cpp host/raw_workspace.hpp)
+target_include_directories(mas_raw_ui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host
+ ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+target_link_libraries(mas_raw_ui PUBLIC Qt6::Widgets)
+add_executable(mas_raw_ui_test tests/raw_ui_test.cpp)
+target_link_libraries(mas_raw_ui_test PRIVATE mas_raw_ui Qt6::Test)
+add_test(NAME native_raw_ui COMMAND mas_raw_ui_test)
+set_tests_properties(native_raw_ui PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
