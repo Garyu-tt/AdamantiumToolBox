@@ -29,6 +29,8 @@ Owner policy requires explicit opt-in to godot.read, godot.launch and
 engine.provider and engine.launch. Existing private policy is never overwritten. Review each
 executable, project script and dependency before granting launch permission.
 Launched game/project code has the privileges of the Toolbox OS user.
+The child environment is allowlisted; ADA credentials and common secret keys are
+excluded. Optional ADA_GODOT_ENV_ALLOWLIST adds non-secret variable names.
 Project IDs are directory names, never arbitrary filesystem paths.
 
 ## API through the authorized capability graph
