@@ -1,5 +1,6 @@
 import {visibleTree,availableViews} from './model.js';
-import {empty,decode,folder,pin,move,rename,remove,customItems} from './state.js';
+import {empty,decode,folder,pin,move,customItems} from './state.js';
+import {contextActions} from './context_actions.js';
 import {userFolder,rootLinks} from './user_tree.js';
 import {renderIcons} from './canvas.js';
 import {paintStart} from './start_menu.js';
@@ -45,27 +46,7 @@ export async function mount(host,api){
   }
  }
  function context(event,item){
-  const actions=[];
-  if(!item)actions.push({title:'Создать папку',run:()=>createFolder(null)});
-  else if(item.id?.startsWith('user:')){
-   if(item.type==='folder')actions.push(
-    {title:'Переименовать',run:()=>{
-     const name=prompt('Новое имя папки',item.name);
-     if(name!==null&&rename(state,item.id,name)){save();redraw();}
-    }},
-    {title:'Удалить папку (ярлыки останутся)',run:()=>{
-     if(confirm('Удалить папку? Ярлыки внутри переместятся на рабочий стол.')){
-      remove(state,item.id);save();redraw();
-     }
-    }}
-   );
-   else actions.push({title:'Удалить ярлык',run:()=>{remove(state,item.id);save();redraw();}});
-   if(item.parent)actions.push({title:'На рабочий стол',run:()=>{
-    move(state,item.id,null);save();redraw();
-   }});
-  }else if(item.type==='app')actions.push({title:'Создать ярлык',run:()=>{
-   pin(state,item.view);save();redraw();
-  }});
+  const actions=contextActions(item,state,{createFolder,changed:()=>{save();redraw();}});
   if(actions.length)menu.show(event,actions);
  }
  const showStart=()=>paintStart(list,search.value,tree,state,views,{
