@@ -47,7 +47,7 @@ export async function outbox(root,kind){
  for(const name of names.filter(n=>/^[a-f0-9]{64}\.json$/.test(n))){
   const value=JSON.parse(await readFile(join(root,kind,name),'utf8'));
   if(hash(JSON.stringify(value))+'.json'!==name)throw Error('queue_integrity_failure');
-  entries.push({sha256:name.slice(0,64),...value});
+  entries.push({...value,queue_sha256:name.slice(0,64)});
  }
  return entries;
 }

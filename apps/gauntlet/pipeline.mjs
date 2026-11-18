@@ -62,8 +62,9 @@ export async function accept(root,input,key){
     files:c.files,attestation:input.report,signature:input.signature,
     release_payload:releasePayload,mesh_payload_sha256:stage.mesh_payload_sha256};
    const artifact=await put(root,'candidates',c.task_id+c.sha256,rc);
+   c.candidate=artifact;c.release_payload=releasePayload;
    stamp(c,'RELEASE_READY');
-   await put(root,'delivery-outbox',c.task_id+c.sha256,{
+   c.delivery=await put(root,'delivery-outbox',c.task_id+c.sha256,{
     schema:'gauntlet-delivery-request-1',task_id:c.task_id,sha256:c.sha256,
     artifact,release_payload:releasePayload,mesh_payload_sha256:stage.mesh_payload_sha256,
     approval:'REQUIRED',status:'PENDING_DELIVERY'});
