@@ -1,0 +1,10 @@
+{
+ "mas":"1.0","id":"network_witness","name":"Network Audit Witness","version":"0.1.0",
+ "icon":"network_witness","lifecycle":"independent",
+ "service":{"protocol":"mas-http-1","port":8932,"invokeTimeoutMs":8000},
+ "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},
+ "auth":{"mode":"host-delegated"},
+ "permissions":["network_witness.read","network_witness.write"],
+ "events":{"schema":"mas-event-1"},"data":{"refs":"mas-ref-1"},
+ "updates":{"strategy":"semver","migrations":[]}
+}
