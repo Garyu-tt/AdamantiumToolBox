@@ -46,6 +46,25 @@ try{
  const action=await fetch(base+'/api/invoke',{method:'POST',headers:{Authorization:'Bearer '+token,
   'Content-Type':'application/json'},body:JSON.stringify({action:'fixture.ping'})});
  assert.equal(action.status,200);assert.deepEqual((await action.json()).result,{pong:true});
+ const typed=async(params)=>fetch(base+'/api/invoke',{method:'POST',headers:{
+  Authorization:'Bearer '+token,'Content-Type':'application/json'},
+  body:JSON.stringify({action:'fixture.ping',params})});
+ assert.equal((await typed({unexpected:true})).status,422);
+ const typeFile=join(tmp,'apps','fixture','modules.json');
+ const typedDoc=JSON.parse(await readFile(typeFile,'utf8'));
+ typedDoc.modules[0].provides[1].output={type:'object',required:['pong'],
+  properties:{pong:{type:'string'}},additionalProperties:false};
+ await writeFile(typeFile,JSON.stringify(typedDoc));
+ assert.equal((await typed({})).status,502);
+ typedDoc.modules[0].provides[1].output={type:'object',required:['pong'],
+  properties:{pong:{type:'boolean'}}};
+ typedDoc.modules[0].provides[1].input={type:'object',pattern:'unsupported'};
+ await writeFile(typeFile,JSON.stringify(typedDoc));
+ const badSchema=await fetch('http://127.0.0.1:'+servicePort+'/graph',{
+  headers:{'X-Internal-Key':secret}});
+ assert.equal(badSchema.status,503);
+ typedDoc.modules[0].provides[1].input={type:'object',additionalProperties:false};
+ await writeFile(typeFile,JSON.stringify(typedDoc));
  const path=join(tmp,'apps','fixture','modules.json');
  const modules=JSON.parse(await readFile(path,'utf8'));
  modules.modules[0].children=[{id:'fixture.nested',kind:'submodule',version:'0.1.0',
