@@ -62,50 +62,5 @@ const deep=(depth)=>{let node={kind:'group',id:'sample.leaf',version:'1.0.0',lab
  for(let i=0;i<depth;i++)node={kind:'group',id:`sample.g${i}`,version:'1.0.0',label:'Nested',children:[node]};
  return node;};
 assert(invalid({...request,root:deep(70)}).errors.some(x=>x.code==='DEPTH_LIMIT'));
-// A function can appear under several UI groups without creating multiple execution requests.
-const changed={schema:'forge.composite.impact.request.v1',observed_revision:'graph-78',
- trigger:'contract.changed',graph_intent:plan.graph_intent,changed_refs:[a.id]};
-const impact=planCompositeImpact(changed);
-assert.equal(impact.ok,true,JSON.stringify(impact.errors));
-assert(impact.revisit_function_refs.includes(a.id));
-assert(impact.revisit_function_refs.includes(b.id));
-assert(impact.revisit_function_refs.includes(c.id));
-assert(impact.composite_refresh_refs.includes('sample.admin'));
-assert(impact.composite_refresh_refs.includes('sample.root'));
-assert(impact.ui_revoke_intents.includes(`ui:${b.id}`));
-assert.equal(impact.ui_revoked,false);assert.equal(impact.authoritative,false);
-const capImpact=planCompositeImpact({...changed,trigger:'provider.revoked',changed_refs:['capability:sample.auth']});
-assert.equal(capImpact.ok,true);
-assert(capImpact.revisit_function_refs.includes(b.id));
-assert.equal(planCompositeImpact({...changed,changed_refs:['unknown.missing']}).ok,false);
-assert.equal(planCompositeImpact({...changed,observed_revision:''}).ok,false);
-assert.equal(planCompositeImpact({...changed,graph_intent:{...plan.graph_intent,
- edges:[...plan.graph_intent.edges,{from:'missing',to:a.id,kind:'contains'}]}}).ok,false);
-// HTTP integration and independent start with only the MAS host, no TaskPool/Graph Manager/agents.
-const free=()=>new Promise(done=>{const s=createServer();s.listen(0,'127.0.0.1',()=>{
- const port=s.address().port;s.close(()=>done(port));});});
-const port=await free(),secret='forge-r05-independent-test-host-secret';
-const child=spawn(process.execPath,[resolve(root,'apps/forge/service.mjs')],{env:{...process.env,
- ADA_INTERNAL_KEY:secret,ADA_CAPS:'forge.read,forge.validate',APP_PORT:String(port)},stdio:'ignore'});
-const base='http://127.0.0.1:'+port;
-const query=(route,body,auth=true)=>fetch(base+route,{method:body?'POST':'GET',
- headers:{...(auth?{'x-internal-key':secret}:{}),'Content-Type':'application/json'},
- body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(2000)});
-try{
- let ready=false;
- for(let i=0;i<40;i++){try{if((await query('/health')).ok){ready=true;break;}}catch{}
-  await new Promise(done=>setTimeout(done,50));}
- assert(ready,'Forge-alone service must launch');
- const graph=await (await query('/graph')).json();
- assert(graph.nodes.some(x=>x.id==='forge.composite.plan'));
- assert(graph.nodes.some(x=>x.id==='forge.composite.impact'));
- const cp=await (await query('/invoke',{action:'forge.composite.plan',params:request})).json();
- assert.equal(cp.result.ok,true);assert.equal(cp.result.topology.reused_function_mounts,1);
- const ci=await (await query('/invoke',{action:'forge.composite.impact',params:changed})).json();
- assert.equal(ci.result.ok,true);assert.equal(ci.result.ui_revoked,false);
- assert.equal((await query('/invoke',{action:'forge.composite.plan',params:request},false)).status,401);
- const info=await (await query('/invoke',{action:'forge.describe'})).json();
- assert.equal(info.result.schema,'mechanicus.forge.adapter.v5');
- assert.equal(info.result.stores_state,false);assert.equal(info.result.external_effects,false);
- console.log('FORGE_R05_TEST_OK: recursive/shared function composition, cycle rejection, reverse impact, fail-closed HTTP');
-}finally{child.kill();}
+import {runImpactR05} from './forge-r05-impact.case.mjs';
+await runImpactR05({a,b,c,plan,request});

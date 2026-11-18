@@ -72,32 +72,5 @@ assert.equal(projectEvents({...batch,events:[event(11,'incident.remediation_atte
 assert.equal(projectEvents({...batch,events:[{...event(11,'incident.remediation_attempted'),
  attempt_ref:'attempt-1',evidence_ref:'trace-1'}]}).ok,true);
 // HTTP surface: isolated Forge process, no external MAS plugins, no agent or graph.
-const free=()=>new Promise(resolvePort=>{const s=createServer();s.listen(0,'127.0.0.1',()=>{
- const port=s.address().port;s.close(()=>resolvePort(port));});});
-const port=await free(),secret='forge-r03-strong-internal-test-secret';
-const child=spawn(process.execPath,[resolve(root,'apps/forge/service.mjs')],{env:{...process.env,
- ADA_INTERNAL_KEY:secret,ADA_CAPS:'forge.read,forge.validate',APP_PORT:String(port)},stdio:'ignore'});
-const base='http://127.0.0.1:'+port;
-const query=(route,body,auth=true)=>fetch(base+route,{method:body?'POST':'GET',
- headers:{...(auth?{'x-internal-key':secret}:{}),'Content-Type':'application/json'},
- body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(2000)});
-try{
- let active=false;
- for(let i=0;i<40;i++){
-  try{if((await query('/health')).ok){active=true;break;}}catch{}
-  await new Promise(r=>setTimeout(r,50));
- }
- assert(active,'isolated core+Forge service must launch');
- const graph=await (await query('/graph')).json();
- assert(graph.nodes.some(n=>n.id==='forge.providers.negotiate'));
- assert(graph.nodes.some(n=>n.id==='forge.events.project'));
- const p=await (await query('/invoke',{action:'forge.providers.negotiate',params:flow})).json();
- assert.equal(p.result.complete,false);
- const e=await (await query('/invoke',{action:'forge.events.project',params:batch})).json();
- assert.equal(e.result.actions.length,3);
- assert.equal((await query('/invoke',{action:'forge.events.project',params:batch},false)).status,401);
- const desc=await (await query('/invoke',{action:'forge.describe'})).json();
- assert.equal(desc.result.schema,'mechanicus.forge.adapter.v5');
- assert.equal(desc.result.external_effects,false);assert.equal(desc.result.stores_state,false);
- console.log('FORGE_R03_TEST_OK: fail-closed negotiation, no silent write failover, strict event projection, standalone HTTP');
-}finally{child.kill();}
+import {runHttpR03} from './forge-r03-http.case.mjs';
+await runHttpR03({flow,batch});
