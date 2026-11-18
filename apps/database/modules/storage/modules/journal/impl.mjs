@@ -1,6 +1,6 @@
 import {openStore} from '../../../../store.mjs';
-export async function activate({dataDir}){
- const store=await openStore(dataDir);
+export async function activate({dataDir,storagePolicy}){
+ const store=await openStore(dataDir,storagePolicy);
  return {services:{'storage.graph.store':store},actions:{
   'database.status':()=>store.status(),
   'database.query':p=>store.query(p),
