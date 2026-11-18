@@ -7,6 +7,9 @@ const rules=[{id:'allow-mail',from:'client',to:'mail',effect:'allow',reason:'cli
 const input={targetNode:'host',topology:{nodes,services,rules}};
 const result=compilePreview(input);
 assert.equal(result.candidate.length,1);
+const wrongService={...input,topology:{...input.topology,services:[{...services[0],addresses:['192.0.2.99']}]}};
+assert.equal(compilePreview(wrongService).candidate.length,0);
+assert(compilePreview(wrongService).warnings.some(x=>x.code==='service_address_not_on_host'));
 assert.equal(result.candidate[0].destinationPort,993);
 assert.equal(result.candidate[0].addressFamily,'ip');
 assert.equal(result.safeToApply,false);assert.equal(result.applied,false);
