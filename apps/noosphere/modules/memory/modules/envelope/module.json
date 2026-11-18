@@ -1,0 +1,10 @@
+{
+ "mas":"1.0","kind":"module","id":"envelope","version":"0.3.0",
+ "lifecycle":"independent","isolation":"in-process","entry":"impl.mjs",
+ "requires":[{"name":"memory.temporal.validator","version":"1.0"},
+             {"name":"memory.provenance.validator","version":"1.0"}],
+ "provides":[{"name":"memory.envelope.validate","version":"1.0",
+              "action":"noosphere.validate","operation":"read",
+              "permission":"noosphere.read"}],
+ "events":[],"settings":{}
+}
