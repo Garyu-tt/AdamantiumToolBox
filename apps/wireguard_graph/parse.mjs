@@ -1,5 +1,6 @@
 import {isIP} from 'node:net';
 import {createHash} from 'node:crypto';
+import {prefixesOverlap} from './prefix.mjs';
 const name=x=>typeof x==='string'&&/^[a-zA-Z0-9_.-]{1,32}$/.test(x);
 const fingerprint=key=>{
  if(typeof key!=='string'||! /^[A-Za-z0-9+/]{43}=$/.test(key))return null;
@@ -23,7 +24,7 @@ const prefixValid=x=>{
 export function parseWireguardEvidence(input){
  if(!input||typeof input!=='object')throw Error('invalid_wg_input');
  const now=Number.isSafeInteger(input.nowSeconds)?input.nowSeconds:Math.floor(Date.now()/1000);
- if(now<0)throw Error('invalid_time');
+ if(now<0||now>253402300799)throw Error('invalid_time');
  const peers=new Map(),issues=[],interfaces=new Set();
  const observe=(iface,key,row,kind)=>{
   const fp=fingerprint(key);
@@ -56,7 +57,8 @@ export function parseWireguardEvidence(input){
   p.lastHandshake=epoch===0?null:epoch;
  }
  const values=[...peers.values()].sort((a,b)=>a.id.localeCompare(b.id));
- const owner=new Map();
+ if(values.length>256)throw Error('wg_peer_limit');
+ const owner=new Map(),advertised=[];
  for(const p of values){
   p.allowedIps.sort();
   if(!p.allowedIps.length)issues.push({code:'no_allowed_ips',peer:p.id});
@@ -64,6 +66,14 @@ export function parseWireguardEvidence(input){
   if(p.lastHandshake!==null&&now-p.lastHandshake>3600)
    issues.push({code:'stale_handshake',peer:p.id,ageSeconds:now-p.lastHandshake});
   for(const range of p.allowedIps){
+   if(advertised.length>=512)throw Error('wg_prefix_limit');
+   for(const x of advertised)if(x.peer!==p.id){
+    const overlap=prefixesOverlap(x.prefix,range);
+    if(overlap===true&&x.prefix!==range)
+     issues.push({code:'overlapping_allowed_prefix',peers:[x.peer,p.id],prefixes:[x.prefix,range]});
+    if(overlap===null)issues.push({code:'prefix_overlap_unverified',peer:p.id,prefix:range});
+   }
+   advertised.push({peer:p.id,prefix:range});
    const old=owner.get(range);
    if(old&&old!==p.id)issues.push({code:'duplicate_allowed_prefix',prefix:range,peers:[old,p.id]});
    else owner.set(range,p.id);
