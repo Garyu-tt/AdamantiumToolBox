@@ -6,6 +6,8 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const key='test-only-internal-key-0123456789';
 const suites=[['graph_dns',39821,'graph_dns.audit','graph_dns.read',
  {zones:[{name:'example.test'}],records:[]}],
+ ['graph_firewall',39824,'graph_firewall.inspect','graph_firewall.read',
+ {nodes:[],services:[],rules:[]}],
  ['noosphere',39822,'noosphere.inspect','noosphere.read',{records:[]}]];
 for(const [name,port,action,permission,params] of suites){
  const proc=spawn(process.execPath,[resolve(root,'apps',name,'service.mjs')],{
