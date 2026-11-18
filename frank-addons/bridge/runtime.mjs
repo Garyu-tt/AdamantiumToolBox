@@ -20,7 +20,7 @@ export async function snapshot(root,secret=''){
  const adapters=new Map(registry.adapters.map(x=>[x.capability,x.port]));
  const routes=new Map(),packages=[];
  for(const pkg of await frankCatalog(root)){
-  if(!approved.has(pkg.key)||!adapters.has(pkg.manifest.adapter))continue;
+  if(!approved.has(pkg.key)||!adapters.has(pkg.manifest.adapter)||pkg.manifest.permissions.length)continue;
   try{
    if(await packageDigest(pkg.directory)!==approved.get(pkg.key))continue;
    const port=adapters.get(pkg.manifest.adapter);
