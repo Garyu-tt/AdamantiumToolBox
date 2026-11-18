@@ -12,6 +12,9 @@ const home=process.env.LOCALAPPDATA;
 if(!home)throw Error('LOCALAPPDATA_required');
 const runtime=join(home,'Adamantium Toolbox');
 const timeout=1500;
+const loopbackHost=process.env.ADA_LOOPBACK_HOST||'127.0.0.1';
+if(!['127.0.0.1','::1','localhost'].includes(loopbackHost))throw Error('loopback_only');
+const address=loopbackHost.includes(':')?'['+loopbackHost+']':loopbackHost;
 async function document(path){return JSON.parse((await readFile(path,'utf8')).replace(/^\uFEFF/,''));}
 async function bundled(){
  const root=join(project,'apps'),apps=[];
@@ -41,14 +44,14 @@ async function selected(){
  return rows;
 }
 async function probe(port){
- const response=await fetch('http://127.0.0.1:'+port+'/health',
+ const response=await fetch(`http://${address}:${port}/health`,
   {signal:AbortSignal.timeout(timeout)});
  if(!response.ok)throw Error('health_http_'+response.status);
  return response.json();
 }
 async function graph(){
  const raw=process.env.ADA_CORE_URL||
-  (process.env.ADA_PORT?'http://127.0.0.1:'+process.env.ADA_PORT:null);
+  (process.env.ADA_PORT?`http://${address}:${process.env.ADA_PORT}`:null);
  if(!raw)return {ids:null,reason:'core_url_not_discovered'};
  const url=new URL(raw);
  if(url.protocol!=='http:'||!['127.0.0.1','[::1]','localhost'].includes(url.hostname)||
