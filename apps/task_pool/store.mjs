@@ -1,12 +1,8 @@
 import {mkdir,readFile,rename,rm,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
+import {actor,requireId,validCaps,validLease} from './validation.mjs';
 const schema='mas-task-pool-state-1';
-const id=/^[0-9a-f-]{36}$/i,worker=/^[a-z0-9][a-z0-9_.-]{0,63}$/i;
-const requireId=value=>{if(typeof value!=='string'||!id.test(value))throw Error('invalid_task_id');return value;};
-const actor=value=>{if(typeof value!=='string'||!worker.test(value))throw Error('invalid_worker_id');return value;};
-const validCaps=value=>Array.isArray(value)&&value.length<=32&&value.every(x=>typeof x==='string'&&
- /^[a-z][a-z0-9_.-]{1,79}$/.test(x))&&new Set(value).size===value.length;
 const serialized=JSON.stringify;
 const hash=value=>createHash('sha256').update(serialized(value)).digest('hex');
 export class TaskPool{
@@ -59,15 +55,17 @@ export class TaskPool{
  doc.tasks[taskId]=task;return {taskId,status:'queued',revision:1};
  });
  }
- async claim({workerId,capabilities=[],leaseMs=300000}={}){
+ async claim({workerId,capabilities=[],leaseMs=300000,requiresContract=null}={}){
  actor(workerId);if(!validCaps(capabilities)||!Number.isInteger(leaseMs)||leaseMs<10000||leaseMs>600000)
  throw Error('invalid_claim');
+ if(requiresContract!==null&&(!validCaps([requiresContract])||!capabilities.includes(requiresContract)))
+ throw Error('invalid_claim_filter');
  return this.transact(doc=>{
  for(const t of Object.values(doc.tasks))if(t.status==='claimed'&&t.lease?.expiresAt<=this.clock()){
  t.status='needs_review';t.lease=null;t.revision++;t.note='lease_expired_unknown';
  }
  const eligible=Object.values(doc.tasks).find(t=>t.status==='queued'&&
- t.requires.every(x=>capabilities.includes(x)));
+ (!requiresContract||t.requires.includes(requiresContract))&&t.requires.every(x=>capabilities.includes(x)));
  if(!eligible)return {status:'empty'};
  const token=randomUUID();eligible.status='claimed';eligible.revision++;
  eligible.lease={workerId,token,expiresAt:this.clock()+leaseMs};
@@ -77,7 +75,7 @@ export class TaskPool{
  }
  async transition(input,target){
  const taskId=requireId(input.taskId);actor(input.workerId);
- if(typeof input.token!=='string'||!id.test(input.token))throw Error('invalid_lease');
+ if(!validLease(input.token))throw Error('invalid_lease');
  return this.transact(doc=>{
  const t=doc.tasks[taskId];if(!t)throw Error('task_not_found');
  if(t.status!=='claimed'||t.lease?.token!==input.token||t.lease.workerId!==input.workerId)
