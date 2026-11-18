@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {validatePayload} from '../../standards/mesh/bundle.mjs';
+import {stagePackage} from './package.mjs';
 import {attest} from './attestation.mjs';
 import {load} from './state.mjs';
 import {hash,bundleHash,validHash,validTask} from './shared.mjs';
@@ -28,8 +28,11 @@ export async function preflight(root,request,publicKey){
   throw Error('delivery_queue_mismatch');
  const rc=await content(root,'candidates',c.candidate);
  const payload=await content(root,'release-payloads',c.release_payload);
- const {manifest}=validatePayload(payload);
+ const staged=stagePackage(c);
+ const manifest=JSON.parse(c.files['manifest.json']);
  const digest=hash(JSON.stringify(payload));
+ if(JSON.stringify(payload)!==JSON.stringify(staged.payload)||
+  digest!==staged.mesh_payload_sha256)throw Error('payload_mismatch');
  if(manifest.id!==c.plugin_id||bundleHash(rc.files)!==c.sha256||
   rc.task_id!==c.task_id||rc.sha256!==c.sha256||
   rc.release_payload!==c.release_payload||

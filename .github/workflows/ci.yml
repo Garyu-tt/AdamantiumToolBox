@@ -82,6 +82,7 @@ jobs:
             tests/gauntlet.test.mjs \
             tests/gauntlet_failures.test.mjs \
             tests/gauntlet_live_graph.test.mjs \
+            tests/gauntlet_delivery.test.mjs \
             tests/gauntlet_ci_evidence.test.mjs
       - name: Publish immutable evidence for independent review
         if: always()
