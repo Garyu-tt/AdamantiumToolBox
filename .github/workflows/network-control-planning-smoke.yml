@@ -1,0 +1,25 @@
+name: Network planning MAS isolation
+on:
+  push:
+    paths:
+      - 'packages/network_policy/**'
+      - 'packages/network_reconciler/**'
+      - '.github/workflows/network-control-planning-smoke.yml'
+  pull_request:
+    paths:
+      - 'packages/network_policy/**'
+      - 'packages/network_reconciler/**'
+      - '.github/workflows/network-control-planning-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  core-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Signed policy and preview/revert contract checks
+        run: node --test packages/network_policy/tests/*.test.mjs packages/network_reconciler/tests/*.test.mjs
