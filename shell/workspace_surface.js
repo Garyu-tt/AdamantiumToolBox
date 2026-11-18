@@ -1,4 +1,4 @@
-import {workspaceWindows} from '/shell/workspace_adapter.js';
+import {workspaceWindows} from './workspace_adapter.js';
 /** An installed MAS view may optionally provide the desktop surface. */
 let current=null;
 export function selectWorkspace(views){
