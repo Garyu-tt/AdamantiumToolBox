@@ -14,8 +14,8 @@ const caps=new Set((process.env.ADA_CAPS||'').split(','));
 if(token.length<24||secret.length<24)throw Error('Missing secure keys');
 const reply=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
 const authorized=req=>req.headers.authorization==='Bearer '+token;
-async function upstream(url,body){
- const r=await fetch(url,{method:body?'POST':'GET',signal:AbortSignal.timeout(1200),
+async function upstream(url,body,timeout=1200){
+ const r=await fetch(url,{method:body?'POST':'GET',signal:AbortSignal.timeout(timeout),
  headers:{'X-Internal-Key':secret,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
  if(!r.ok)throw Error('upstream_'+r.status);
  return r.json();
@@ -38,7 +38,8 @@ async function graph(){
     if(app.source==='plugin'&&app.assets?.includes('icon.svg'))item.iconUrl='/apps/'+app.id+'/'+app.hash+'/icon.svg';
     if(app.source==='plugin'&&app.assets?.includes('icon.ico'))item.iconFile=resolve(app.directory,'icon.ico');
    }
-   if(node.type==='action')routes.set(node.id,host+'/invoke');
+   if(node.type==='action')routes.set(node.id,{url:host+'/invoke',
+    timeout:app.service.invokeTimeoutMs||1200});
    seen.add(node.id);local.push(item);
   }
   if(Array.isArray(app.connections))connections.push(...app.connections.map(c=>({...c,owner:app.id})));
@@ -86,7 +87,8 @@ http.createServer(async(req,res)=>{
   req.on('end',async()=>{try{
    const body=JSON.parse(raw),routes=(await graph()).routes;
    if(!routes.has(body.action))return reply(res,403,{error:'capability_unavailable'});
-   reply(res,200,await upstream(routes.get(body.action),{action:body.action,params:body.params||{}}));
+   const destination=routes.get(body.action);
+   reply(res,200,await upstream(destination.url,{action:body.action,params:body.params||{}},destination.timeout));
   }catch(e){reply(res,400,{error:String(e.message).slice(0,100)});}});
   return;
  }

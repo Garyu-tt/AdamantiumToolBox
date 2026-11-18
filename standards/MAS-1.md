@@ -88,3 +88,12 @@ Configured automatic rollback applies ONLY to previously approved, signed
 external plugins, with an expected active-hash check and auditable event.
 Base services and bundled apps are quarantined, not silently replaced.
 See docs/RUNTIME-RECOVERY.md. This does not restrict OS-level privileges.
+
+## Optional browser capability
+The Browser MAS application uses a separate Chromium profile, local CDP
+controller and typed scoped actions. Engine lookup and browser settings come
+from declarative config. No other application requires a browser, and browser
+navigation is not automatically authorized for other agents.
+The initial browser UI is a screenshot-based remote viewport; future WebView2
+rendering can replace this presentation without changing the MAS action contract.
+See docs/BROWSER.md.

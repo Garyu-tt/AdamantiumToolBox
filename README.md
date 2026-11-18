@@ -77,3 +77,14 @@ quarantines repeated crashes, and automatically rolls back signed external
 plugins to the last selected version when enabled by the runtime policy.
 Read docs/RUNTIME-RECOVERY.md and inspect node tools/lifecycle.mjs status.
 Runtime recovery is NOT a sandbox or protection against malicious code.
+
+## Chromium Browser MAS
+apps/browser provides an optional Chromium-powered browser view with isolated
+Edge/Chromium profile, typed CDP automation actions, screenshot preview, tabs,
+navigation, clicking and text input. Core + Browser works without other addons.
+See docs/BROWSER.md. It uses a screenshot viewport, not native WebView2 yet.
+Owner permissions must be explicitly granted with
+node tools/authorize-app.mjs grant browser --approve, followed by a restart.
+
+Installed-browser smoke test: node tests/browser_proxy.test.mjs.
+This uses a temporary local fixture site and does not access private accounts.

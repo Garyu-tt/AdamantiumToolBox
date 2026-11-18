@@ -1,0 +1,30 @@
+{
+  "schema": "mas-icon-design-1",
+  "id": "browser",
+  "accent": "#76b9ed",
+  "svg": "<circle cx=\"32\" cy=\"32\" r=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"/><path d=\"M15 32h34M32 15v34\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"/><path d=\"M32 15c-11 10-11 24 0 34M32 15c11 10 11 24 0 34\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/>",
+  "lines": [
+    [
+      15,
+      32,
+      49,
+      32,
+      2.5
+    ],
+    [
+      32,
+      15,
+      32,
+      49,
+      2.5
+    ]
+  ],
+  "rings": [
+    [
+      32,
+      32,
+      17,
+      2.5
+    ]
+  ]
+}

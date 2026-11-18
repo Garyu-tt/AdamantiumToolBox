@@ -5,6 +5,7 @@ export function validateManifest(m){
  if(!m.name||typeof m.name!=='string'||m.name.length>80)return false;
  if(!Number.isInteger(m.service?.port)||m.service.port<1024||m.service.port>65535)return false;
  if(m.service.protocol!=='mas-http-1'||m.lifecycle!=='independent')return false;
+ if(m.service.invokeTimeoutMs!==undefined&&(!Number.isInteger(m.service.invokeTimeoutMs)||m.service.invokeTimeoutMs<1000||m.service.invokeTimeoutMs>20000))return false;
  if(!m.icon||!id.test(m.icon)||!Array.isArray(m.permissions))return false;
  if(!m.permissions.every(x=>typeof x==='string'&&/^[a-z0-9_-]+\.[a-z0-9_-]+$/.test(x)))return false;
  if(!m.ui||m.ui.standard!=='mas-ui-1'||!['embedded-and-standalone'].includes(m.ui.mode))return false;

@@ -31,3 +31,12 @@
   atomic guard-state persistence, health/graph checks and conditional auto-rollback.
   Validated by an end-to-end crashing plugin and last-good recovery on Windows.
 - No OS sandbox or CPU/RAM quotas yet. See docs/RUNTIME-RECOVERY.md.
+
+- Chromium Browser MAS v0.1: installed Edge/Chromium autodiscovery via registry,
+  isolated temporary profile and localhost CDP. Typed tabs, navigation, back,
+  forward, reload, screenshot, click and input actions with owner permissions.
+  Live screenshot panel in Toolbox; native WebView2 embedding is still future.
+- Windows live browser test passes on a local website without external accounts.
+
+- Browser Core integration verified: API graph, LinkFS navigation, UI assets,
+  delegated typed screenshot invocation through a local fixture website.

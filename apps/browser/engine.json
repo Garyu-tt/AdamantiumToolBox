@@ -1,0 +1,47 @@
+{
+  "schema": "mas-browser-engine-1",
+  "version": 1,
+  "registrations": [
+    {
+      "id": "edge",
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe"
+    },
+    {
+      "id": "chrome",
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe"
+    },
+    {
+      "id": "edge-user",
+      "key": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe"
+    },
+    {
+      "id": "chrome-user",
+      "key": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe"
+    }
+  ],
+  "commands": [
+    "chromium",
+    "chromium-browser",
+    "google-chrome",
+    "microsoft-edge"
+  ],
+  "flags": [
+    "--headless=new",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-extensions",
+    "--disable-sync",
+    "--disable-background-networking"
+  ],
+  "viewport": {
+    "width": 1152,
+    "height": 720
+  },
+  "maxTabs": 6,
+  "screenshot": {
+    "format": "jpeg",
+    "quality": 62
+  },
+  "startupTimeoutMs": 12000,
+  "previewRefreshMs": 2500
+}

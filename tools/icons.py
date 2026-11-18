@@ -2,6 +2,7 @@
 """Dependency-free icon forge: SVG + Windows ICO for every installed app."""
 from pathlib import Path
 import math
+import json
 import struct
 import zlib
 
@@ -15,6 +16,13 @@ THEMES={
  'studio':('#8ce6ac','<path d="M16 18h32v28H16zM16 27h32M27 27v19M34 34h9M34 41h6" fill="none" stroke="currentColor" stroke-width="3"/>'),
  'graph':('#a7abff','<path d="M22 40l11-17 10 14M22 40l21-3" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="22" cy="40" r="5" fill="currentColor"/><circle cx="33" cy="23" r="5" fill="currentColor"/><circle cx="43" cy="37" r="5" fill="currentColor"/>')
 }
+CUSTOM={}
+for file in sorted(OUT.glob('*.design.json')):
+ item=json.loads(file.read_text(encoding='utf8'))
+ if item.get('schema')!='mas-icon-design-1' or item.get('id')!=file.name[:-12]:
+  raise ValueError('invalid_icon_design: '+file.name)
+ CUSTOM[item['id']]=item
+ THEMES[item['id']]=(item['accent'],item['svg'])
 def png(data,w,h):
  def chunk(tag,d):return struct.pack('!I',len(d))+tag+d+struct.pack('!I',zlib.crc32(tag+d)&0xffffffff)
  raw=b''.join(b'\x00'+data[i*w*4:(i+1)*w*4] for i in range(h))
@@ -34,6 +42,7 @@ def render(name):
   'graph':[(22,41,33,24,2),(33,24,43,37,2),(22,41,43,37,2)],
   'studio':[(16,18,48,18,2),(16,18,16,46,2),(16,46,48,46,2),(48,18,48,46,2),(16,27,48,27,2),(27,27,27,46,2),(34,35,43,35,2)]
  }
+ shapes.update({key:value.get('lines',[]) for key,value in CUSTOM.items()})
  pix=bytearray()
  for yy in range(256):
   for xx in range(256):
@@ -45,7 +54,7 @@ def render(name):
    bg=(int(21+12*t),int(33+16*t),int(50+20*t))
    glow=math.exp(-((x-43)**2+(y-19)**2)/550)*0.15
    color=tuple(min(255,int(bg[k]*(1-glow)+accent[k]*glow)) for k in range(3))
-   if any(line(x,y,*s[:4],s[4]) for s in shapes.get(name,shapes['workbench'])) or (name=='graph' and any(near_circle(x,y,*c) for c in [(22,41,4),(33,24,4),(43,37,4)])):
+   if any(line(x,y,*s[:4],s[4]) for s in shapes.get(name,shapes['workbench'])) or (name=='graph' and any(near_circle(x,y,*c) for c in [(22,41,4),(33,24,4),(43,37,4)])) or any(abs(math.hypot(x-cx,y-cy)-r)<=w/2 for cx,cy,r,w in CUSTOM.get(name,{}).get('rings',[])):
     color=accent
    pix.extend((*color,255))
  data=png(bytes(pix),256,256)

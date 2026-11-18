@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {createServer} from 'node:net';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
+import {catalog} from '../core/catalog.mjs';
 const source=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const free=()=>new Promise(ok=>{const s=createServer();s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>ok(p));});});
 const pause=t=>new Promise(ok=>setTimeout(ok,t));
@@ -27,7 +28,7 @@ async function isolated(id){
   m.service.port=appPort;await writeFile(manifest,JSON.stringify(m));
   const env={...process.env,LOCALAPPDATA:home,ADA_TOKEN:auth,ADA_INTERNAL_KEY:secret,
    ADA_CAPS:m.permissions.join(',')+',graph.read,frontend.read,frontend.write,semantic.read',
-   ADA_PORT:String(corePort),APP_PORT:String(appPort),
+   ADA_PORT:String(corePort),APP_PORT:String(appPort),ADA_BROWSER_EXECUTABLE:process.execPath,
    ADA_CORE_URL:'http://127.0.0.1:'+corePort};
   app=spawn(process.execPath,[service],{env,stdio:'ignore',windowsHide:true});
   core=spawn(process.execPath,[join(root,'core','kernel.mjs')],{env,stdio:'ignore',windowsHide:true});
@@ -53,4 +54,5 @@ async function isolated(id){
   await rm(root,{recursive:true,force:true,maxRetries:5,retryDelay:150});
  }
 }
-for(const id of ['editor','studio'])await isolated(id);
+const bundled=(await catalog(source)).filter(app=>app.source==='bundled');
+for(const app of bundled)await isolated(app.id);

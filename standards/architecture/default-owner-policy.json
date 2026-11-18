@@ -12,6 +12,9 @@
     "studio.write",
     "semantic.read",
     "semantic.write",
-    "mesh.read"
+    "mesh.read",
+    "browser.read",
+    "browser.navigate",
+    "browser.interact"
   ]
 }
