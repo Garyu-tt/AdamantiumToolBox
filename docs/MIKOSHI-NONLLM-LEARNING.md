@@ -1,6 +1,6 @@
 # Mikoshi Voice & Learning — MAS non-LLM experimental R02
 
-Six independent MAS 1.0 applications; each boots with Core alone and
+Seven independent MAS 1.0 applications; each boots with Core alone and
 advertises only real, permitted capabilities. A single Classroom UI composes
 resources discovered through `mikoshi.skill.v1`, not fixed app names.
 
@@ -22,7 +22,11 @@ resources discovered through `mikoshi.skill.v1`, not fixed app names.
   Provider is hidden until its locally installed Python package, model/config
   files, and owner-reviewed voice rights acknowledgement are all present.
   Piper currently supports speed correction, not direct pitch correction.
-- `mikoshi_classroom`: graph-discovered composition of voice + optional prosody.
+- `mikoshi_motifs`: auditory motif discovery and online memory from short
+  PCM frames, with no predefined phoneme labels or language models.
+  See `docs/MIKOSHI-MOTIFS-R04.md` for tests and limits.
+- `mikoshi_classroom`: graph-discovered composition of voice, prosody,
+  articulation and auditory memory providers, including explicit sample learning.
   Provider selection uses declared skill priority and supported adjustments.
 
 ## Optional Piper configuration (never put model files in this repository)
@@ -41,14 +45,15 @@ on the selected permitted model. No particular singer-level similarity is claime
 ## Security and lifecycle
 The existing read-only `plugins/mikoshi` is unchanged. New permissions:
 `hearing.observe`, `voice.inspect`, `voice.render`, `learning.inspect`,
-`learning.train`, `prosody.inspect`, `prosody.learn`, `classroom.view`.
+`learning.train`, `prosody.inspect`, `prosody.learn`, `motifs.inspect`,
+`motifs.learn`, `classroom.view`.
 A user must separately grant rights through Toolbox policy. No automatic
 activation, copying of private data, recording, or changes to existing agents.
 Only explicit owner-approved training state is persisted. The current prototype
 is single-runtime rather than multi-tenant; per-agent isolation remains future work.
 
 ## Next separate modules
-1. Consent-bound microphone / media ingestion, denoising and VAD.
+1. Improve permissioned microphone capture, add denoising and VAD.
 2. Phoneme acquisition and audiovisual grounding from appropriately licensed
    media, with robust feedback and no commands inferred from show dialogue.
 3. Recurrent or predictive world-model cognition with decision-making and
@@ -59,6 +64,7 @@ is single-runtime rather than multi-tenant; per-agent isolation remains future w
 ## Acceptance
 Run `node tests/mikoshi_speech.test.mjs`,
 `node tests/mikoshi_prosody.test.mjs`, `node tests/mikoshi_piper.test.mjs`,
+`node tests/mikoshi_motifs.test.mjs`, `node tests/mikoshi_motifs_service.test.mjs`,
 `node tools/mas-check.mjs` and `python tools/check-size.py`. Then test
 isolated services, actual eSpeak/Piper binaries, consent, output quality and
 permissions on a host. Piper's CLI currently reloads the neural model per
