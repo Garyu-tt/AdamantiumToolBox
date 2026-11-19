@@ -11,7 +11,8 @@ const graph=()=>{
  const edges=[{from:'mikoshi_voice.view',to:'mikoshi_voice.status',type:'uses'}];
  if(available()){
   nodes.push({id:'mikoshi_voice.provider',type:'resource',requires:['voice.render'],
-   skill:{schema:'mikoshi.skill.v1',domain:'speech',actions:{speak:'mikoshi_voice.speak'}}},
+   skill:{schema:'mikoshi.skill.v1',domain:'speech',priority:20,
+    prosody:['pitchDelta','speedDelta'],actions:{speak:'mikoshi_voice.speak'}}},
    {id:'mikoshi_voice.speak',type:'action',title:'Render speech',requires:['voice.render']});
   edges.push({from:'mikoshi_voice.view',to:'mikoshi_voice.provider',type:'uses'},
    {from:'mikoshi_voice.provider',to:'mikoshi_voice.speak',type:'provides'});
