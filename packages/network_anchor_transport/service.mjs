@@ -18,7 +18,11 @@ const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application
 let cfg=null,listener=null,error='not_configured';
 if(process.env.NETWORK_ANCHOR_TRANSPORT_CONFIG){
  try{cfg=await load(process.env.NETWORK_ANCHOR_TRANSPORT_CONFIG);
-  if(cfg.mode==='receiver')listener=await startReceiver(cfg,credential,caps);
+  if(cfg.mode==='receiver'){
+   const needed=['network_anchor_transport.read','network_anchor_transport.receive','network_anchor.read','network_anchor.write'];
+   if(needed.some(cap=>!caps.has(cap)))throw Error('receiver_permissions_missing');
+   listener=await startReceiver(cfg,credential,caps);
+  }
   error=null;
  }catch(e){cfg=null;error=String(e.message).slice(0,85);}
 }
