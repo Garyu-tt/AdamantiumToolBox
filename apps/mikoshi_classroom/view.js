@@ -47,7 +47,8 @@ export async function mount(host,api){
   const articulation=provider('articulation','preview');
   const memory=provider('auditory-memory','recognize');
   const sequence=provider('auditory-sequence','predict');
-  if(articulation)phoneticPanel(controls,api,articulation,actions(),memory,sequence);
+  const motor=provider('motor-learning','propose');
+  if(articulation)phoneticPanel(controls,api,articulation,actions(),memory,sequence,motor);
   if(teach){
    const labels=[['higher','Выше'],['lower','Ниже'],['faster','Быстрее'],
     ['slower','Медленнее'],['good','Подходит']];
