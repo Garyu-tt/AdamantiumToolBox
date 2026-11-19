@@ -1,3 +1,4 @@
+import {hypothesesPanel} from './hypotheses_panel.js';
 import {streamPanel} from './stream_panel.js';
 import {learningLoopPanel} from './loop_panel.js';
 import {gesturesPanel} from './gestures_panel.js';
@@ -51,6 +52,8 @@ export async function mount(host,api){
   const memory=provider('auditory-memory','recognize');
   const sequence=provider('auditory-sequence','predict');
   const motor=provider('motor-learning','propose');
+  hypothesesPanel(controls,api,{hypothesis:provider('hypothesis-search','generate'),
+   world:provider('world-prediction','estimate'),articulation,motor},actions());
   streamPanel(controls,api,provider('auditory-events','analyze'),memory,
    sequence,articulation,actions(),motor,provider('gesture-planner','plan'),
    provider('waveform-renderer','render'),provider('exploration','choose'),
