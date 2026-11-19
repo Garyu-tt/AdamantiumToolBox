@@ -156,6 +156,7 @@ function onResult(node,p) {
   const job=state.jobs.get(p.jobId);
   if(!job)throw Error('unknown_job');
   if(job.status==='done') {
+    if(job.leasedTo!==node)throw Error('result_owner_mismatch');
     if(JSON.stringify(job.result)!==JSON.stringify(p.result))throw Error('conflicting_duplicate_result');
     return {accepted:true,duplicate:true};
   }
