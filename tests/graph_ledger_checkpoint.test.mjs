@@ -32,7 +32,7 @@ try{
  assert.equal(compared.externallyAnchored,false);
  assert.equal((await checkpointReservations({...options,
   expectedDigest:'b'.repeat(64)})).callerAnchorMatches,false);
- assert.equal((await checkpointReservations({...root,nowSeconds})).status,'degraded');
+ assert.equal((await checkpointReservations({root,nowSeconds})).status,'degraded');
  assert.equal((await checkpointReservations({...options})).digest,first.digest);
  await reserveLease(make('lease-2'),options);
  const added=await checkpointReservations({...options,expectedDigest:first.digest});
