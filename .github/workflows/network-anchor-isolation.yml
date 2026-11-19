@@ -1,0 +1,23 @@
+name: Independent Audit Anchor MAS isolation
+on:
+  push:
+    paths:
+      - 'packages/network_anchor/**'
+      - '.github/workflows/network-anchor-isolation.yml'
+  pull_request:
+    paths:
+      - 'packages/network_anchor/**'
+      - '.github/workflows/network-anchor-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  anchor-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Witness receipts, independently signed anchors and Core isolation
+        run: node --test packages/network_anchor/tests/*.test.mjs
