@@ -28,15 +28,16 @@ export async function checkLab(preview,options={}){
  const ns=options.namespace??process.env.ADA_NFT_LAB_NAMESPACE;
  const nft=options.nftBinary??process.env.ADA_NFT_LAB_NFT;
  const ip=options.ipBinary??process.env.ADA_NFT_LAB_IP;
+ const root=options.namespaceDir??process.env.ADA_NFT_LAB_NAMESPACE_ROOT;
  if(process.platform!=='linux'&&!options.mockPlatform)
   return unavailable('linux_required');
- if(!nsName(ns)||!isBinary(nft)||!isBinary(ip))
+ if(!nsName(ns)||!isBinary(nft)||!isBinary(ip)||!isAbsolute(root||''))
   return unavailable('sandbox_configuration_missing');
  const readStat=options.stat??stat;
  let active,target;
  try{
   [active,target]=await Promise.all([readStat('/proc/self/ns/net'),
-   readStat(join('/var/run/netns',ns))]);
+   readStat(join(root,ns))]);
  }catch{return unavailable('sandbox_not_verified');}
  if(active.ino===target.ino&&active.dev===target.dev)
   return unavailable('sandbox_matches_process_namespace');
