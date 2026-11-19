@@ -1,0 +1,33 @@
+name: Universal Graph IR G0
+on:
+  pull_request:
+    paths:
+      - 'native/universal-graph/**'
+      - 'standards/universal-graph/**'
+      - '.github/workflows/universal-graph-ir.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'native/universal-graph/**'
+      - 'standards/universal-graph/**'
+      - '.github/workflows/universal-graph-ir.yml'
+permissions:
+  contents: read
+jobs:
+  headless:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure pure C++17 Graph IR
+        run: cmake -S native/universal-graph -B native/universal-graph/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build native/universal-graph/build --config Release --parallel 2
+      - name: Test three domains and hostile graphs
+        run: ctest --test-dir native/universal-graph/build -C Release --output-on-failure
