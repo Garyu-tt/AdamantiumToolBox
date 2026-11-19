@@ -65,6 +65,7 @@ jobs:
           node tests/mikoshi_av_live.test.mjs
           node tests/mikoshi_avsync.test.mjs
           node tests/mikoshi_avsync_live.test.mjs
+          node tests/mikoshi_av_capture.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
