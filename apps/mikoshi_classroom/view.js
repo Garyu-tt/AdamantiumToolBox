@@ -1,3 +1,4 @@
+import {streamPanel} from './stream_panel.js';
 import {learningLoopPanel} from './loop_panel.js';
 import {gesturesPanel} from './gestures_panel.js';
 import {phoneticPanel} from './phonetic_panel.js';
@@ -50,6 +51,8 @@ export async function mount(host,api){
   const memory=provider('auditory-memory','recognize');
   const sequence=provider('auditory-sequence','predict');
   const motor=provider('motor-learning','propose');
+  streamPanel(controls,api,provider('auditory-events','analyze'),memory,
+   sequence,articulation,actions());
   if(articulation)phoneticPanel(controls,api,articulation,actions(),memory,sequence,motor);
   await gesturesPanel(controls,api,motor,provider('gesture-planner','plan'),
    provider('waveform-renderer','render'),actions());
