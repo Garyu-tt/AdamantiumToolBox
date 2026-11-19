@@ -1,7 +1,7 @@
-# Mikoshi non-LLM skill ecosystem — R08
+# Mikoshi non-LLM skill ecosystem — R09
 
-**Thirteen independently installable MAS providers plus Mikoshi Classroom**
-(14 MAS apps). All are CPU-first, capability-driven and usable with
+**Fourteen independently installable MAS providers plus Mikoshi Classroom**
+(15 MAS apps). All are CPU-first, capability-driven and usable with
 Core alone. No conversational language models or prompt-generated
 dialogues are required. The composite UI is a separate user-facing app,
 not a replacement monolith or a dependency of any provider.
@@ -11,6 +11,7 @@ not a replacement monolith or a dependency of any provider.
 | Skill domain | App | Function |
 |---|---|---|
 | hearing | `mikoshi_hearing` | PCM energy and pitch features |
+| auditory-events | `mikoshi_segments` | 2–4 second PCM stream acoustic event candidates |
 | speech | `mikoshi_voice` | Optional eSpeak NG parametric voice |
 | general | `mikoshi_learning` | Supervised feature prototypes |
 | prosody | `mikoshi_prosody` | Small online neural pitch/speed adjustments |
@@ -30,6 +31,9 @@ voice, hearing, motor rehearsal, sequence memory and timing practice.
 `loop_panel.js` exposes one explicit opt-in complete synthetic lesson
 covering hearing → acoustic memory → motor action → audible result →
 scalar reward → motor/transition memory. Missing permissions hide it.
+`stream_panel.js` additionally connects explicitly recorded short clips
+or synthetic diagnostic signals to transient event segmentation, approved
+memory updates and separate voluntary sensorimotor reproduction.
 
 ## Immutable owner-chosen vocal identity
 - eSpeak NG: `MIKOSHI_VOICE_PROFILE_JSON` with language/pitch/speed/amplitude.
@@ -64,10 +68,14 @@ architecture able to acquire skills later, not a ready-made conversation.
 - `docs/MIKOSHI-MOTORLINKS-R06.md` — feedback-based motor learning
 - `docs/MIKOSHI-GESTURES-R07.md` — continuous coarticulation
 - `docs/MIKOSHI-CLOSED-LOOP-R08.md` — full circuit, limitations and gates
+- `docs/MIKOSHI-STREAM-R09.md` — bounded continuous hearing and replay
 
 Run `node tests/mikoshi_complete_loop.test.mjs`,
 `node tests/mikoshi_transition_feedback.test.mjs`,
 `node tests/mikoshi_transition_service.test.mjs`,
+`node tests/mikoshi_segments.test.mjs`,
+`node tests/mikoshi_segments_service.test.mjs`,
+`node tests/mikoshi_stream_imitation.test.mjs`,
 `node tools/mas-check.mjs` and `python tools/check-size.py`.
 The CI also runs isolated Core+App and Windows regression checks.
 For real user deployment still need CPU and acoustic field benchmarks,
