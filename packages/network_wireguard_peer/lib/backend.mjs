@@ -49,7 +49,7 @@ export function createBackend({
    checkTransition(plan,await state(plan.interface));
    if(managedFile){
     if(!trust||!proofs)throw Error('managed_approvals_required');
-    const existing=await loadManaged(managedFile,trust,{interface:interfaceName,pool});
+    const existing=await loadManaged(managedFile,trust,{interface:interfaceName,pool},{allowMissing:true});
     const prev=existing.managed.find(p=>p.publicKey===plan.peerPublicKey);
     if(plan.operation==='remove'&&prev?.allowedIP!==plan.allowedIP)throw Error('unmanaged_peer');
     if(plan.operation==='add'&&(prev||existing.managed.some(p=>p.allowedIP===plan.allowedIP)))throw Error('managed_peer_conflict');
