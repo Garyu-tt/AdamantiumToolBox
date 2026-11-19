@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import {strict as assert} from 'node:assert';
-import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
+import {mkdtemp,rm,readFile,writeFile,unlink} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {DurableQueue} from '../apps/dantesensory/queue.mjs';
@@ -31,5 +31,20 @@ test('corrupt durable record fails closed without changing prior cache or disk',
   await assert.rejects(q.peekFresh(),/spool_corrupt/);
   assert.equal(q.peek().length,1);
   assert.deepEqual(await readFile(path),before);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('disappeared committed journal rejects reads and writes without resetting cached events',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'dante-missing-journal-')),path=join(dir,'journal.json');
+ try{
+  const q=await new DurableQueue({path}).open();
+  assert.equal((await q.publish(event(0))).ok,true);
+  assert.equal(q.peek().length,1);
+  await unlink(path);
+  await assert.rejects(q.peekFresh(),/journal_missing_after_commit/);
+  assert.equal(q.peek().length,1,'read failure must preserve cached event');
+  await assert.rejects(q.publish(event(1)),/journal_missing_after_commit/);
+  assert.equal(q.peek().length,1,'writer failure must preserve cached event');
+  await assert.rejects(readFile(path),{code:'ENOENT'});
  }finally{await rm(dir,{recursive:true,force:true});}
 });
