@@ -1,15 +1,34 @@
 {
-  "mas":"1.0",
-  "id":"network_wireguard_peer",
-  "name":"WireGuard Peer Enrollment",
-  "version":"0.1.0",
-  "icon":"network_wireguard_peer",
-  "lifecycle":"independent",
-  "service":{"protocol":"mas-http-1","port":8930,"invokeTimeoutMs":8000},
-  "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},
-  "auth":{"mode":"host-delegated"},
-  "permissions":["network_wireguard_peer.read","network_wireguard_peer.write"],
-  "events":{"schema":"mas-event-1"},
-  "data":{"refs":"mas-ref-1"},
-  "updates":{"strategy":"semver","migrations":[]}
+  "mas": "1.0",
+  "id": "network_wireguard_peer",
+  "name": "WireGuard Peer Enrollment",
+  "version": "0.2.0",
+  "icon": "network_wireguard_peer",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8930,
+    "invokeTimeoutMs": 8000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "network_wireguard_peer.read",
+    "network_wireguard_peer.write"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  }
 }
