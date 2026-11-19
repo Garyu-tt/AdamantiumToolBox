@@ -7,6 +7,7 @@ on:
       - 'apps/nftables_preview/**'
       - 'apps/nftables_lab/**'
       - 'apps/rollback_watchdog/**'
+      - 'apps/rollback_ledger/**'
       - 'apps/network_inventory/**'
       - 'apps/wireguard_graph/**'
       - 'apps/noosphere/**'
@@ -44,6 +45,8 @@ jobs:
           node tests/graph_watchdog_receipt.test.mjs
           node tests/graph_watchdog_journal.test.mjs
           node tests/graph_watchdog_diagnostics.test.mjs
+          node tests/graph_rollback_ledger.test.mjs
+          node tests/graph_ledger_http.test.mjs
           node tests/graph_network_inventory.test.mjs
           node tests/graph_wireguard.test.mjs
           node tests/graph_transaction.test.mjs
