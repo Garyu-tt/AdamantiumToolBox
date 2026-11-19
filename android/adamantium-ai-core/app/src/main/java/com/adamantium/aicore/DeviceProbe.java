@@ -41,7 +41,7 @@ final class DeviceProbe {
         int battery = metrics.optInt("batteryPercent", -1);
         return (metrics.optBoolean("charging") || battery >= 40) &&
             metrics.optInt("thermalStatus", 99) <= PowerManager.THERMAL_STATUS_MODERATE &&
-            !metrics.optBoolean("batteryLow", true) &&
+            !metrics.optBoolean("memoryLow", true) &&
             metrics.optLong("availableMemoryBytes", 0) >= 128L * 1024 * 1024;
     }
 }
