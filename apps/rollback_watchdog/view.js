@@ -8,7 +8,8 @@ export async function mount(host,api){
  const output=add('pre');output.style.whiteSpace='pre-wrap';
  output.style.overflowWrap='anywhere';
  for(const [action,label] of [['rollback_watchdog.receipt','Проверить подпись одобрения'],
-  ['rollback_watchdog.journal','Проверить цепочку журнала']]){
+  ['rollback_watchdog.journal','Проверить цепочку журнала'],
+  ['rollback_watchdog.diagnose','Показать граф блокеров']]){
   const button=add('button',label);
   button.disabled=!api.graph().nodes.some(x=>x.id===action);
   button.onclick=async()=>{try{const result=await api.call(action,JSON.parse(input.value));
