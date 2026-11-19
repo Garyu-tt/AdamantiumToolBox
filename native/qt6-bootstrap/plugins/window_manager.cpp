@@ -36,7 +36,7 @@ public:
   sub->resize(560,420);sub->show();area_->setActiveSubWindow(sub);
  }
  void updateWindowTitle(const QString& id,const QString& title) override {
-  if(auto* sub=windows_.value(id).data()){
+  if(auto* sub=windows_.value(id).sub.data()){
    if(sub->windowTitle()!=title)sub->setWindowTitle(title);
   }
  }
