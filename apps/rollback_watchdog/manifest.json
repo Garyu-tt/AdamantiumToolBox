@@ -1,0 +1,45 @@
+{
+  "mas": "1.0",
+  "id": "rollback_watchdog",
+  "name": "Rollback Watchdog",
+  "version": "0.1.0",
+  "icon": "graph",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8929,
+    "invokeTimeoutMs": 5000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "rollback_watchdog.read"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  },
+  "connections": [
+    {
+      "from": "rollback_watchdog.receipt",
+      "to": "nftables_preview.transaction",
+      "type": "related"
+    },
+    {
+      "from": "rollback_watchdog.journal",
+      "to": "nftables_lab.rollback_trial",
+      "type": "related"
+    }
+  ]
+}
