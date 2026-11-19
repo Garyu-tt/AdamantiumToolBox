@@ -15,6 +15,30 @@ const value='mas.value@1', spike='neural.spike@1', genome='genome.ref@1';
 const tensor='tensor.handle@1', device='runtime.device@1';
 
 export const examples: Record<string,Graph> = {
+  selfhost:graph('genesis.selfhost','program',[
+    node('original_genome','resource','adamantium.genome.store@1',[
+      port('genome','genome.ref@1','output')]),
+    node('genesis_n','capability','adamantium.genome.compiler@1',[
+      port('genome','genome.ref@1','input'),
+      port('graph','graph.ref@1','output')]),
+    node('g0_verifier','capability','mechanicus.graph.verify@1',[
+      port('graph','graph.ref@1','input'),
+      port('receipt','verification.receipt@1','output')]),
+    node('signed_catalog','resource','mechanicus.artifact.registry@1',[
+      port('catalog','artifact.catalog@1','output')]),
+    node('artifact_attest','capability','adamantium.genome.attest@1',[
+      port('receipt','verification.receipt@1','input'),
+      port('catalog','artifact.catalog@1','input'),
+      port('candidate','candidate.ref@1','output')]),
+    node('genesis_next','capability','mechanicus.lifecycle.proposal@1',[
+      port('candidate','candidate.ref@1','input')])
+  ],[
+    link('gene.expression','original_genome','genome','genesis_n','genome'),
+    link('structural.verification','genesis_n','graph','g0_verifier','graph'),
+    link('verification.receipt','g0_verifier','receipt','artifact_attest','receipt'),
+    link('artifact.catalog','signed_catalog','catalog','artifact_attest','catalog'),
+    link('successor.proposal','artifact_attest','candidate','genesis_next','candidate')
+  ]),
   program:graph('mas.program','program',[
     node('loader','capability','mas.source.read@1',[port('data',value,'output')]),
     node('processor','capability','mas.transform@1',[
