@@ -47,3 +47,33 @@ jobs:
           node tests/graph_http_smoke.test.mjs
       - name: Verify export script syntax
         run: python -m py_compile tools/noosphere_sqlite_export.py
+
+  nftables-kernel-lab:
+    name: Real nft syntax check in disposable Linux netns
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install native nftables and iproute2 tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nftables iproute2
+      - name: Validate in ephemeral namespace; assert zero kernel rule changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          namespace="ada-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          sudo ip netns add "$namespace"
+          trap 'sudo ip netns del "$namespace"' EXIT
+          before="$(sudo ip netns exec "$namespace" nft -j list ruleset)"
+          nsroot="$(dirname "$(readlink -f "/run/netns/$namespace")")"
+          sudo env ADA_NFT_LAB_NAMESPACE="$namespace" \
+            ADA_NFT_LAB_NAMESPACE_ROOT="$nsroot" \
+            ADA_NFT_LAB_NFT="$(command -v nft)" \
+            ADA_NFT_LAB_IP="$(command -v ip)" \
+            "$(command -v node)" tests/graph_nftables_real.test.mjs
+          after="$(sudo ip netns exec "$namespace" nft -j list ruleset)"
+          test "$before" = "$after"
+          echo "NFTABLES_RULESET_UNCHANGED_OK"
