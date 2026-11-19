@@ -2,7 +2,7 @@ import {explorePanel} from './explore_panel.js';
 import {streamMotorPanel} from './stream_motor_panel.js';
 import {captureStream} from './stream_capture.js';
 // Composite discovery only; no fixed sibling MAS imports or endpoints.
-export function streamPanel(host,api,events,memory,sequence,articulation,allowed,motor,gesture,wave,explorer){
+export function streamPanel(host,api,events,memory,sequence,articulation,allowed,motor,gesture,wave,explorer,world){
  const ev=events?.skill?.actions,mem=memory?.skill?.actions;
  if(!ev?.analyze||!allowed.has(ev.analyze))return;
  const add=(tag,text,parent=host)=>{const e=document.createElement(tag);
