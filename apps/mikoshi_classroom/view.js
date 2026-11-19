@@ -12,9 +12,10 @@ export async function mount(host,api){
  const actions=()=>new Set(api.graph().nodes.filter(n=>n.type==='action').map(n=>n.id));
  const provider=(domain,action)=>{
   const active=actions();
-  return api.graph().nodes.find(n=>n.type==='resource'&&
+  return api.graph().nodes.filter(n=>n.type==='resource'&&
    n.skill?.schema==='mikoshi.skill.v1'&&n.skill.domain===domain&&
-   active.has(n.skill.actions?.[action]));
+   active.has(n.skill.actions?.[action]))
+   .sort((a,b)=>(b.skill.priority||0)-(a.skill.priority||0))[0];
  };
  async function refresh(){
   controls.replaceChildren();
