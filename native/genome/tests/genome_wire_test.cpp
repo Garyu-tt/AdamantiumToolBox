@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <iostream>
 #include <iterator>
+#include <stdexcept>
+#include <utility>
 #include <string>
 #include <vector>
 #ifdef _WIN32
