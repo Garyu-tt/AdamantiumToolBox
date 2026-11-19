@@ -12,14 +12,15 @@ const input={schema:'rollback-watchdog-journal-1',leaseId,planDigest,
  deadlineSeconds:160,events:[armed,staged,probe,confirm]};
 const valid=inspectJournal(input,{nowSeconds:200});
 assert.equal(valid.state,'confirmed');
-assert.equal(valid.journalIntegrityVerified,true);
+assert.equal(valid.chainConsistent,true);
+assert.equal(valid.journalIntegrityVerified,false);
 assert.equal(valid.writerAuthenticated,false);
 assert.equal(valid.readyToApply,false);
 assert.equal(valid.rollbackCompleted,false);
 assert.deepEqual(valid,inspectJournal(input,{nowSeconds:200}));
 const tampered=inspectJournal({...input,events:[armed,{...staged,atSeconds:115},probe,confirm]},
  {nowSeconds:200});
-assert.equal(tampered.journalIntegrityVerified,false);
+assert.equal(tampered.chainConsistent,false);
 assert(tampered.issues.some(x=>x.code==='journal_integrity_failure'));
 const duplicated=inspectJournal({...input,events:[armed,{...staged,seq:1}]},{nowSeconds:200});
 assert(duplicated.issues.some(x=>x.code==='journal_integrity_failure'));
@@ -32,7 +33,9 @@ const rollback=event(3,'staged','rollback_requested',130,staged.hash);
 const restored=event(4,'rollback_pending','rollback_verified',135,rollback.hash);
 const complete=inspectJournal({...input,events:[armed,staged,rollback,restored]},
  {nowSeconds:200});
-assert.equal(complete.rollbackCompleted,true);
+assert.equal(complete.rollbackClaimed,true);
+assert.equal(complete.rollbackCompleted,false);
+assert.equal(complete.requiresRecovery,true);
 assert.equal(complete.kernelReadbackVerified,false);
 const late=event(4,'observed','operator_confirmed',170,probe.hash);
 const rejected=inspectJournal({...input,events:[armed,staged,probe,late]},{nowSeconds:200});
