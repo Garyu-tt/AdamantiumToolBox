@@ -1,0 +1,40 @@
+name: Universal Graph Rete G2b Local Import
+on:
+  push:
+    paths:
+      - 'apps/universal_graph_rete/**'
+      - '.github/workflows/universal-graph-rete-g2b.yml'
+  pull_request:
+    paths:
+      - 'apps/universal_graph_rete/**'
+      - '.github/workflows/universal-graph-rete-g2b.yml'
+permissions:
+  contents: read
+jobs:
+  local-import:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: apps/universal_graph_rete
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned direct dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate dependency licenses
+        run: npm run license
+      - name: Test G0 contracts and bounded local imports
+        run: npm run test:contract
+      - name: Static TypeScript check
+        run: npm run check
+      - name: Build isolated Vite preview
+        run: npm run build
