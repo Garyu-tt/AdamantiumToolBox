@@ -1,4 +1,4 @@
-# Network Checkpoint Transport v0.1.0
+# Network Checkpoint Transport v0.1.1
 
 Independent MAS plugin for **source-to-witness signed checkpoint delivery**. Deploy the same package separately in `source` or `receiver` mode. Each instance works with Core + this app alone; external services are optional but required to complete a transfer. Core, Approval Ledger, Witness and this transport are NOT imported into one another at runtime.
 
@@ -22,7 +22,8 @@ Source config has `source:{journalId,keyId,publicKey,ledgerPath,keyPath,receiptP
 - Failed/uncertain POST never gets automatically retried. `delivery_unconfirmed` is ambiguous; re-query witness state before a new attempt, with the risk that a remote write already committed. Only a witness-signed receipt proves success.
 - The source persists the cryptographically verified witness receipt in an fsynced, 0600 atomic cache under a non-group/world-writable directory. A lower remote witness sequence (or conflicting equal-sequence head) then raises `witness_rollback_detected` or `witness_fork_detected`. Compromise of both local cache and witness still requires a third independent anchor.
 - Witnessed sequence strictly higher than the local ledger, or a contradictory anchored row hash, is an observed **rollback/fork**, not a cue to overwrite the Witness. Partial segments are refused by the independent Witness.
-- Witness currently exposes a bounded 50-receipt list. When the current journal has no recent anchor but a longer witness history exists, receiver **fails closed** rather than treating it as genesis. A dedicated indexed `headForJournal` future contract is required for scaling.
+- Receiver queries `network_witness.latest` for the **exact operator-bound journal ID**, not the most recent 50 receipts. An untrusted journal ID fails closed rather than claiming genesis. Witness returns a signed receipt and its witnessed revision if present, or an explicit null for a trusted never-observed journal. New sender requires Witness v0.1.1; older Witness deployments without `latest` are rejected rather than silently downgrading to list-based guessing.
+- `network_witness.latest` is independent of receipt window size, but the Witness currently replays its local log on each read to validate integrity; very long histories still need a separate authenticated persisted index/performance upgrade.
 - A source signing key proves a signing identity, not that each Approval event passed full semantic replay. Source operator must keep the Approval Ledger protected, use signed trust snapshots and replicate witness receipts to another independent failure domain.
 - Same-host deployment is useful for tests but not an independent witness. No production endpoint, wildcard DNS, access policy enforcement, SSH or route changes have been made by this package.
 
