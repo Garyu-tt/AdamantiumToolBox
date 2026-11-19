@@ -1,7 +1,7 @@
-# Mikoshi non-LLM skill ecosystem — R16
+# Mikoshi non-LLM skill ecosystem — R17
 
-**23 independent MAS providers plus Mikoshi Classroom**
-(24 MAS apps), CPU-first and independently discoverable.
+**24 independent MAS providers plus Classroom**
+(25 MAS apps), CPU-first.
 No conversational LLM; Classroom is an optional composition.
 
 ## Independently discoverable providers
@@ -14,7 +14,8 @@ No conversational LLM; Classroom is an optional composition.
 | av-alignment | `mikoshi_avsync` | Bounded event-time matching |
 | visual-tracking | `mikoshi_tracking` | Anonymous coarse blob paths |
 | clock-calibration | `mikoshi_clockcal` | Known-cue clock offset estimates |
-| source-policy | `mikoshi_sourcepolicy` | Short-lived HMAC lesson permits |
+| source-policy | `mikoshi_sourcepolicy` | HMAC lesson permits |
+| source-reconciliation | `mikoshi_reconciliation` | Classify incomplete signed writes |
 | auditory-events | `mikoshi_segments` | 2–4 second PCM stream acoustic event candidates |
 | speech | `mikoshi_voice` | Optional eSpeak NG parametric voice |
 | general | `mikoshi_learning` | Supervised feature prototypes |
@@ -45,32 +46,26 @@ or practice based on numeric error and uncertainty. The optional
 and updates its prediction from the resulting acoustic observation.
 `hypotheses_panel.js` lets the operator approve one untried vocal action,
 forecast it, hear the result and update prediction error.
-`av_panel.js` provides synthetic pairing; `av_live_panel.js` adds
-manual capture and pair-verified writes with readback.
+`av_live_panel.js` offers opt-in AV capture and protected writes.
+`av_recovery_ui.js` adds manual receipt inspection and link-only repair.
 No background tasks.
 
-## Immutable owner-chosen vocal identity
-- eSpeak NG: `MIKOSHI_VOICE_PROFILE_JSON` with language/pitch/speed/amplitude.
-  Default higher-register starting point is a relative engine preset, not Hz.
-- Vocal oscillator: `MIKOSHI_VOCAL_ANCHOR_HZ` (default 235 Hz, 170–340).
-  Must be provisioned consistently with the phonetics anchor.
-- Piper: optional `MIKOSHI_PIPER_MODEL` absolute ONNX path plus matching
-  JSON config, `MIKOSHI_PIPER_MODEL_RIGHTS=approved`, optional Python binary.
-  Model licensing/rights must actually be independently verified. No
-  third-party singer voice cloned or automatically downloaded.
-- Learned articulation, vocal timing and prosody remain distinct from
-  the operator-selected initial timbral identity.
+## Vocal identity
+Owner-chosen eSpeak profile, oscillator anchor and optional rights-approved
+local Piper model remain separate from learned articulation and timing.
+No artist voice cloning, weights or automatically downloaded models.
 
 ## Permission boundary
-R16 verifies v2 source permits in both memory writers when the private
+R17 builds on source permits verified by memory writers when the private
 signing key is configured. Sound receipts bind visual associations.
-Local journals deduplicate retries and offer 24-hour readback.
+Journals deduplicate writes; R17 classifies partial receipts and
+allows manual link-only recovery during the original permit window.
 Legacy mode is for isolated tests ONLY; do not expose it to live media.
 A signature does not prove consent. Cross-service atomicity, durable
 agent isolation and hardware verification are not complete.
 No background recording, Noosphere migration or deployment.
 
-**R16 does not establish speech understanding, object identity or causal
+**R17 does not establish speech understanding, object identity or causal
 reasoning.** Synthetic checks do not validate real hardware or permission.
 
 ## Implementation and validation records
@@ -87,13 +82,15 @@ reasoning.** Synthetic checks do not validate real hardware or permission.
 - `docs/MIKOSHI-AV-GROUNDING-R13.md` — visual/audio associations
 - `docs/MIKOSHI-LIVE-AV-R14.md` — explicit capture, clock limits
 - `docs/MIKOSHI-TRACKING-SOURCE-R15.md` — tracks, known cues, signed claims
-- `docs/MIKOSHI-SOURCE-TRANSACTIONS-R16.md` — guarded writes and receipts
+- `docs/MIKOSHI-SOURCE-TRANSACTIONS-R16.md` — guarded writes
+- `docs/MIKOSHI-RECONCILIATION-R17.md` — manual recovery
 
-Run `node tests/mikoshi_r16_secure_writes.test.mjs` and
-`node tests/mikoshi_permit_contract.test.mjs` for R16.
+Run `node tests/mikoshi_reconciliation.test.mjs`,
+`node tests/mikoshi_reconciliation_service.test.mjs`, and
+`node tests/mikoshi_av_recovery.test.mjs` for R17.
 Full test commands are in `.github/workflows/ci.yml`.
 Core/MAS regression coverage also includes
 `node tools/mas-check.mjs` and `python tools/check-size.py`.
 The CI also runs isolated Core+App and Windows regression checks.
-Before deployment: real clock tests, independently verified consent,
-per-agent isolation and cross-service reconciliation.
+Before deployment: real clocks, verified consent, agent isolation and
+cross-service transactional recovery.
