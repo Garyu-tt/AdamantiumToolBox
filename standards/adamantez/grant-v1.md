@@ -66,4 +66,4 @@ review, signed package activation and rollback. Keep the five autonomous
 development workers' schedules, roles and prompts unchanged; this contract is
 additive to their shared repository-routing reminder.
 
-See [R01 source routing](../docs/ADAMANTEZ-SOURCE-BOUNDARY-R01.md).
+See [R01 source routing](../../docs/ADAMANTEZ-SOURCE-BOUNDARY-R01.md).
