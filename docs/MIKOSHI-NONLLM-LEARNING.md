@@ -1,6 +1,6 @@
-# Mikoshi Voice & Learning — MAS non-LLM experimental R05
+# Mikoshi Voice & Learning — MAS non-LLM experimental R06
 
-Eight independent MAS providers plus a separate Classroom app; each boots
+Nine independent MAS providers plus a separate Classroom app; each boots
 with Core alone and advertises only real, permitted capabilities. Classroom composes
 resources discovered through `mikoshi.skill.v1`, not fixed app names.
 
@@ -29,8 +29,13 @@ resources discovered through `mikoshi.skill.v1`, not fixed app names.
   See `docs/MIKOSHI-MOTIFS-R04.md` for tests and limits.
 - `mikoshi_sequences`: order and coarse timing memory for motifs; context
   prediction and phrase boundaries; see `docs/MIKOSHI-SEQUENCES-R05.md`.
+- `mikoshi_motorlinks`: bounded sensory-reward motor controller that maps
+  acoustic motif IDs to two learned vocal-formant parameters. It neither
+  synthesizes nor hears audio itself; Classroom composes these capabilities
+  dynamically. See `docs/MIKOSHI-MOTORLINKS-R06.md`.
 - `mikoshi_classroom`: graph-discovered composition of voice, prosody,
-  articulation, auditory motifs and ordered sequences, with opt-in learning.
+  articulation, auditory motifs, ordered sequences and motor learning,
+  with opt-in feedback.
   Provider selection uses declared skill priority and supported adjustments.
 
 ## Optional Piper configuration (never put model files in this repository)
@@ -51,7 +56,8 @@ The existing read-only `plugins/mikoshi` is unchanged. New permissions:
 `hearing.observe`, `voice.inspect`, `voice.render`, `learning.inspect`,
 `learning.train`, `prosody.inspect`, `prosody.learn`, `motifs.inspect`,
 `motifs.learn`, `phonetics.inspect`, `phonetics.render`, `phonetics.learn`,
-`sequence.inspect`, `sequence.learn`, `classroom.view`.
+`sequence.inspect`, `sequence.learn`, `motor.inspect`, `motor.learn`,
+`classroom.view`.
 A user must separately grant rights through Toolbox policy. No automatic
 activation, copying of private data, recording, or changes to existing agents.
 Only explicit owner-approved training state is persisted. The current prototype
@@ -71,6 +77,7 @@ Run `node tests/mikoshi_speech.test.mjs`,
 `node tests/mikoshi_prosody.test.mjs`, `node tests/mikoshi_piper.test.mjs`,
 `node tests/mikoshi_motifs.test.mjs`, `node tests/mikoshi_motifs_service.test.mjs`,
 `node tests/mikoshi_sequences.test.mjs`, `node tests/mikoshi_sequences_service.test.mjs`,
+`node tests/mikoshi_motorlinks.test.mjs`, `node tests/mikoshi_motorlinks_service.test.mjs`,
 `node tools/mas-check.mjs` and `python tools/check-size.py`. Then test
 isolated services, actual eSpeak/Piper binaries, consent, output quality and
 permissions on a host. Piper's CLI currently reloads the neural model per
