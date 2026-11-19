@@ -11,7 +11,7 @@ export function streamPanel(host,api,events,memory,sequence,articulation,allowed
  const info=add('pre','Запись и обучение запускаются только вручную');
  let source=null,detected=null,learned=null,busy=false;
  streamMotorPanel(host,api,{articulation,motor,gesture,wave},allowed,()=>learned);
- explorePanel(host,api,{explorer,articulation,motor},allowed,()=>learned);
+ explorePanel(host,api,{explorer,articulation,motor},allowed,()=>learned,world);
  const capture=add('button','Записать 2 секунды с микрофона');
  capture.onclick=async()=>{
   if(busy)return;busy=true;capture.disabled=true;detected=null;learned=null;
