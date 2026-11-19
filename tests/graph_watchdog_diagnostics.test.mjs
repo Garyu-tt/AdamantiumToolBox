@@ -46,8 +46,6 @@ const expired=diagnoseTransaction({transaction,journal},{nowSeconds:issuedAt+30}
 assert(expired.alerts.some(x=>x.code==='rollback_needs_recovery'));
 assert(expired.graph.nodes.some(x=>x.id==='blocker:rollback'&&
  x.cause==='rollback_ledger_requires_reconciliation'));
-const spoofed=diagnoseTransaction({transaction:{...transaction,applied:true}});
-assert.equal(spoofed.readyToCommit,false);
 assert.throws(()=>diagnoseTransaction({transaction:{...transaction,applied:true}}),
  /invalid_transaction/);
 console.log('GRAPH_WATCHDOG_DIAGNOSTICS_OK eight explained blockers, no trusted apply');
