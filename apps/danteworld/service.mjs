@@ -29,11 +29,30 @@ http.createServer((req,res)=>{
  if(req.headers['x-internal-key']!==secret)return result(res,401,{error:'unauthorized'});
  if(req.method==='GET'&&req.url==='/graph')return result(res,200,spec);
  if(req.method==='POST'&&req.url==='/invoke'){
-  let raw='',over=false;
-  req.on('data',chunk=>{raw+=chunk;if(raw.length>16384){over=true;req.destroy();}});
-  req.on('end',()=>{if(over)return;
-   try{const body=JSON.parse(raw);return result(res,200,{result:respond(body.action,body.params||{})});}
-   catch(e){return result(res,400,{error:String(e.message).slice(0,100)});}
+  const limit=16384;
+  let bytes=0,over=false;
+  const chunks=[];
+  const rejectLarge=()=>{
+   if(over)return;
+   over=true;
+   result(res,413,{error:'payload_too_large'});
+  };
+  const declared=req.headers['content-length'];
+  if(declared!==undefined&&/^\d+$/.test(declared)&&Number(declared)>limit){
+   rejectLarge();req.resume();return;
+  }
+  req.on('data',chunk=>{
+   if(over)return;
+   bytes+=chunk.byteLength;
+   if(bytes>limit){rejectLarge();return;}
+   chunks.push(chunk);
+  });
+  req.on('end',()=>{
+   if(over)return;
+   try{
+    const body=JSON.parse(Buffer.concat(chunks,bytes).toString('utf8'));
+    return result(res,200,{result:respond(body.action,body.params||{})});
+   }catch(e){return result(res,400,{error:String(e.message).slice(0,100)});}
   });return;
  }
  return result(res,404,{error:'not_found'});
