@@ -1,0 +1,50 @@
+{
+  "mas": "1.0",
+  "id": "nftables_lab",
+  "name": "nftables Lab",
+  "version": "0.1.0",
+  "icon": "graph",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8928,
+    "invokeTimeoutMs": 5000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "nftables_lab.read"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  },
+  "connections": [
+    {
+      "from": "nftables_lab.check",
+      "to": "nftables_preview.transaction",
+      "type": "related"
+    },
+    {
+      "from": "nftables_lab.rollback_trial",
+      "to": "rollback_watchdog.journal",
+      "type": "related"
+    },
+    {
+      "from": "nftables_lab.check",
+      "to": "nftables_readback.observe",
+      "type": "related"
+    }
+  ]
+}

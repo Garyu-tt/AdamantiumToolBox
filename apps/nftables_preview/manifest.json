@@ -1,0 +1,55 @@
+{
+  "mas": "1.0",
+  "id": "nftables_preview",
+  "name": "nftables Preview",
+  "version": "0.1.0",
+  "icon": "graph",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8925,
+    "invokeTimeoutMs": 5000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "nftables_preview.read"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  },
+  "connections": [
+    {
+      "from": "nftables_preview.transaction",
+      "to": "wireguard_graph.snapshot",
+      "type": "related"
+    },
+    {
+      "from": "nftables_preview.transaction",
+      "to": "network_inventory.reconcile",
+      "type": "related"
+    },
+    {
+      "from": "nftables_preview.transaction",
+      "to": "nftables_lab.check",
+      "type": "related"
+    },
+    {
+      "from": "nftables_preview.transaction",
+      "to": "rollback_watchdog.receipt",
+      "type": "related"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "mas": "1.0",
+  "id": "rollback_ledger",
+  "name": "Rollback Ledger",
+  "version": "0.1.0",
+  "icon": "graph",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8930,
+    "invokeTimeoutMs": 5000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "rollback_ledger.read",
+    "rollback_ledger.reserve"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  },
+  "connections": [
+    {
+      "from": "rollback_ledger.inspect",
+      "to": "rollback_watchdog.journal",
+      "type": "related"
+    },
+    {
+      "from": "rollback_ledger.reserve",
+      "to": "rollback_watchdog.receipt",
+      "type": "related"
+    }
+  ]
+}
