@@ -20,6 +20,7 @@ export function diagnoseTransaction(input,options={}){
  const alerts=[],observations=[];
  const warn=code=>plan.warnings.some(w=>w?.code===code);
  let approval=null,journal=null;
+ let kernelMismatch=false,ledgerIncomplete=false;
  if(input.receipt!==undefined){
   approval=inspectApproval(input.receipt,{expectedLeaseId:input.expectedLeaseId,
    expectedTargetNode:input.expectedTargetNode,
@@ -38,15 +39,41 @@ export function diagnoseTransaction(input,options={}){
   if(journal.requiresRecovery)alerts.push({
    code:'rollback_needs_recovery',reason:'expiry or unverified rollback requires intervention'});
  }
+ if(input.readback!==undefined){
+  const x=input.readback;
+  if(x?.schema!=='nftables-readback-1'||x.status!=='observed'||!hash(x.revision))
+   alerts.push({code:'kernel_readback_unavailable',
+    reason:'snapshot missing or invalid; independent kernel probe required'});
+  else if(hash(input.expectedBaseRevision)&&x.revision!==input.expectedBaseRevision){
+   kernelMismatch=true;alerts.push({code:'kernel_base_revision_mismatch',
+    reason:'observed digest differs from planned base ruleset'});
+  }else observations.push('kernel_snapshot_observed_but_unattested');
+ }
+ if(input.ledger!==undefined){
+  const x=input.ledger;
+  if(x?.schema!=='rollback-ledger-audit-1'||x.status!=='scanned'||
+     !Array.isArray(x.entries)||!Array.isArray(x.issues)){
+   ledgerIncomplete=true;alerts.push({code:'ledger_inventory_unavailable'});
+  }else{
+   ledgerIncomplete=x.issues.length>0||x.entries.some(e=>
+    e.state==='incomplete_or_untrusted'||e.state==='expired_needs_review');
+   if(ledgerIncomplete)alerts.push({code:'ledger_requires_review',
+    reason:'local replay store includes incomplete or expired claims'});
+   const found=x.entries.some(e=>e.leaseId===input.expectedLeaseId);
+   if(found)observations.push('local_lease_seen_not_distributed_attestation');
+   else alerts.push({code:'requested_lease_not_found_in_local_audit'});
+  }
+ }
  const nodes=[],edges=[];
  for(const [i,[name,label,remediation]] of stages.entries()){
   let cause='requires_independent_evidence';
   if(name==='identity')cause='node_identity_not_attested';
   if(name==='approval')cause=approval?.signatureValid?
    'signature_verified_but_replay_and_node_unverified':'signed_approval_not_verified';
+  if(name==='kernel'&&kernelMismatch)cause='kernel_revision_mismatch';
   if(name==='management'&&warn('management_flow_not_in_candidate'))
    cause='management_path_not_preserved';
-  if(name==='rollback'&&journal?.requiresRecovery)
+  if(name==='rollback'&&(journal?.requiresRecovery||ledgerIncomplete))
    cause='rollback_ledger_requires_reconciliation';
   if(name==='commit')cause='privileged_executor_not_installed';
   nodes.push({id:'gate:'+name,type:'gate',label,status:'blocked'});
