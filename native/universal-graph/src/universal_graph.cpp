@@ -85,7 +85,7 @@ class Compiler {
       return false;
     }
     const Graph& graph = found->second;
-    if (graph.schema_version != kSchemaVersion) {
+    if (graph.schema_version != kSchemaVersion || graph.revision == 0) {
       failure(ErrorCode::Version, id, "schema_version");
       return false;
     }
@@ -121,13 +121,18 @@ class Compiler {
         return false;
       }
       if (node.kind == NodeKind::Composite) {
-        if (!node.type_ref.empty() || !id_ok(node.graph_ref)) {
+        if (!node.type_ref.empty() || !id_ok(node.graph_ref) ||
+            node.graph_ref_revision == 0) {
           failure(ErrorCode::TypeRef, id, node.id);
           return false;
         }
         const auto child = catalog_.find(node.graph_ref);
         if (child == catalog_.end()) {
           failure(ErrorCode::MissingGraph, id, node.graph_ref);
+          return false;
+        }
+        if (child->second.revision != node.graph_ref_revision) {
+          failure(ErrorCode::CompositeRevision, id, node.id);
           return false;
         }
         // Exposed ports are an exact, order-independent contract. The UI
@@ -146,7 +151,8 @@ class Compiler {
             return false;
           }
         }
-      } else if (!ref_ok(node.type_ref) || !node.graph_ref.empty()) {
+      } else if (!ref_ok(node.type_ref) || !node.graph_ref.empty() ||
+                 node.graph_ref_revision != 0) {
         failure(ErrorCode::TypeRef, id, node.id);
         return false;
       }
