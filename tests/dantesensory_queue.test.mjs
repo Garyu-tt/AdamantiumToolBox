@@ -4,6 +4,7 @@ import {mkdtemp,rm,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {DurableQueue} from '../apps/dantesensory/queue.mjs';
+import {AtomicStore} from '../apps/dantesensory/atomic_store.mjs';
 const event=(sequence,source='world.mock')=>({schema:'dante.sensory.event.v1',source,kind:'position',
  sequence,observedAtMs:sequence,payload:{position:sequence}});
 test('at least once: replay after restart, ack, duplicate and bounds',async()=>{
@@ -55,5 +56,15 @@ test('serializes concurrent publish without state loss',async()=>{
   const recovered=await new DurableQueue({path,capacity:32,maxSources:2,maxEventBytes:512}).open();
   assert.equal(recovered.status().queued,20);
   console.log('DANTE_SENSOR_JOURNAL_OK 20 commits, bounded state, replay, ack');
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('escaped payload wrapper reloads within bounded record size',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'dante-escaped-')),path=join(dir,'payload.json');
+ try{
+  const store=new AtomicStore(path,600);
+  const state={quoted:'"'.repeat(250)};
+  await store.save(state);
+  assert.deepEqual(await store.load(),state);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
