@@ -65,6 +65,9 @@ public final class WatchdogService extends Service {
         if (!Settings.prefs(this).getBoolean(Settings.ENABLED, false) ||
             !Settings.configured(this) || Thread.currentThread().isInterrupted()) return;
         try {
+            // Mesh is mandatory. Never silently fall back to an ordinary public route.
+            WireGuardMesh.ensureConnected(this);
+            if (!WireGuardMesh.isUp()) return;
             JSONObject metrics = DeviceProbe.snapshot(this);
             boolean ready = DeviceProbe.canCompute(metrics);
             JSONObject capability = new JSONObject()

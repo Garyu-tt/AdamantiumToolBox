@@ -19,6 +19,7 @@ final class PoolClient {
         if (!path.equals("/api/ai-core/v1/pulse") && !path.equals("/api/ai-core/v1/results"))
             throw new SecurityException("Not an enrolled gateway action");
         String base = Settings.httpsBase(Settings.prefs(context).getString(Settings.GATEWAY, ""));
+        WireGuardMesh.requireGatewayRoute(context, new URL(base).getHost());
         String pin = Settings.checkedPin(Settings.prefs(context).getString(Settings.PIN, ""));
         byte[] expected = Base64.decode(pin, Base64.NO_WRAP);
         byte[] body = data.toString().getBytes(StandardCharsets.UTF_8);

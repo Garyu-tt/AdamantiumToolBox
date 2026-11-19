@@ -11,6 +11,7 @@ import android.widget.*;
 public final class MainActivity extends Activity {
     private EditText gateway, pin, chat;
     private TextView status;
+    private static final int WG_IMPORT=71, MODEL_IMPORT=72, VPN_PERMISSION=73;
 
     private TextView text(String value) {
         TextView t = new TextView(this);
@@ -95,6 +96,37 @@ public final class MainActivity extends Activity {
             show("Stopped locally. Coordinator must expire outstanding leases.");
         });
 
+
+        button(root, "Import WireGuard mesh profile (.conf)", v -> {
+            Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            pick.setType("*/*"); pick.addCategory(Intent.CATEGORY_OPENABLE);
+            pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+            startActivityForResult(pick,WG_IMPORT);
+        });
+        button(root, "Connect WireGuard mesh", v -> {
+            if (!WireGuardMesh.hasProfile(this)) { show("Import an approved mesh profile first."); return; }
+            Intent consent = android.net.VpnService.prepare(this);
+            if (consent != null) startActivityForResult(consent,VPN_PERMISSION);
+            else enableMesh();
+        });
+        button(root, "Disconnect WireGuard mesh", v -> {
+            WireGuardMesh.stop(this); show("WireGuard disconnect requested; pool traffic gated.");
+        });
+        button(root, "Import model artifact", v -> {
+            Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            pick.setType("*/*"); pick.addCategory(Intent.CATEGORY_OPENABLE);
+            pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+            startActivityForResult(pick,MODEL_IMPORT);
+        });
+        button(root, "List model artifacts", v -> {
+            try { show(ModelRegistry.list(this).toString(2)); }
+            catch (Exception e) { show("Model registry unavailable: "+e.getClass().getSimpleName()); }
+        });
+        root.addView(text("Mesh: "+(WireGuardMesh.isUp()?"UP":"DOWN")+
+            " | Profile: "+(WireGuardMesh.hasProfile(this)?"imported":"missing")+
+            ". Imported weights are registered for future backends, not claimed as executing LLMs."));
         button(root, "Open configured chat", v -> {
             try {
                 String u = Settings.httpsChat(p.getString(Settings.CHAT, ""));
@@ -104,5 +136,37 @@ public final class MainActivity extends Activity {
         root.addView(text("R01: CPU dense-layer tasks only. No arbitrary remote phone control. " +
             "Thermal/battery gates and Android service restrictions apply. " +
             "Remote chat requires a separately deployed chat server."));
+
+    }
+
+    private void enableMesh() {
+        Settings.prefs(this).edit().putBoolean(WireGuardMesh.ENABLED,true).apply();
+        WireGuardMesh.ensureConnected(this);
+        show("Mesh connection requested; tunnel state becomes UP after backend setup.");
+    }
+
+    @Override protected void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request,result,data);
+        if (request==VPN_PERMISSION) {
+            if(result==RESULT_OK) enableMesh();
+            else show("VPN permission denied; tunnel remains inactive.");
+            return;
+        }
+        if (result!=RESULT_OK || data==null || data.getData()==null) return;
+        try {
+            if (request==WG_IMPORT) {
+                try (java.io.InputStream in=getContentResolver().openInputStream(data.getData())) {
+                    if (in==null) throw new java.io.IOException("Empty document stream");
+                    WireGuardMesh.importProfile(this,in);
+                }
+                show("WireGuard profile encrypted in Android Keystore-backed app storage.");
+            } else if (request==MODEL_IMPORT) {
+                org.json.JSONObject m=ModelRegistry.importModel(this,data.getData(),data.getFlags());
+                show("Model artifact registered: "+m.getString("name")+
+                    " (weights not loaded until an inference backend is installed)");
+            }
+        } catch (Exception e) {
+            show("Import rejected: "+e.getClass().getSimpleName()+" - "+e.getMessage());
+        }
     }
 }
