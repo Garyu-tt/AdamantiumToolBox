@@ -1,4 +1,5 @@
 import {makeReactiveSamples} from './view-r07-samples.js';
+import {makeProjectionSamples} from './view-r08-samples.js';
 // Pure contract inspector; no backend state.
 export async function mount(host,api){
  const add=(tag,text,parent=host)=>{const el=document.createElement(tag);
@@ -63,7 +64,7 @@ export async function mount(host,api){
       action_id:'publication.transaction.commit',contract_version:'1.0.0'}};
    }
   }catch{/* Optional peer unavailable. */}
-  Object.assign(samples,await makeReactiveSamples(api,functionNode));
+  Object.assign(samples,await makeReactiveSamples(api,functionNode),makeProjectionSamples(functionNode));
   samples['forge.distribution.recover']={schema:'forge.distribution.recovery.request.v1',
    operation_id:'demo-operation-0001',request_id:'demo-distribution-request-0001',
    graph_revision:'demo-graph-revision',policy_revision:'demo-policy-revision',mode:'publish',
