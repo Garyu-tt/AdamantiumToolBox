@@ -1,6 +1,7 @@
 #pragma once
 #include <QHash>
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QListWidget>
 #include <QSet>
 #include <QSignalBlocker>
