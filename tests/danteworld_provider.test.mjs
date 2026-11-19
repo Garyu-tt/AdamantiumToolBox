@@ -3,6 +3,8 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {once} from 'node:events';
 import {fileURLToPath} from 'node:url';
+import {readFile} from 'node:fs/promises';
+import {validateManifest,validateGraph} from '../core/contract.mjs';
 const exe=fileURLToPath(new URL('../apps/danteworld/service.mjs',import.meta.url));
 const port=await new Promise((resolve,reject)=>{
  const server=createServer();server.on('error',reject);
@@ -26,6 +28,9 @@ try{
  assert.equal((await fetch(base+'/graph')).status,401);
  const spec=await (await fetch(base+'/graph',{headers:{'X-Internal-Key':secret}})).json();
  assert.equal(spec.app,'danteworld');
+ const manifest=JSON.parse(await readFile(fileURLToPath(new URL('../apps/danteworld/manifest.json',import.meta.url)),'utf8'));
+ assert(validateManifest(manifest),'invalid manifest');
+ assert(validateGraph(spec,manifest),'invalid MAS graph');
  assert.equal(spec.nodes.find(n=>n.id==='danteworld.observe')?.contract,'dante.world.observe.v1');
  assert.equal(spec.nodes.find(n=>n.id==='danteworld.apply')?.fixture,true);
  let r=await call('danteworld.observe');assert.equal(r.body.result.tick,0);
