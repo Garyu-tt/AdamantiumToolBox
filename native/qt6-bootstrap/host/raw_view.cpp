@@ -42,18 +42,23 @@ void RawView::updateGraph(const QJsonObject& graph) {
   actions_->currentItem()->data(Qt::UserRole).toString():QString{};
  QSignalBlocker silent(actions_);
  QHash<QString,QListWidgetItem*> old;
+ QSet<QString> activeActions;
  for(int i=0;i<actions_->count();++i)
   old.insert(actions_->item(i)->data(Qt::UserRole).toString(),actions_->item(i));
  for(const auto& value:nodes) {
   const auto n=value.toObject();
   const auto id=n.value("id").toString();
   if(n.value("type").toString()!="action"||!allowed.contains(id))continue;
+  activeActions.insert(id);
   auto* row=old.take(id);
   if(!row){row=new QListWidgetItem(actions_);row->setData(Qt::UserRole,id);}
   const auto title=n.value("title").toString(id);
   if(row->text()!=title)row->setText(title);
  }
  for(const auto* row:old)delete actions_->takeItem(actions_->row(row));
+ if(!lastResultAction_.isEmpty()&&!activeActions.contains(lastResultAction_)){
+  output_->clear();lastResultAction_.clear();
+ }
  for(int i=0;i<actions_->count();++i) {
   if(actions_->item(i)->data(Qt::UserRole).toString()==selected)actions_->setCurrentRow(i);
  }
@@ -70,15 +75,22 @@ void RawView::invokeSelected() {
  }
  pending_=QUuid::createUuid().toString(QUuid::WithoutBraces);
  run_->setEnabled(false);state_->setText("Running...");
- host_->invoke(pending_,actions_->currentItem()->data(Qt::UserRole).toString(),doc.object());
+ inflightAction_=actions_->currentItem()->data(Qt::UserRole).toString();
+ host_->invoke(pending_,inflightAction_,doc.object());
 }
 void RawView::complete(const QString& id,const QJsonObject& result,const QString& error) {
  if(id!=pending_)return;
  pending_.clear();run_->setEnabled(online_&&actions_->currentItem()!=nullptr);
  state_->setText(error.isEmpty()?"Completed":error);
- if(error.isEmpty())output_->setPlainText(QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Indented)));
+ if(error.isEmpty()){
+  lastResultAction_=inflightAction_;
+  output_->setPlainText(QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Indented)));
+ }else{output_->clear();lastResultAction_.clear();}
+ inflightAction_.clear();
 }
 void RawView::online(bool yes) {
  online_=yes;run_->setEnabled(online_&&pending_.isEmpty()&&actions_->currentItem()!=nullptr);
- if(!online_)state_->setText("Core unavailable — execution disabled");
+ if(!online_){state_->setText("Core unavailable — execution disabled");
+  output_->clear();lastResultAction_.clear();
+ }
 }

@@ -41,9 +41,20 @@ int main(int argc,char** argv) {
  button->click();
  if(calls.size()!=1||calls.at(0).at(1).toString()!="item.0.run")return 4;
  bridge.complete(calls.at(0).at(0).toString(),QJsonObject{{"result",true}},{});
+ const auto edits=raw.findChildren<QPlainTextEdit*>();
+ if(edits.size()!=2||!edits.at(1)->toPlainText().contains("true"))return 7;
  bridge.publish(QJsonObject{{"nodes",nodes},{"edges",QJsonArray{}}});
  if(actions->count()!=0||button->isEnabled())return 5;
+ if(!edits.at(1)->toPlainText().isEmpty())return 8;
  bridge.publish(QJsonObject{{"nodes",QJsonArray{}},{"edges",QJsonArray{}}});
  if(launcher->count()!=0)return 6;
+ bridge.publish(QJsonObject{{"nodes",nodes},{"edges",edges}});
+ bridge.setAvailable(true);
+ button->click();
+ if(calls.size()!=2)return 9;
+ bridge.complete(calls.at(1).at(0).toString(),QJsonObject{{"result","sensitive"}},{});
+ if(!edits.at(1)->toPlainText().contains("sensitive"))return 10;
+ bridge.setAvailable(false);
+ if(!edits.at(1)->toPlainText().isEmpty()||button->isEnabled())return 11;
  std::cout<<"MAS_RAW_UI_OK incremental workspace, authorized actions and revocation\n";
 }

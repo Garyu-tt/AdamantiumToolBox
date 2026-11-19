@@ -17,7 +17,7 @@ private slots:
  void invokeSelected();
  void online(bool available);
 private:
- QString viewId_,pending_;
+ QString viewId_,pending_,inflightAction_,lastResultAction_;
  HostBridge* host_=nullptr;
  QListWidget* actions_=nullptr;
  QPlainTextEdit *params_=nullptr,*output_=nullptr;
