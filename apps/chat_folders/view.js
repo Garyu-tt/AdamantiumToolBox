@@ -10,7 +10,9 @@ export async function mount(host,api){
    const label=document.createElement('span');label.textContent=f.name+' ('+f.items.length+')';row.append(label);
    const add=document.createElement('button');add.textContent='Добавить чат';
    add.onclick=async()=>{if(!selected){state.textContent='Сначала выбери чат';return;}
-    try{await api.call(src.actions.link,{folder:f.id,ref:'mas://chat_store/thread/'+selected,
+    try{const store=api.graph().nodes.find(n=>n.type==='resource'&&n.protocol==='conversation-store-1');
+     if(!store)throw Error('Хранилище бесед недоступно');
+     await api.call(src.actions.link,{folder:f.id,ref:'mas://'+store.id.split('.')[0]+'/thread/'+selected,
      opId:crypto.randomUUID()});state.textContent='Добавлено';await render();}
     catch(err){state.textContent=err.message;}};row.append(add);list.append(row);}
  };
