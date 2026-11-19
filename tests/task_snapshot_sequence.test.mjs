@@ -24,17 +24,28 @@ test('bootstrap explicitly and recover increasing high-water mark on restart',as
   assert.equal((await store.inspect()).sequence,2);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
-test('32 concurrent local publisher reservations never repeat a sequence',async()=>{
+test('32 sequential local reservations preserve monotonic epochs',async()=>{
  const {dir,store}=await tempDir();
  try{
   await store.initialize(identity);
-  // File locks refuse simultaneous uncoordinated writers rather than silently
-  // reuse epochs. A queue in the owner-approved publisher should serialize
-  // calls to the single writer, as done here.
+  // The approved single-host publisher serializes reservations.
   const values=[];
   for(let i=0;i<32;i++)values.push(await store.reserve(identity));
   assert.deepEqual(values,Array.from({length:32},(_,i)=>i+1));
   assert.equal((await store.inspect()).sequence,32);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+test('actual concurrent reservations cannot produce repeated epochs',async()=>{
+ const {dir,store}=await tempDir();
+ try{
+  await store.initialize(identity);
+  const attempts=await Promise.allSettled(Array.from({length:32},()=>store.reserve(identity)));
+  const success=attempts.filter(x=>x.status==='fulfilled').map(x=>x.value);
+  const failed=attempts.filter(x=>x.status==='rejected');
+  assert.ok(success.length>=1);
+  assert.equal(new Set(success).size,success.length);
+  assert.equal((await store.inspect()).sequence,success.length);
+  for(const failure of failed)assert.match(String(failure.reason),/operator must inspect/);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 test('crash-held lock fails closed; no automatic stale-lock removal',async()=>{
