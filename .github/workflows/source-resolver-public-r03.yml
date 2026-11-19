@@ -1,0 +1,29 @@
+name: Public source resolver R03 contract
+on:
+  pull_request:
+    paths:
+      - 'sdk/source-resolver-result.mjs'
+      - 'tests/source_resolver_result.test.mjs'
+      - 'standards/repository-sources/resolver-r03.md'
+      - '.github/workflows/source-resolver-public-r03.yml'
+  push:
+    branches: [main, 'feat/source-resolver-public-contract-r03']
+    paths:
+      - 'sdk/source-resolver-result.mjs'
+      - 'tests/source_resolver_result.test.mjs'
+      - 'standards/repository-sources/resolver-r03.md'
+      - '.github/workflows/source-resolver-public-r03.yml'
+permissions:
+  contents: read
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/source_resolver_result.test.mjs
