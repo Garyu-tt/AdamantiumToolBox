@@ -32,3 +32,25 @@ test('cycles, limits, invalid specs and misleading metadata fail safely',()=>{
  assert.throws(()=>resolveComposition('dante',[{...specs[1],requires:[{slot:'x',contract:'__evil'}]}],{nodes:[]}),/invalid_composite_spec/);
  assert.equal(resolveComposition('genesis',specs,{nodes:[{id:'unknown.run',type:'view',contract:genesisReq[0]}]}).discovered,false);
 });
+
+test('three-level recursive Genesis: subcomposites nest without a fixed depth or provider identity',async()=>{
+ const nested=await Promise.all(['genperception','genpolicy'].map(async name=>JSON.parse(
+  await readFile(fileURLToPath(new URL('../standards/composition/'+name+'.json',import.meta.url)),'utf8'))));
+ const composables=[...specs,...nested];
+ const required=[...danteReq,'genesis.worldmodel.update.v1','genesis.selfstate.snapshot.v1',
+   ...nested.flatMap(s=>s.requires.map(r=>r.contract))];
+ const full=resolveComposition('dante',composables,{nodes:nodes(required)});
+ assert.equal(full.discovered,true);assert.equal(full.runnable,false);
+ const genesis=full.tree.roles.find(r=>r.slot==='cognition').child;
+ assert.equal(genesis.id,'genesis');
+ const perception=genesis.roles.find(r=>r.slot==='perception').child;
+ assert.equal(perception.id,'genperception');
+ assert.equal(perception.roles.length,3);
+ const policy=genesis.roles.find(r=>r.slot==='decision').child;
+ assert.equal(policy.id,'genpolicy');
+ assert.equal(policy.roles.length,3);
+ const without=resolveComposition('dante',composables,{nodes:nodes(required.filter(c=>c!=='genesis.policy.select.v1'))});
+ assert.equal(without.discovered,false);
+ assert.equal(without.tree.roles.find(r=>r.slot==='observe').status,'discovered');
+ assert.equal(without.tree.roles.find(r=>r.slot==='cognition').status,'blocked');
+});
