@@ -1,4 +1,4 @@
-# Network WireGuard Peer Enrollment — MAS v0.2.0
+# Network WireGuard Peer Enrollment — MAS v0.3.0
 
 Independent, optional peer-management app. The existing network_wireguard MAS provider remains strictly read-only. Requires only Core + this app; no compulsory Network Fabric, Network Approval, JediControl, Graph Manager, Noosphere or Leonardo. Host service uses mas-http-1, loopback-only with the Core-provided internal secret. The Raw UI remains usable without a styling provider.
 
@@ -44,3 +44,5 @@ Android AVF Debian guests can lack TUN/NET_ADMIN, so this output **does not prov
 Run: node --test packages/network_wireguard_peer/tests/*.test.mjs
 Stage: node tools/plugin-stage.mjs prepare packages/network_wireguard_peer
 Never execute unreviewed installation, change VPN ACLs, or claim the app is deployed based on GitHub CI alone.
+
+**Signed reboot restoration (opt-in):** See [RECOVERY.md](RECOVERY.md). A verified peer can be retained in a host-local signed public-key ledger and safely re-added after reboot; no automatic service installation or network-policy enforcement is implied.
