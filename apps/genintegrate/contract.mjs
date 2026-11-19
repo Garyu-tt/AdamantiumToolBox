@@ -32,9 +32,13 @@ export function validateContext(s,{maxSources=32,maxRecent=32}={}){
      c.sequence<0||!digest(c.payloadSha256)||c.eventId!==eventId(c))throw Error('invalid_cursor');
   const key=cursorKey(c.source,c.kind);if(keys.has(key))throw Error('duplicate_cursor');keys.add(key);
  }
- const seen=new Set();
+ const seen=new Set(),lastSequence=new Map();
  for(const e of s.recent){
-  validateNormalized(e);const c=s.cursors.find(c=>cursorKey(c.source,c.kind)===cursorKey(e.source,e.kind));
+  validateNormalized(e);
+  const key=cursorKey(e.source,e.kind),prev=lastSequence.get(key);
+  if(prev!==undefined&&e.sequence<=prev)throw Error('recent_order');
+  lastSequence.set(key,e.sequence);
+  const c=s.cursors.find(c=>cursorKey(c.source,c.kind)===key);
   const id=eventId(e);if(seen.has(id))throw Error('duplicate_recent_event');seen.add(id);
   if(!c||e.sequence>c.sequence||(e.sequence===c.sequence&&e.payloadSha256!==c.payloadSha256))
    throw Error('context_cursor_mismatch');
