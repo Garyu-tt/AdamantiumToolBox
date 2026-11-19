@@ -1,4 +1,4 @@
-# Mikoshi non-LLM skill ecosystem — R15
+# Mikoshi non-LLM skill ecosystem — R16
 
 **23 independent MAS providers plus Mikoshi Classroom**
 (24 MAS apps), CPU-first and independently discoverable.
@@ -46,7 +46,7 @@ and updates its prediction from the resulting acoustic observation.
 `hypotheses_panel.js` lets the operator approve one untried vocal action,
 forecast it, hear the result and update prediction error.
 `av_panel.js` provides synthetic pairing; `av_live_panel.js` adds
-explicit capture, optional tracks and source-gated writes.
+manual capture and pair-verified writes with readback.
 No background tasks.
 
 ## Immutable owner-chosen vocal identity
@@ -61,16 +61,16 @@ No background tasks.
 - Learned articulation, vocal timing and prosody remain distinct from
   the operator-selected initial timbral identity.
 
-## Consent, permissions and scope
-Each module declares its own inspect/render/learn scopes. Owner-managed
-private state files are opt-in; no raw audio stored in long-term motor,
-motif or timing memory. Training flags do NOT prove license or consent;
-external media needs separate signed provenance and recording policies.
-Prototypes are single-instance, not secure multi-tenant hosting.
-No background microphone recording, Noosphere migration or active
-deployment was performed in this change.
+## Permission boundary
+R16 verifies v2 source permits in both memory writers when the private
+signing key is configured. Sound receipts bind visual associations.
+Local journals deduplicate retries and offer 24-hour readback.
+Legacy mode is for isolated tests ONLY; do not expose it to live media.
+A signature does not prove consent. Cross-service atomicity, durable
+agent isolation and hardware verification are not complete.
+No background recording, Noosphere migration or deployment.
 
-**R15 does not establish speech understanding, object identity or causal
+**R16 does not establish speech understanding, object identity or causal
 reasoning.** Synthetic checks do not validate real hardware or permission.
 
 ## Implementation and validation records
@@ -87,11 +87,13 @@ reasoning.** Synthetic checks do not validate real hardware or permission.
 - `docs/MIKOSHI-AV-GROUNDING-R13.md` — visual/audio associations
 - `docs/MIKOSHI-LIVE-AV-R14.md` — explicit capture, clock limits
 - `docs/MIKOSHI-TRACKING-SOURCE-R15.md` — tracks, known cues, signed claims
+- `docs/MIKOSHI-SOURCE-TRANSACTIONS-R16.md` — guarded writes and receipts
 
-Run `node tests/mikoshi_r15_live.test.mjs` and its four R15 unit tests.
+Run `node tests/mikoshi_r16_secure_writes.test.mjs` and
+`node tests/mikoshi_permit_contract.test.mjs` for R16.
 Full test commands are in `.github/workflows/ci.yml`.
 Core/MAS regression coverage also includes
 `node tools/mas-check.mjs` and `python tools/check-size.py`.
 The CI also runs isolated Core+App and Windows regression checks.
-Before deployment: measured CPU/clock error, verified source consent,
-per-agent isolation, provider-side permit enforcement and recovery.
+Before deployment: real clock tests, independently verified consent,
+per-agent isolation and cross-service reconciliation.
