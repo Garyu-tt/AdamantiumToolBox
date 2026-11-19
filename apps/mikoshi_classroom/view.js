@@ -60,7 +60,9 @@ export async function mount(host,api){
    vision:provider('visual-events','analyze'),
    audio:provider('auditory-events','analyze'),
    sync:provider('av-alignment','align'),
-   memory,grounding:provider('audiovisual-association','associate')
+   memory,grounding:provider('audiovisual-association','associate'),
+   policy:provider('source-policy','status'),
+   tracking:provider('visual-tracking','track')
   },actions());
   hypothesesPanel(controls,api,{hypothesis:provider('hypothesis-search','generate'),
    world:provider('world-prediction','estimate'),articulation,motor},actions());
