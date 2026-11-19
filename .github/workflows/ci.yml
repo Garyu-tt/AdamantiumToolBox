@@ -73,6 +73,7 @@ jobs:
           node tests/mikoshi_av_policy.test.mjs
           node tests/mikoshi_av_gate_view.test.mjs
           node tests/mikoshi_r16_secure_writes.test.mjs
+          node tests/mikoshi_permit_contract.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
