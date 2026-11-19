@@ -27,7 +27,7 @@ export function safeStepValue(value, maxNodes = 8192) {
       seen.delete(v);
       return out;
     }
-    const out = Object.create(null);
+    const out = {};
     for (const [key, d] of Object.entries(desc)) {
       if (!d.enumerable || !('value' in d)) throw Error('invalid_step_value');
       Object.defineProperty(out, key, {value: visit(d.value, depth + 1),
