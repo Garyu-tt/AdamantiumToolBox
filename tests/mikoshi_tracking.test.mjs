@@ -1,9 +1,9 @@
 import {strict as assert} from 'node:assert';
 import {track} from '../apps/mikoshi_tracking/tracker.mjs';
 const blank=Array(192).fill(0);
-function paint(x,color=0){
+function paint(x,color=0,y0=2){
  const pixels=[...blank];
- for(let y=2;y<4;y++)for(let col=x;col<x+2;col++)
+ for(let y=y0;y<y0+2;y++)for(let col=x;col<x+2;col++)
   pixels[(y*8+col)*3+color]=1;
  return pixels;
 }
@@ -11,9 +11,9 @@ function combine(a,b){
  return a.map((v,i)=>Math.max(v,b[i]));
 }
 const frames=[{timeMs:0,pixels:blank},
- {timeMs:200,pixels:combine(paint(1),paint(5,2))},
- {timeMs:400,pixels:combine(paint(2),paint(5,2))},
- {timeMs:600,pixels:combine(paint(3),paint(5,2))}];
+ {timeMs:200,pixels:combine(paint(1),paint(5,2,5))},
+ {timeMs:400,pixels:combine(paint(2),paint(5,2,5))},
+ {timeMs:600,pixels:combine(paint(3),paint(5,2,5))}];
 const result=track(frames);
 assert.equal(result.schema,'mikoshi.visual.tracks.v1');
 assert.equal(result.tracks.length,2);
