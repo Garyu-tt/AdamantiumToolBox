@@ -31,10 +31,11 @@ export function speak(text,prosody={}){
  if(!Number.isInteger(speedDelta)||Math.abs(speedDelta)>20)
   throw Error('prosody_out_of_bounds');
  const lengthScale=+(1-speedDelta/120).toFixed(4),c=config();
+ if(!c)throw Error('piper_provider_offline');
  const args=['-m','piper','-m',c.model,'--length-scale',String(lengthScale),
   '-f','-','--',text];
  const r=spawnSync(c.python,args,{timeout:16500,windowsHide:true,maxBuffer:2*1024*1024});
- if(r.error||r.status!==0||r.stdout.length<44||
+ if(r.error||r.status!==0||!r.stdout||r.stdout.length<44||
   r.stdout.subarray(0,4).toString('ascii')!=='RIFF')throw Error('piper_synthesis_failed');
  return {mime:'audio/wav',audioBase64:r.stdout.toString('base64'),provider:'piper',
   voiceProfile:{model:basename(c.model)},appliedProsody:{pitchDelta:0,speedDelta},
