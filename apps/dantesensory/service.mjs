@@ -29,8 +29,15 @@ http.createServer((req,res)=>{
  if(req.headers['x-internal-key']!==secret)return send(res,401,{error:'unauthorized'});
  if(req.method==='GET'&&req.url==='/graph')return send(res,200,spec);
  if(req.method==='POST'&&req.url==='/invoke'){
-  let body='',over=false;req.on('data',part=>{body+=part;if(body.length>20000){over=true;req.destroy();}});
-  req.on('end',async()=>{if(over)return;
+  const chunks=[];let bytes=0,over=false;
+  req.on('data',part=>{
+   bytes+=part.byteLength;
+   if(bytes>20000){over=true;chunks.length=0;return;}
+   if(!over)chunks.push(part);
+  });
+  req.on('end',async()=>{
+   if(over)return send(res,413,{error:'request_too_large'});
+   const body=Buffer.concat(chunks,bytes).toString('utf8');
    try{const b=JSON.parse(body);return send(res,200,{result:await act(b.action,b.params||{})});}
    catch(e){const status=/unknown_action|invalid_|event_too_large/.test(e.message)?400:503;
     return send(res,status,{error:String(e.message).slice(0,120)});}
