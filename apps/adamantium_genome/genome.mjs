@@ -18,7 +18,8 @@ const semantics=new Set(['data','control','event','signal','dependency','permiss
 const keys=(o,required)=>plain(o)&&
  Object.keys(o).length===required.length&&required.every(k=>Object.hasOwn(o,k));
 const cpy=v=>JSON.parse(JSON.stringify(v));
-const hash=v=>'sha256:'+createHash('sha256').update(JSON.stringify(v)).digest('hex');
+const hash=v=>'sha256:'+createHash('sha256').update(JSON.stringify(v,(_key,x)=>
+ plain(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x)).digest('hex');
 function validatePort(p){
  check(keys(p,['id','dataType','direction','semantics'])&&name.test(p.id)&&ref.test(p.dataType)&&
   (p.direction==='input'||p.direction==='output')&&semantics.has(p.semantics),
