@@ -32,7 +32,7 @@ http.createServer((req,res)=>{
    if(!can(scope))throw Error('capability_denied');
    const result=b.action==='mikoshi_voice.status'?
     {engine:available()?'online':'offline',profile:profile(),model:'none'}:
-    b.action==='mikoshi_voice.speak'?speak(b.params?.text):null;
+    b.action==='mikoshi_voice.speak'?speak(b.params?.text,b.params?.prosody):null;
    if(!result)throw Error('action_unavailable');
    send(res,200,{result});
   }catch(e){send(res,400,{error:String(e.message).slice(0,100)});}});
