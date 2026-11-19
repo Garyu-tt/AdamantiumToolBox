@@ -1,6 +1,18 @@
 // Graph-only composition: each provider may be installed/removed independently.
 // Synthetic lessons use no external audio, no LLM and no automatic background capture.
 export async function practice(api,skills,progress=()=>{},cancelled=()=>false){
+ // Preflight every dependency before the first irreversible learning write.
+ const required={
+  articulation:['preview','observe'],memory:['remember'],
+  motor:['propose','feedback','status'],sequence:['teach'],
+  gesture:['plan'],wave:['render'],audiometry:['compare'],
+  transition:['propose','feedback','status']
+ };
+ if(cancelled())throw Error('practice_cancelled');
+ for(const [domain,actions] of Object.entries(required))
+  for(const action of actions)
+   if(typeof skills?.[domain]?.[action]!=='string')
+    throw Error('missing_capability_'+domain+'_'+action);
  const call=async(domain,action,params={})=>{
   if(cancelled())throw Error('practice_cancelled');
   const id=skills[domain]?.[action];
