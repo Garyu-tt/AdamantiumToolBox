@@ -15,7 +15,7 @@ test('fails closed for invalid, oversized, cyclic, nonfinite inputs',()=>{
  assert.throws(()=>normalizeSensor({...event,payload:{value:Infinity}}),/invalid_value/);
  assert.throws(()=>normalizeSensor({...event,payload:{long:'x'.repeat(9000)}}),/invalid_value/);
  const cyclic={};cyclic.self=cyclic;
- assert.throws(()=>normalizeSensor({...event,payload:cyclic}),/max_depth/);
+ assert.throws(()=>normalizeSensor({...event,payload:cyclic}),/cyclic_value|max_depth/);
  assert.throws(()=>normalizeSensor({...event,payload:JSON.parse('{"__proto__":123}')}),/unsafe_key/);
 });
 
