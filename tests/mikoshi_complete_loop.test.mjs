@@ -69,5 +69,7 @@ const before=mutations;
 await assert.rejects(practice(api,skills,()=>{},()=>true),/practice_cancelled/);
 assert.equal(mutations,before,'cancelled session does not mutate memory');
 await assert.rejects(practice(api,{articulation:{preview:'ap'}}),
+ /missing_capability_articulation_observe/);
+await assert.rejects(practice(api,{...skills,memory:{}}),
  /missing_capability_memory_remember/);
 console.log('MIKOSHI_COMPLETE_LOOP_OK audible stimulus -> memory -> motor -> timing -> waveform');
