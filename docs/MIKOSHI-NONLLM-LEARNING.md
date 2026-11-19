@@ -1,7 +1,7 @@
-# Mikoshi non-LLM skill ecosystem — R09
+# Mikoshi non-LLM skill ecosystem — R10
 
-**Fourteen independently installable MAS providers plus Mikoshi Classroom**
-(15 MAS apps). All are CPU-first, capability-driven and usable with
+**Fifteen independently installable MAS providers plus Mikoshi Classroom**
+(16 MAS apps). All are CPU-first, capability-driven and usable with
 Core alone. No conversational language models or prompt-generated
 dialogues are required. The composite UI is a separate user-facing app,
 not a replacement monolith or a dependency of any provider.
@@ -24,6 +24,7 @@ not a replacement monolith or a dependency of any provider.
 | waveform-renderer | `mikoshi_vocalstream` | Continuous-phase formant WAV synthesis |
 | acoustic-feedback | `mikoshi_audiometry` | Compare aligned synthetic WAV exercises |
 | transition-learning | `mikoshi_transitions` | Learn a better between-motif join duration |
+| exploration | `mikoshi_explorer` | Select inspect/practice by error and uncertainty within a limited session |
 
 `mikoshi_classroom` discovers `mikoshi.skill.v1` resource contracts
 from the authorized capability graph. It can mount isolated panels for
@@ -34,6 +35,9 @@ scalar reward → motor/transition memory. Missing permissions hide it.
 `stream_panel.js` additionally connects explicitly recorded short clips
 or synthetic diagnostic signals to transient event segmentation, approved
 memory updates and separate voluntary sensorimotor reproduction.
+`explore_panel.js` provides a manually authorized 2–12-step lesson;
+`mikoshi_explorer` then chooses which existing acoustic motif to inspect
+or practice based on numeric error and uncertainty. No background tasks.
 
 ## Immutable owner-chosen vocal identity
 - eSpeak NG: `MIKOSHI_VOICE_PROFILE_JSON` with language/pitch/speed/amplitude.
@@ -56,7 +60,7 @@ Current prototypes are single-instance, not isolated multi-tenant hosting.
 No background microphone recording, Noosphere migration or active
 deployment was performed in this change.
 
-**R08 is not speech understanding, speech recognition, a learned phoneme
+**R10 is not speech understanding, speech recognition, a learned phoneme
 inventory, independent reasoning or proven autonomy.** The final sound
 is a synthetic learning demonstration. The target is a complete
 architecture able to acquire skills later, not a ready-made conversation.
@@ -69,6 +73,7 @@ architecture able to acquire skills later, not a ready-made conversation.
 - `docs/MIKOSHI-GESTURES-R07.md` — continuous coarticulation
 - `docs/MIKOSHI-CLOSED-LOOP-R08.md` — full circuit, limitations and gates
 - `docs/MIKOSHI-STREAM-R09.md` — bounded continuous hearing and replay
+- `docs/MIKOSHI-EXPLORER-R10.md` — bounded self-directed sensory experiments
 
 Run `node tests/mikoshi_complete_loop.test.mjs`,
 `node tests/mikoshi_transition_feedback.test.mjs`,
@@ -76,6 +81,9 @@ Run `node tests/mikoshi_complete_loop.test.mjs`,
 `node tests/mikoshi_segments.test.mjs`,
 `node tests/mikoshi_segments_service.test.mjs`,
 `node tests/mikoshi_stream_imitation.test.mjs`,
+`node tests/mikoshi_explorer.test.mjs`,
+`node tests/mikoshi_explorer_service.test.mjs`,
+`node tests/mikoshi_explorer_live.test.mjs`,
 `node tools/mas-check.mjs` and `python tools/check-size.py`.
 The CI also runs isolated Core+App and Windows regression checks.
 For real user deployment still need CPU and acoustic field benchmarks,
