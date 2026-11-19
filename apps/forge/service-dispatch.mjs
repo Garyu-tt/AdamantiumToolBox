@@ -7,6 +7,7 @@ import {planComposite,planCompositeImpact} from './composite.mjs';
 import {planDistribution,recoverDistribution} from './distribution.mjs';
 import {planReactive,assessReactive} from './reactive.mjs';
 import {planProjection,planReconnect} from './projection.mjs';
+import {planLeases,assessRevocation} from './access.mjs';
 export function dispatch(spec,params,protocol){
  return spec.id==='forge.describe'?protocol:
   spec.id==='forge.validate'?validateFunction(params?.function):
@@ -25,5 +26,7 @@ export function dispatch(spec,params,protocol){
   spec.id==='forge.distribution.recover'?recoverDistribution(params):
   spec.id==='forge.reactive.plan'?planReactive(params):
   spec.id==='forge.reactive.assess'?assessReactive(params):
-  spec.id==='forge.projection.plan'?planProjection(params):planReconnect(params);
+  spec.id==='forge.projection.plan'?planProjection(params):
+  spec.id==='forge.projection.reconnect'?planReconnect(params):
+  spec.id==='forge.access.lease.plan'?planLeases(params):assessRevocation(params);
 }

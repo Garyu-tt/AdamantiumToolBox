@@ -17,5 +17,7 @@ export const actionNodes=[
  {id:'forge.reactive.plan',title:'Plan external reactive UI revision commit',permission:'forge.validate'},
  {id:'forge.reactive.assess',title:'Assess external UI/cursor acknowledgement',permission:'forge.validate'},
  {id:'forge.projection.plan',title:'Prepare scoped UI projection',permission:'forge.validate'},
- {id:'forge.projection.reconnect',title:'Prepare fail-closed session resync',permission:'forge.validate'}
+ {id:'forge.projection.reconnect',title:'Prepare fail-closed session resync',permission:'forge.validate'},
+ {id:'forge.access.lease.plan',title:'Plan lease expiry and UI invalidation',permission:'forge.validate'},
+ {id:'forge.access.revocation.assess',title:'Assess scoped runtime and UI revocation receipts',permission:'forge.validate'}
 ];

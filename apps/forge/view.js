@@ -1,11 +1,12 @@
 import {makeReactiveSamples} from './view-r07-samples.js';
 import {makeProjectionSamples} from './view-r08-samples.js';
+import {makeAccessSamples} from './view-r09-samples.js';
 // Pure contract inspector; no backend state.
 export async function mount(host,api){
  const add=(tag,text,parent=host)=>{const el=document.createElement(tag);
   if(text!==undefined)el.textContent=text;parent.append(el);return el;};
  add('h2','Mechanicus Forge · Adapter API');
- add('p','Только контракты и планы. Граф, память, выполнение и публикация принадлежат внешним провайдерам.');
+ add('p','Контракты и планы, без графа, памяти, исполнения и публикации.');
  const status=add('p',''),choices=add('select'),area=add('textarea');
  area.rows=13;area.style.width='100%';
  const functionNode={schema:'forge.function.v1',id:'mechanicus.example.inspect',version:'0.1.0',
@@ -64,7 +65,8 @@ export async function mount(host,api){
       action_id:'publication.transaction.commit',contract_version:'1.0.0'}};
    }
   }catch{/* Optional peer unavailable. */}
-  Object.assign(samples,await makeReactiveSamples(api,functionNode),makeProjectionSamples(functionNode));
+  Object.assign(samples,await makeReactiveSamples(api,functionNode),
+   makeProjectionSamples(functionNode),makeAccessSamples(functionNode));
   samples['forge.distribution.recover']={schema:'forge.distribution.recovery.request.v1',
    operation_id:'demo-operation-0001',request_id:'demo-distribution-request-0001',
    graph_revision:'demo-graph-revision',policy_revision:'demo-policy-revision',mode:'publish',

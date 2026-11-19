@@ -90,3 +90,10 @@ Implemented contract-only `forge.projection.plan` and
 `forge.projection.reconnect`; security epoch rotation, missing grants, explicit
 revocations and stream gaps fail closed. Actual identity checks, scoped UI
 commits and cursor persistence remain external responsibilities.
+
+## R09 — time-bound permissions and revocation gates
+
+Implemented pure `forge.access.lease.plan` and `forge.access.revocation.assess`.
+Runtime denial, trusted clock, policy CAS, UI invalidation, reverse-index
+coverage, immutable audit, cursor commitment and independent readbacks stay
+with external authorized providers. Forge does not claim those providers exist.
