@@ -102,3 +102,11 @@ maximize/restore/minimize, edge and corner snap, live snap preview and
 configurable layouts for up to eight windows. Use the "Окна" toolbar menu
 for grid, asymmetric primary-pane layouts and split-size adjustment.
 See docs/WINDOW-MANAGEMENT.md. Test with node tests/window_ui.test.mjs.
+
+
+## Adamantez source boundary
+
+Public code lives here; private implementation in separately controlled repositories.
+Neither holds production secrets. Optional providers require MAS authorization.
+See [source boundary](docs/ADAMANTEZ-SOURCE-BOUNDARY-R01.md) and
+`standards/repository-sources/registry.example.json` (metadata only).

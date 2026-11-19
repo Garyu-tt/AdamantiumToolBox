@@ -1,0 +1,24 @@
+{
+  "schema": "mechanicus-source-registry/1",
+  "sources": [
+    {
+      "id": "adamantium.toolbox",
+      "exposure": "public",
+      "source": {
+        "kind": "git",
+        "repository": "Garyu-tt/AdamantiumToolBox",
+        "ref": "main"
+      },
+      "installation": "manual"
+    },
+    {
+      "id": "adamantez.gateway",
+      "exposure": "private",
+      "source": {
+        "kind": "capability",
+        "action": "source.resolve"
+      },
+      "installation": "manual"
+    }
+  ]
+}
