@@ -9,6 +9,7 @@
     "schema",
     "id",
     "schemaVersion",
+    "revision",
     "domain",
     "interfacePorts",
     "nodes",
@@ -41,6 +42,10 @@
       "type": "array",
       "items": {"$ref":"#/$defs/edge"},
       "maxItems": 200000
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
     }
   },
   "$defs": {
@@ -68,9 +73,9 @@
     "node": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id","kind","typeRef","graphRef","ports"],
-      "properties": {"id":{"$ref":"#/$defs/name"},"kind":{"enum":["capability","composite","service","device","sensor","effector","brain-region","resource","view","policy"]},"typeRef":{"type":"string","maxLength":256},"graphRef":{"type":"string","maxLength":128},"ports":{"type":"array","items":{"$ref":"#/$defs/port"},"maxItems":4096}},
-      "allOf": [{"if":{"properties":{"kind":{"const":"composite"}}},"then":{"properties":{"typeRef":{"const":""},"graphRef":{"$ref":"#/$defs/name"}}},"else":{"properties":{"typeRef":{"$ref":"#/$defs/contract"},"graphRef":{"const":""}}}}]
+      "required": ["id","kind","typeRef","graphRef","ports","graphRefRevision"],
+      "properties": {"id":{"$ref":"#/$defs/name"},"kind":{"enum":["capability","composite","service","device","sensor","effector","brain-region","resource","view","policy"]},"typeRef":{"type":"string","maxLength":256},"graphRef":{"type":"string","maxLength":128},"ports":{"type":"array","items":{"$ref":"#/$defs/port"},"maxItems":4096},"graphRefRevision":{"type":"integer","minimum":0}},
+      "allOf": [{"if":{"properties":{"kind":{"const":"composite"}}},"then":{"properties":{"typeRef":{"const":""},"graphRef":{"$ref":"#/$defs/name"},"graphRefRevision":{"type":"integer","minimum":1}}},"else":{"properties":{"typeRef":{"$ref":"#/$defs/contract"},"graphRef":{"const":""},"graphRefRevision":{"const":0}}}}]
     },
     "edge": {
       "type": "object",
