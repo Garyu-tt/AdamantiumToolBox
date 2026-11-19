@@ -2,7 +2,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {readFile,appendFile,open,mkdir,rmdir,stat} from 'node:fs/promises';
 import {dirname} from 'node:path';
-import {digest,validateSnapshot,publicKey} from './contract.mjs';
+import {digest,validateSnapshot,publicKey,checkTransition} from './contract.mjs';
 const exec=promisify(execFile);
 
 export function createBackend({
@@ -40,6 +40,8 @@ export function createBackend({
    const id=digest(plan);
    const entries=log.split(/\r?\n/).filter(Boolean).map(x=>JSON.parse(x));
    if(entries.some(x=>x.id===id))throw Error('operation_replayed');
+   // Recheck under the single-writer lock; never trust a stale preflight.
+   checkTransition(plan,await state(plan.interface));
    const fh=await open(journal,'a',0o600);
    try{
     const meta=await fh.stat();
