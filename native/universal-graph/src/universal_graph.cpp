@@ -55,11 +55,32 @@ class Compiler {
   Compiler(const Catalog& src, const Limits& lim)
       : catalog_(src), limits_(lim) {}
   CompileResult run(const std::string& root) {
-    visit(root, 1);
+    if (visit(root, 1) && result_.diagnostics.empty()) {
+      // Validation is memoized per graph, but depth is a property of a PATH.
+      // Revisit shared subgraphs only when reached at a greater depth.
+      std::map<std::string, std::size_t> deepest;
+      check_path_depth(root, 1, deepest);
+    }
     result_.ok = result_.diagnostics.empty();
     return result_;
   }
  private:
+  bool check_path_depth(const std::string& id, std::size_t depth,
+                        std::map<std::string, std::size_t>& deepest) {
+    if (depth > limits_.max_depth) {
+      failure(ErrorCode::DepthLimit, id, "module_depth");
+      return false;
+    }
+    const auto prior = deepest.find(id);
+    if (prior != deepest.end() && prior->second >= depth) return true;
+    deepest[id] = depth;
+    const auto& graph = catalog_.at(id);  // Already validated by visit().
+    for (const auto& node : graph.nodes) {
+      if (node.kind == NodeKind::Composite &&
+          !check_path_depth(node.graph_ref, depth + 1, deepest)) return false;
+    }
+    return true;
+  }
   void failure(ErrorCode code, const std::string& graph,
                const std::string& subject) {
     if (result_.diagnostics.empty())
