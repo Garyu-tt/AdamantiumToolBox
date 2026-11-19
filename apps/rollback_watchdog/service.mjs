@@ -4,12 +4,13 @@ import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {inspectApproval} from './receipt.mjs';
 import {inspectJournal} from './journal.mjs';
+import {diagnoseTransaction} from './diagnose.mjs';
 const manifest=JSON.parse(await readFile(join(dirname(fileURLToPath(import.meta.url)),
  'manifest.json'),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('internal_key_missing');
 const permission=manifest.permissions[0],actions=[
- 'rollback_watchdog.receipt','rollback_watchdog.journal'];
+ 'rollback_watchdog.receipt','rollback_watchdog.journal','rollback_watchdog.diagnose'];
 const permitted=()=>new Set((process.env.ADA_CAPS||'').split(',')).has(permission);
 const graph=()=>({app:manifest.id,version:1,nodes:permitted()?
  [{id:manifest.id+'.view',type:'view',title:manifest.name,
@@ -38,6 +39,8 @@ http.createServer((req,res)=>{
       trustedPublicKey:process.env.ADA_ROLLBACK_TRUST_SPKI||''})});
     if(body.action===actions[1])return reply(res,200,
      {result:inspectJournal(params)});
+    if(body.action===actions[2])return reply(res,200,{result:diagnoseTransaction(
+     params,{trustedPublicKey:process.env.ADA_ROLLBACK_TRUST_SPKI||''})});
     return reply(res,404,{error:'unknown_action'});
    }catch(e){return reply(res,400,{error:String(e.message).slice(0,96)});}
   });return;
