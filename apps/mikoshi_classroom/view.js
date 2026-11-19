@@ -62,7 +62,8 @@ export async function mount(host,api){
    sync:provider('av-alignment','align'),
    memory,grounding:provider('audiovisual-association','associate'),
    policy:provider('source-policy','status'),
-   tracking:provider('visual-tracking','track')
+   tracking:provider('visual-tracking','track'),
+   reconciliation:provider('source-reconciliation','assess')
   },actions());
   hypothesesPanel(controls,api,{hypothesis:provider('hypothesis-search','generate'),
    world:provider('world-prediction','estimate'),articulation,motor},actions());
