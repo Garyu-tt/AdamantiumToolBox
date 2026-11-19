@@ -29,11 +29,15 @@ export function verifyRemoteState(state,trust){
    l.attestation.witnessSeq!==state.witnessSeq||l.attestation.witnessHead!==state.witnessHead)throw Error('invalid_anchor_proof');}
  return state;
 }
-export function verifyCommit(result,trust,last,previous){
+export function verifyCommit(result,trust,last,previous,batch){
  if(result?.enforcement!==false||!result.attestation||!verifyAttestation(result.attestation,result.signature,trust)||
  result.revision!==result.attestation.anchorHead||result.attestation.anchorSeq!==previous.count+1||
  result.attestation.witnessSeq!==last.receipt.anchorSeq||result.attestation.witnessHead!==last.witnessRevision||
- result.attestation.witnessId!==trust.witness.id||result.attestation.anchorId!==trust.anchor.id)throw Error('untrusted_anchor_commit');
+ result.attestation.witnessId!==trust.witness.id||result.attestation.anchorId!==trust.anchor.id||
+ !Array.isArray(batch)||batch.length<1||batch.length>16||
+ batch.at(-1)?.witnessRevision!==last.witnessRevision||
+ result.revision!==sha(JSON.stringify({seq:previous.count+1,previous:previous.revision,
+  batch,at:result.attestation.at})))throw Error('untrusted_anchor_commit');
  return {schema:'network-anchor-transport-proof-v1',revision:result.revision,
   witnessSeq:result.attestation.witnessSeq,witnessHead:result.attestation.witnessHead,
   attestation:result.attestation,signature:result.signature};
