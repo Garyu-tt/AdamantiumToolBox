@@ -46,3 +46,8 @@ endif()
 add_executable(mas_native_dispatch_test tests/native_dispatch_test.cpp)
 target_link_libraries(mas_native_dispatch_test PRIVATE mas_native_dispatch)
 add_test(NAME native_dispatch_guarded_invoke COMMAND mas_native_dispatch_test)
+
+# Regression: policy-only revocation while read-only handler is in flight.
+add_executable(mas_native_policy_postcheck_test tests/native_policy_postcheck_test.cpp)
+target_link_libraries(mas_native_policy_postcheck_test PRIVATE mas_native_dispatch Threads::Threads)
+add_test(NAME native_policy_posthandler_revocation COMMAND mas_native_policy_postcheck_test)
