@@ -28,7 +28,9 @@ async function launch([id,caps]){
  const p=await port(),base='http://127.0.0.1:'+p;
  const entry=fileURLToPath(new URL('../apps/'+id+'/service.mjs',import.meta.url));
  const child=spawn(process.execPath,[entry],{stdio:'ignore',env:{
-  ...process.env,...env,ADA_INTERNAL_KEY:key,ADA_CAPS:caps,APP_PORT:String(p)}});
+  ...process.env,...env,ADA_INTERNAL_KEY:key,ADA_CAPS:caps,APP_PORT:String(p),
+  MIKOSHI_SOURCE_SIGNING_KEY:id==='mikoshi_sourcepolicy'?
+   env.MIKOSHI_SOURCE_SIGNING_KEY:''}});
  children.push(child);let ok=false;
  for(let t=0;t<90;t++){
   await new Promise(resolve=>setTimeout(resolve,35));
