@@ -4,11 +4,13 @@ on:
     paths:
       - 'apps/universal_graph/**'
       - 'tests/universal_graph_ir.test.mjs'
+      - 'tests/universal_graph_ir_native_test.cpp'
       - '.github/workflows/universal-graph-ir.yml'
   pull_request:
     paths:
       - 'apps/universal_graph/**'
       - 'tests/universal_graph_ir.test.mjs'
+      - 'tests/universal_graph_ir_native_test.cpp'
       - '.github/workflows/universal-graph-ir.yml'
 permissions:
   contents: read
@@ -29,3 +31,6 @@ jobs:
       - run: node --check apps/universal_graph/ir.mjs
       - run: node --check apps/universal_graph/composition.mjs
       - run: node --test tests/universal_graph_ir.test.mjs
+      - run: cmake -S apps/universal_graph/native -B build-ugraph -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build-ugraph --config Release --parallel 2
+      - run: ctest --test-dir build-ugraph -C Release --output-on-failure
