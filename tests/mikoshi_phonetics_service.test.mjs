@@ -5,18 +5,19 @@ import {mkdtemp,readFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
 import {validateGraph} from '../core/contract.mjs';
 import {synth} from '../apps/mikoshi_phonetics/synth.mjs';
 import {readFile as file} from 'node:fs/promises';
 const manifest=JSON.parse(await file(new URL('../apps/mikoshi_phonetics/manifest.json',import.meta.url)));
 const choose=()=>new Promise((ok,bad)=>{
  const s=createServer().once('error',bad);
- s.listen(0,'127.0.0.1',()=>s.close(()=>ok(s.address()?.port)));
+ s.listen(0,'127.0.0.1',()=>{const port=s.address().port;s.close(()=>ok(port));});
 });
 const port=await choose(),key=randomBytes(32).toString('hex');
 const dir=await mkdtemp(join(tmpdir(),'mikoshi-phonetics-test-'));
 const path=join(dir,'state.json'),base='http://127.0.0.1:'+port;
-const worker=spawn(process.execPath,[new URL('../apps/mikoshi_phonetics/service.mjs',import.meta.url).pathname],{
+const worker=spawn(process.execPath,[fileURLToPath(new URL('../apps/mikoshi_phonetics/service.mjs',import.meta.url))],{
  env:{...process.env,APP_PORT:String(port),ADA_INTERNAL_KEY:key,
   ADA_CAPS:'phonetics.inspect,phonetics.render,phonetics.learn',
   MIKOSHI_PHONETICS_STATE:path},stdio:'ignore'});
