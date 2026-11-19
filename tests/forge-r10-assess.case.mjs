@@ -1,0 +1,32 @@
+import {strict as assert} from 'node:assert';
+import {assessRemediation} from '../apps/forge/remediation.mjs';
+import {assessmentRequest} from './forge-r10-fixtures.mjs';
+export function testAssess(){
+ const run=()=>structuredClone(assessmentRequest);
+ let p=run(),r=assessRemediation(p);
+ assert.equal(r.ok,true);assert.equal(r.evidence_consistent,true,JSON.stringify(r.issues));
+ assert.equal(r.cleared,false);assert.equal(r.verified,false);
+ assert.equal(r.attempted,false);assert.equal(r.authoritative,false);
+ p=run();p.evidence.verification.passed_checks.pop();
+ assert.equal(assessRemediation(p).evidence_consistent,false,'all tests must pass');
+ p=run();p.evidence.graph.restored_refs=[];
+ assert.equal(assessRemediation(p).evidence_consistent,false,'reverse scope required');
+ p=run();p.evidence.incident.state='blocked';
+ assert.equal(assessRemediation(p).evidence_consistent,false,'incident not resolved');
+ p=run();p.evidence.audit.incident_revision='stale';
+ assert.equal(assessRemediation(p).evidence_consistent,false,'old evidence rejected');
+ p=run();p.evidence.attempt.idempotency_key='another';
+ assert.equal(assessRemediation(p).evidence_consistent,false,'wrong attempt rejected');
+ p=run();p.evidence.attempt.attempt_ref='wrong-attempt';
+ assert.equal(assessRemediation(p).evidence_consistent,false,'wrong scope rejected');
+ p=run();p.evidence.verification.verifier_ref='demo.executor';
+ assert.equal(assessRemediation(p).evidence_consistent,false,'self-verification rejected');
+ p=run();delete p.evidence.audit.record_ref;
+ assert.equal(assessRemediation(p).evidence_consistent,false,'missing audit ref');
+ p=run();p.evidence.policy={state:'granted'};
+ assert.equal(assessRemediation(p).evidence_consistent,true,'irrelevant receipt ignored');
+ p=run();p.acceptance_checks=['check.graph-consistent','check.graph-consistent'];
+ assert.equal(assessRemediation(p).ok,false,'duplicate acceptance rejected');
+ p=run();p.affected_refs=[];
+ assert.equal(assessRemediation(p).ok,false,'missing affected graph rejected');
+}

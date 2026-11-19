@@ -97,3 +97,10 @@ Implemented pure `forge.access.lease.plan` and `forge.access.revocation.assess`.
 Runtime denial, trusted clock, policy CAS, UI invalidation, reverse-index
 coverage, immutable audit, cursor commitment and independent readbacks stay
 with external authorized providers. Forge does not claim those providers exist.
+
+## R10 — explained blocker remediation
+
+Pure `forge.remediation.plan` and `forge.remediation.assess` were added.
+Reversible idempotent attempts and independent checks remain external; unsafe
+or permissioned cases return explicit escalation and diagnostic actions.
+All returned plans are non-executable and no blocker is cleared inside Forge.
