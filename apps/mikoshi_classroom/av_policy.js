@@ -11,6 +11,21 @@ export async function digestLesson(lesson){
  const result=await crypto.subtle.digest('SHA-256',bytes);
  return [...new Uint8Array(result)].map(v=>v.toString(16).padStart(2,'0')).join('');
 }
+async function hashFields(value){
+ if(!globalThis.crypto?.subtle)throw Error('source_digest_unavailable');
+ const data=new TextEncoder().encode(JSON.stringify(value));
+ const bytes=await crypto.subtle.digest('SHA-256',data);
+ return [...new Uint8Array(bytes)].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+export async function pairBindings(lesson){
+ if(!Array.isArray(lesson)||lesson.length<1||lesson.length>12)
+  throw Error('invalid_source_pairs');
+ return Promise.all(lesson.map(async item=>({
+  audioHash:await hashFields({samples:item.audio?.samples,sampleRate:12000}),
+  visualHash:await hashFields({visualVector:item.visual?.vector,
+   visualAtMs:item.pair?.visualAtMs,soundAtMs:item.pair?.soundAtMs})
+ })));
+}
 export async function permitLesson(api,actions,lesson,durationMs){
  if(typeof actions?.authorize!=='string'||typeof actions?.verify!=='string')
   throw Error('source_policy_missing');
@@ -20,7 +35,8 @@ export async function permitLesson(api,actions,lesson,durationMs){
  const claim={sourceKind:'user-live-av',captureMethod:'explicit-gesture',
   purpose:PURPOSE,captureConsent:true,subjectsConsentConfirmed:true,
   noThirdPartyMedia:true,rawRetention:false,
-  sessionDurationMs:durationMs,pairs:lesson.length,digest};
+  sessionDurationMs:durationMs,pairs:lesson.length,digest,
+  pairBindings:await pairBindings(lesson)};
  const issued=await api.call(actions.authorize,{claim});
  if(!issued?.token)throw Error('source_policy_denied');
  const permit={digest,token:issued.token,pairs:lesson.length};
@@ -32,7 +48,8 @@ export async function verifyLesson(api,actions,lesson,permit){
  if(actual!==permit?.digest)throw Error('lesson_changed_since_approval');
  const result=await api.call(actions.verify,{token:permit.token,
   digest:actual,purpose:PURPOSE});
- if(!result?.allowed||result.pairs!==lesson.length)
+ if(!result?.allowed||result.pairs!==lesson.length||
+  result.permitVersion!==2)
   throw Error('source_policy_denied');
  return result;
 }
