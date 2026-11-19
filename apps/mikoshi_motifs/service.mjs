@@ -43,7 +43,7 @@ async function invoke(body){
  if(!can(r))throw Error('capability_denied');
  if(body.action===ids.status){const state=await load();return {...catalog(state),configured:configured(),secureSourceWrites:secure,sourceReceipts:(state.sourceWrites||[]).length};}
  if(body.action===ids.receipt&&secure){
-  const proof=checkTicket(sourceKey,body.params,Date.now());
+  const proof=checkTicket(sourceKey,body.params,Date.now(),true);
   const result=replay(await load(),proof);
   return {applied:result!==null,result};
  }
