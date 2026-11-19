@@ -34,3 +34,15 @@ round-trip, large-graph virtualization and independent security review land.
 
 It remains a separately installable MAS UI component. The native graph IR
 continues to compile with pure C++17 when this whole directory is absent.
+
+## Local Universal Graph JSON preview (G2b)
+
+Use the **Local G0 JSON** file chooser in the toolbar. Import the JSON output of
+`apps/universal_graph_genesis/convert.mjs` from the independent G3 bridge
+(PR #144), or any document in the **canonical G0** Universal Graph IR schema.
+Files are read entirely inside the browser; no upload, remote graph write or
+capability invocation occurs. A strict schema check precedes rendering,
+and a maximum 8 MiB file size is enforced before and after reading.
+Malformed files are rejected without destroying the currently displayed graph.
+Large graph virtualization and structural C++ compiler validation remain
+separate release gates: schema validity alone is not runtime authorization.
