@@ -1,4 +1,6 @@
 import {AtomicStore} from './atomic_store.mjs';
+import {open as openFile,mkdir,unlink} from 'node:fs/promises';
+import {dirname} from 'node:path';
 import {QUEUE_SCHEMA,encoded,keyOf,validateState} from './event_codec.mjs';
 export class DurableQueue{
  #entries=[];#cursors=new Map();#acked=[];#tail=Promise.resolve();
@@ -17,7 +19,29 @@ export class DurableQueue{
   return this;
  }
  #run(fn){
-  const task=this.#tail.then(fn);this.#tail=task.then(()=>{},()=>{});
+  const task=this.#tail.then(async()=>{
+   const lock=this.store.path+'.writer.lock';
+   await mkdir(dirname(lock),{recursive:true});
+   let handle;
+   try{handle=await openFile(lock,'wx',0o600);}
+   catch(e){if(e.code==='EEXIST')throw Error('journal_writer_locked');throw e;}
+   try{
+    // Never mutate from an instance-local snapshot after another writer committed.
+    const state=await this.store.load();
+    if(state){
+     validateState(state,this.config);
+     this.#entries=state.entries;this.#cursors=new Map(state.cursors);this.#acked=state.acked;
+    }else{
+     this.#entries=[];this.#cursors=new Map();this.#acked=[];
+    }
+    return await fn();
+   }finally{
+    await handle.close();
+    // A crashed writer leaves the lock in place: fail closed, no auto-steal.
+    await unlink(lock);
+   }
+  });
+  this.#tail=task.then(()=>{},()=>{});
   return task;
  }
  async #commit(entries,cursors,acked){
