@@ -1,0 +1,24 @@
+{
+  "schema": "mas.composite.v1",
+  "id": "genperception",
+  "version": "0.1.0",
+  "exports": [
+    "genesis.perception.accept.v1"
+  ],
+  "requires": [
+    {
+      "slot": "normalize",
+      "contract": "genesis.sensory.normalize.v1"
+    },
+    {
+      "slot": "integrate",
+      "contract": "genesis.sensory.integrate.v1"
+    }
+  ],
+  "optional": [
+    {
+      "slot": "salience",
+      "contract": "genesis.sensory.salience.v1"
+    }
+  ]
+}

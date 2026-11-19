@@ -1,0 +1,40 @@
+{
+  "schema": "mas.composite.v1",
+  "id": "genesis",
+  "version": "0.1.0",
+  "exports": [
+    "dante.genesis.apply.v1"
+  ],
+  "requires": [
+    {
+      "slot": "perception",
+      "contract": "genesis.perception.accept.v1"
+    },
+    {
+      "slot": "worldmodel",
+      "contract": "genesis.worldmodel.update.v1"
+    },
+    {
+      "slot": "decision",
+      "contract": "genesis.policy.decide.v1"
+    },
+    {
+      "slot": "selfstate",
+      "contract": "genesis.selfstate.snapshot.v1"
+    }
+  ],
+  "optional": [
+    {
+      "slot": "attention",
+      "contract": "genesis.attention.focus.v1"
+    },
+    {
+      "slot": "plasticity",
+      "contract": "genesis.plasticity.update.v1"
+    },
+    {
+      "slot": "language",
+      "contract": "genesis.language.interact.v1"
+    }
+  ]
+}
