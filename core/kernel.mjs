@@ -9,6 +9,8 @@ import {createGraphEvents} from './graph_events.mjs';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {localProviders} from './capabilities/discovery.mjs';
+import {capabilityApi,capabilityInvoke} from './capabilities/http.mjs';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const token=process.env.ADA_TOKEN||'',secret=process.env.ADA_INTERNAL_KEY||'';
 const caps=new Set((process.env.ADA_CAPS||'').split(','));
@@ -22,13 +24,13 @@ async function upstream(url,body,timeout=1200){
  return r.json();
 }
 async function graph(){
- const nodes=[],edges=[],routes=new Map(),seen=new Set(),connections=[];
+ const nodes=[],edges=[],routes=new Map(),seen=new Set(),connections=[],providerSpecs=[];
  for(const app of await catalog(root)){
   if(!/^[a-z0-9_-]+$/.test(app.id)||!Number.isInteger(app.service.port))continue;
   const host='http://127.0.0.1:'+app.service.port;
   let spec;try{spec=await upstream(host+'/graph');}catch{continue;}
   if(!validateGraph(spec,app))continue;
-  const local=[];
+  const local=[],eligible=[];
   for(const node of spec.nodes){
    if(typeof node.id!=='string'||!node.id.startsWith(app.id+'.')||seen.has(node.id))continue;
    if(!['view','action','resource','event'].includes(node.type))continue;
@@ -39,12 +41,14 @@ async function graph(){
     if(app.source==='plugin'&&app.assets?.includes('icon.svg'))item.iconUrl='/apps/'+app.id+'/'+app.hash+'/icon.svg';
     if(app.source==='plugin'&&app.assets?.includes('icon.ico'))item.iconFile=resolve(app.directory,'icon.ico');
    }
-   if(node.type==='action')routes.set(node.id,{url:host+'/invoke',
-    timeout:app.service.invokeTimeoutMs||1200});
+   if(node.type==='action'){
+    routes.set(node.id,{url:host+'/invoke',timeout:app.service.invokeTimeoutMs||1200});
+    eligible.push(node);
+   }
    seen.add(node.id);local.push(item);
   }
   if(Array.isArray(app.connections))connections.push(...app.connections.map(c=>({...c,owner:app.id})));
-  nodes.push(...local);
+  nodes.push(...local);providerSpecs.push({app:{...app,invokeUrl:host+'/invoke'},nodes:eligible});
   const ids=new Set(local.map(n=>n.id));
   edges.push(...(spec.edges||[]).filter(e=>ids.has(e.from)&&ids.has(e.to)));
  }
@@ -54,7 +58,8 @@ async function graph(){
   if(!['related','opens','depends','consumes'].includes(c.type))continue;
   edges.push({from:c.from,to:c.to,type:c.type});
  }
- return {doc:{version:1,nodes,edges},routes};
+ return {doc:{version:1,nodes,edges},routes,
+  providers:localProviders(providerSpecs,upstream)};
 }
 const graphEvents=createGraphEvents(async()=>(await graph()).doc,
  process.env.ADA_GRAPH_EVENT_POLL_MS);
@@ -89,11 +94,13 @@ http.createServer(async(req,res)=>{
   if(!authorized(req))return reply(res,401,{error:'unauthorized'});
   try{return reply(res,200,(await graph()).doc);}catch{return reply(res,503,{error:'graph_failed'});}
  }
+ if(await capabilityApi(req,res,{authorized,reply,graph}))return;
  if(req.method==='POST'&&url.pathname==='/api/invoke'){
   if(!authorized(req))return reply(res,401,{error:'unauthorized'});
   let raw='';req.on('data',d=>{raw+=d;if(raw.length>262144)req.destroy();});
   req.on('end',async()=>{try{
-   const body=JSON.parse(raw),routes=(await graph()).routes;
+   const body=JSON.parse(raw),live=await graph(),routes=live.routes;
+   if(body.capability)return reply(res,200,{result:await capabilityInvoke(live,body,caps)});
    if(!routes.has(body.action))return reply(res,403,{error:'capability_unavailable'});
    const destination=routes.get(body.action);
    reply(res,200,await upstream(destination.url,{action:body.action,params:body.params||{}},destination.timeout));

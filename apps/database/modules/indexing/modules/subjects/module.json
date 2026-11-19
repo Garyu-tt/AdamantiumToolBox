@@ -1,0 +1,26 @@
+{
+  "mas": "1.0",
+  "kind": "module",
+  "id": "subjects",
+  "version": "0.1.0",
+  "isolation": "in-process",
+  "lifecycle": "independent",
+  "entry": "impl.mjs",
+  "requires": [
+    {
+      "name": "storage.graph.store",
+      "version": "1.0"
+    }
+  ],
+  "events": [],
+  "settings": {},
+  "provides": [
+    {
+      "name": "storage.graph.subjects",
+      "permission": "database.read",
+      "action": "database.subjects",
+      "version": "1.0",
+      "operation": "read"
+    }
+  ]
+}

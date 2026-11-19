@@ -1,4 +1,6 @@
 import {createServer} from 'node:net';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {join} from 'node:path';
@@ -16,8 +18,9 @@ async function freePort(){
 }
 export async function probePlugin(directory,manifest,timeout=5000){
  const port=await freePort(),secret=randomBytes(32).toString('hex');
+ const probeDataDir=await mkdtemp(join(tmpdir(),'mas-probe-'));
  const env={...process.env,APP_PORT:String(port),ADA_INTERNAL_KEY:secret,
-  ADA_CAPS:manifest.permissions.join(',')};
+  ADA_CAPS:manifest.permissions.join(','),ADA_PROBE_MODE:'1',ADA_PROBE_DATA_DIR:probeDataDir};
  const proc=spawn(process.execPath,[join(directory,'service.mjs')],{
   cwd:directory,env,windowsHide:true,stdio:'ignore'});
  const base='http://'+(host.includes(':')?'['+host+']':host)+':'+port;
@@ -42,6 +45,7 @@ export async function probePlugin(directory,manifest,timeout=5000){
    proc.kill();await Promise.race([closed,pause(1000)]);
    if(proc.exitCode===null){proc.kill('SIGKILL');await Promise.race([closed,pause(1000)]);}
   }
+  await rm(probeDataDir,{recursive:true,force:true,maxRetries:5,retryDelay:100});
  }
  if(!verified)throw Error('probe_failed:'+error);
  return {health:'ok',graph:'valid'};

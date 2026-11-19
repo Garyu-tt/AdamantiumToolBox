@@ -1,0 +1,46 @@
+{
+  "mas": "1.0",
+  "kind": "module",
+  "id": "journal",
+  "version": "0.1.0",
+  "isolation": "in-process",
+  "lifecycle": "independent",
+  "entry": "impl.mjs",
+  "requires": [],
+  "events": [],
+  "settings": {},
+  "provides": [
+    {
+      "name": "storage.graph.read",
+      "permission": "database.read",
+      "action": "database.query",
+      "version": "1.0",
+      "operation": "read"
+    },
+    {
+      "name": "storage.graph.write",
+      "permission": "database.write",
+      "action": "database.transact",
+      "version": "1.0",
+      "operation": "write"
+    },
+    {
+      "name": "storage.graph.history",
+      "permission": "database.read",
+      "action": "database.history",
+      "version": "1.0",
+      "operation": "read"
+    },
+    {
+      "name": "storage.graph.status",
+      "permission": "database.read",
+      "action": "database.status",
+      "version": "1.0",
+      "operation": "read"
+    },
+    {
+      "name": "storage.graph.store",
+      "version": "1.0"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+ "mas":"1.0","kind":"module","id":"temporal","version":"0.3.0",
+ "lifecycle":"independent","isolation":"in-process","entry":"impl.mjs",
+ "requires":[],"provides":[{"name":"memory.temporal.validator","version":"1.0"}],
+ "events":[],"settings":{}
+}
