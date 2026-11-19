@@ -83,3 +83,10 @@ See [Forge release milestones R02–R06](FORGE-MILESTONES.md).
 Implemented pure `forge.reactive.plan` and `forge.reactive.assess` contracts.
 Host-authorized actual UI diff CAS, durable event cursor, runtime policy
 check and signed readback remain separate independent MAS plugins.
+
+## R08 — personalized UI / disconnected clients
+
+Implemented contract-only `forge.projection.plan` and
+`forge.projection.reconnect`; security epoch rotation, missing grants, explicit
+revocations and stream gaps fail closed. Actual identity checks, scoped UI
+commits and cursor persistence remain external responsibilities.

@@ -1,37 +1,13 @@
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
-import {validateFunction,prepareInvocation} from './contract.mjs';
-import {composeFunction,planPublication,prepareReconciliation,validateIncident} from './pipeline.mjs';
-import {negotiateProviders} from './negotiation.mjs';
-import {projectEvents} from './events.mjs';
-import {prepareIntegration,assessVisibility} from './integration.mjs';
-import {planComposite,planCompositeImpact} from './composite.mjs';
-import {planDistribution,recoverDistribution} from './distribution.mjs';
-import {planReactive,assessReactive} from './reactive.mjs';
+import {actionNodes} from './service-actions.mjs';
+import {dispatch} from './service-dispatch.mjs';
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 const protocol=JSON.parse(await readFile(new URL('./protocol.json',import.meta.url),'utf8'));
+protocol.provider_ports=JSON.parse(await readFile(new URL('./protocol-ports.json',import.meta.url),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('internal_key_missing');
 const grants=new Set((process.env.ADA_CAPS||'').split(','));
-const actionNodes=[
- {id:'forge.describe',title:'Describe Forge adapter',permission:'forge.read'},
- {id:'forge.validate',title:'Validate atomic function',permission:'forge.validate'},
- {id:'forge.prepare',title:'Prepare capability request',permission:'forge.validate'},
- {id:'forge.compose',title:'Compose graph/UI intents',permission:'forge.validate'},
- {id:'forge.publication.plan',title:'Plan verified publication',permission:'forge.validate'},
- {id:'forge.reconcile.prepare',title:'Prepare invalidation/revisit',permission:'forge.validate'},
- {id:'forge.incident.validate',title:'Validate explained blocker',permission:'forge.validate'},
- {id:'forge.providers.negotiate',title:'Negotiate external capability offers',permission:'forge.validate'},
- {id:'forge.events.project',title:'Project external revision events',permission:'forge.validate'},
- {id:'forge.integration.prepare',title:'Prepare authorized host dispatch intents',permission:'forge.validate'},
- {id:'forge.visibility.assess',title:'Cross-check external publication/UI receipts',permission:'forge.validate'},
- {id:'forge.composite.plan',title:'Compose recursive function/UI graph intents',permission:'forge.validate'},
- {id:'forge.composite.impact',title:'Plan reverse impact/revisit of composite nodes',permission:'forge.validate'},
- {id:'forge.distribution.plan',title:'Plan explicit distributed function placement',permission:'forge.validate'},
- {id:'forge.distribution.recover',title:'Assess ambiguous distributed publication and recovery',permission:'forge.validate'},
- {id:'forge.reactive.plan',title:'Plan external reactive UI revision commit',permission:'forge.validate'},
- {id:'forge.reactive.assess',title:'Assess external UI/cursor acknowledgement',permission:'forge.validate'}
-];
 const graph={app:manifest.id,version:1,nodes:[
  {id:'forge.view',type:'view',title:'Forge Contracts',icon:manifest.icon,requires:['forge.read']},
  {id:'forge.protocol',type:'resource',requires:['forge.read'],schema:protocol.schema},
@@ -44,22 +20,7 @@ function invoke(body){
  const spec=actionNodes.find(a=>a.id===body?.action);
  if(!spec)return {status:404,payload:{error:'unknown_action'}};
  if(!grants.has(spec.permission))return {status:403,payload:{error:'capability_denied'}};
- const result=spec.id==='forge.describe'?protocol:
-  spec.id==='forge.validate'?validateFunction(body.params?.function):
-  spec.id==='forge.prepare'?prepareInvocation(body.params):
-  spec.id==='forge.compose'?composeFunction(body.params):
-  spec.id==='forge.publication.plan'?planPublication(body.params):
-  spec.id==='forge.reconcile.prepare'?prepareReconciliation(body.params):
-  spec.id==='forge.incident.validate'?validateIncident(body.params):
-  spec.id==='forge.providers.negotiate'?negotiateProviders(body.params):
-  spec.id==='forge.events.project'?projectEvents(body.params):
-  spec.id==='forge.integration.prepare'?prepareIntegration(body.params):
-  spec.id==='forge.visibility.assess'?assessVisibility(body.params):
-  spec.id==='forge.composite.plan'?planComposite(body.params):
-  spec.id==='forge.composite.impact'?planCompositeImpact(body.params):
-  spec.id==='forge.distribution.plan'?planDistribution(body.params):
-  spec.id==='forge.distribution.recover'?recoverDistribution(body.params):
-  spec.id==='forge.reactive.plan'?planReactive(body.params):assessReactive(body.params);
+ const result=dispatch(spec,body.params,protocol);
  return {status:200,payload:{result}};
 }
 http.createServer((req,res)=>{

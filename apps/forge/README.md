@@ -79,3 +79,11 @@ provider runtime, transaction journal or coordinator have been added to Forge.
   asserts that UI actually updated or any capability became authorized.
 
 Details and deployment gates: `docs/FORGE-REACTIVE-R07.md`.
+
+## R08: scoped UI and reconnect
+
+`forge.projection.plan` filters host-supplied UI candidates by revision-bound
+allow/deny/revocation claims. `forge.projection.reconnect` classifies replay
+versus full resnapshot after disconnect. Both return unexecuted recipes.
+They DO NOT authenticate principals, authorize calls, mutate UI or store cursors.
+See `docs/FORGE-PROJECTION-R08.md`.

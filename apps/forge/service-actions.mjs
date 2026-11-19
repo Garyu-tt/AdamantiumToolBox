@@ -1,0 +1,21 @@
+export const actionNodes=[
+ {id:'forge.describe',title:'Describe Forge adapter',permission:'forge.read'},
+ {id:'forge.validate',title:'Validate atomic function',permission:'forge.validate'},
+ {id:'forge.prepare',title:'Prepare capability request',permission:'forge.validate'},
+ {id:'forge.compose',title:'Compose graph/UI intents',permission:'forge.validate'},
+ {id:'forge.publication.plan',title:'Plan verified publication',permission:'forge.validate'},
+ {id:'forge.reconcile.prepare',title:'Prepare invalidation/revisit',permission:'forge.validate'},
+ {id:'forge.incident.validate',title:'Validate explained blocker',permission:'forge.validate'},
+ {id:'forge.providers.negotiate',title:'Negotiate external capability offers',permission:'forge.validate'},
+ {id:'forge.events.project',title:'Project external revision events',permission:'forge.validate'},
+ {id:'forge.integration.prepare',title:'Prepare authorized host dispatch intents',permission:'forge.validate'},
+ {id:'forge.visibility.assess',title:'Cross-check external publication/UI receipts',permission:'forge.validate'},
+ {id:'forge.composite.plan',title:'Compose recursive function/UI graph intents',permission:'forge.validate'},
+ {id:'forge.composite.impact',title:'Plan reverse impact/revisit of composite nodes',permission:'forge.validate'},
+ {id:'forge.distribution.plan',title:'Plan explicit distributed function placement',permission:'forge.validate'},
+ {id:'forge.distribution.recover',title:'Assess ambiguous distributed publication and recovery',permission:'forge.validate'},
+ {id:'forge.reactive.plan',title:'Plan external reactive UI revision commit',permission:'forge.validate'},
+ {id:'forge.reactive.assess',title:'Assess external UI/cursor acknowledgement',permission:'forge.validate'},
+ {id:'forge.projection.plan',title:'Prepare scoped UI projection',permission:'forge.validate'},
+ {id:'forge.projection.reconnect',title:'Prepare fail-closed session resync',permission:'forge.validate'}
+];
