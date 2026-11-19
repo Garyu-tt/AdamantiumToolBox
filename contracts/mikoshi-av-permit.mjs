@@ -27,7 +27,7 @@ function decode(secret,token,domain=''){
  try{return JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));}
  catch{throw Error('invalid_source_permit');}
 }
-export function decodePermit(secret,token,now){
+export function decodePermit(secret,token,now,readback=false){
  if(!Number.isSafeInteger(now)||now<0)throw Error('invalid_source_clock');
  const p=decode(secret,token);
  if((p.v!==1&&p.v!==2)||p.purpose!==PURPOSE||
@@ -35,13 +35,13 @@ export function decodePermit(secret,token,now){
   !Number.isInteger(p.pairs)||p.pairs<1||p.pairs>12||
   !Number.isSafeInteger(p.issuedAt)||!Number.isSafeInteger(p.expiresAt)||
   p.expiresAt-p.issuedAt!==60000||
-  now<p.issuedAt||now>p.expiresAt||
+  now<p.issuedAt||now>p.expiresAt+(readback?86400000:0)||
   (p.v===2&&!bindingsOK(p.pairBindings,p.pairs)))
   throw Error('source_permit_expired_or_mismatched');
  return p;
 }
-export function checkTicket(secret,params,now){
- const p=decodePermit(secret,params?.sourcePermit,now);
+export function checkTicket(secret,params,now,readback=false){
+ const p=decodePermit(secret,params?.sourcePermit,now,readback);
  const index=params?.pairIndex;
  if(p.v!==2||p.digest!==params?.lessonDigest||
   !Number.isInteger(index)||index<0||index>=p.pairs)
@@ -73,12 +73,13 @@ export function verifyReceipt(secret,receipt,proof,soundId){
 }
 export function journal(state,proof,result){
  const now=Date.now(),entries=(state.sourceWrites||[]).filter(
-  x=>x.expiresAt>=now);
+  x=>(x.readbackUntil??x.expiresAt)>=now);
  if(entries.length>=256)throw Error('source_journal_full');
  state.sourceWrites=[...entries,{key:proof.key,
   lessonDigest:proof.permit.digest,pairIndex:proof.index,
   sourceKind:proof.permit.sourceKind,recordedAt:now,
-  expiresAt:proof.permit.expiresAt,result}];
+  expiresAt:proof.permit.expiresAt,
+  readbackUntil:proof.permit.expiresAt+86400000,result}];
 }
 export function replay(state,proof){
  return (state.sourceWrites||[]).find(x=>x.key===proof.key)?.result??null;
