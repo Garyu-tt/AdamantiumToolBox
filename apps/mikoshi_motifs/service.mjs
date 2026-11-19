@@ -1,4 +1,4 @@
-import {checkPair,checkTicket,signReceipt,replay,journal} from '../../contracts/mikoshi-av-permit.mjs';
+import {checkPair,checkTicket,signReceipt,replay,journal} from './permit.mjs';
 import http from 'node:http';
 import {encode} from './encoder.mjs';
 import {recognize,learn,catalog} from './cluster.mjs';
