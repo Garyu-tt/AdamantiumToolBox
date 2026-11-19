@@ -1,6 +1,6 @@
 // Signed short-lived claims, NOT independent proof of legal recording consent.
 import {createHmac,randomBytes} from 'node:crypto';
-import {bindingsOK,decodePermit} from '../../contracts/mikoshi-av-permit.mjs';
+import {bindingsOK,decodePermit} from './permit.mjs';
 const PURPOSE='audiovisual-association-training',TTL=60000;
 const DIGEST=/^[0-9a-f]{64}$/;
 const encode=x=>Buffer.from(JSON.stringify(x)).toString('base64url');
