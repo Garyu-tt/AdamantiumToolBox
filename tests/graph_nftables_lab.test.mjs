@@ -1,6 +1,7 @@
 import {strict as assert} from 'node:assert';
 import {compileLabScript} from '../apps/nftables_lab/compile.mjs';
 import {checkLab} from '../apps/nftables_lab/check.mjs';
+import {readFile,access} from 'node:fs/promises';
 const preview={schema:'nftables-intent-preview-1',applied:false,safeToApply:false,
  proposedBackend:{attachedToKernel:false},
  candidate:[{addressFamily:'ip',sourceAddress:'192.0.2.2',
@@ -28,12 +29,16 @@ assert.equal(shared.reason,'sandbox_matches_process_namespace');
 const calls=[];
 const tested=await checkLab(preview,{mockPlatform:true,namespace:'lab_a',namespaceDir:'/tmp/operator-netns-fixture',
  nftBinary:'/usr/sbin/nft',ipBinary:'/usr/sbin/ip',stat:stats,
- runner:async(command,args,stdin)=>{calls.push({command,args,stdin});
+ runner:async(command,args)=>{calls.push({command,args,
+  script:await readFile(args.at(-1),'utf8')});
   return {ok:true,code:'syntax_valid'};}});
 assert.equal(calls.length,1);
 assert.equal(calls[0].command,'/usr/sbin/ip');
-assert.deepEqual(calls[0].args,['netns','exec','lab_a','/usr/sbin/nft','--check','--file','-']);
-assert.equal(calls[0].stdin,script.script);
+assert.deepEqual(calls[0].args.slice(0,-1),
+ ['netns','exec','lab_a','/usr/sbin/nft','--check','--file']);
+assert.equal(calls[0].script,script.script);
+assert(calls[0].args.at(-1).endsWith('/rules.nft'));
+await assert.rejects(access(calls[0].args.at(-1)),{code:'ENOENT'});
 assert.equal(tested.status,'syntax_checked');
 assert.equal(tested.syntaxVerified,true);
 assert.equal(tested.canApply,false);
