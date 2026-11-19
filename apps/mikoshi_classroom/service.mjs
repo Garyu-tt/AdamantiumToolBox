@@ -14,4 +14,4 @@ http.createServer((req,res)=>{
  if(req.headers['x-internal-key']!==key)return send(res,401,{error:'unauthorized'});
  if(req.method==='GET'&&req.url==='/graph')return send(res,200,graph);
  send(res,404,{error:'not_found'});
-}).listen(Number(process.env.APP_PORT||8924),'127.0.0.1');
+}).listen(Number(process.env.APP_PORT||8950),'127.0.0.1');
