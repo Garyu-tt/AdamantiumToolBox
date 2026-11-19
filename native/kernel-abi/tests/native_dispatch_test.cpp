@@ -34,7 +34,7 @@ int main() {
     return true;
   };
   REQUIRE(dispatcher.bind("echo", "host.echo", "mas.echo.v1", echo));
-  REQUIRE(!dispatcher.bind("echo", "host.echo", echo)); // duplicate binding
+  REQUIRE(!dispatcher.bind("echo", "host.echo", "mas.echo.v1", echo)); // duplicate binding
   char output[32] = {};
   auto call = [&](std::string_view who, std::uint64_t revision,
                   std::string_view payload) {
@@ -81,7 +81,7 @@ int main() {
                           cancelled).status == InvokeStatus::HandlerFailed);
   REQUIRE(output[0] == 'S');
   NativeDispatcher overflowing(graph, [](auto, auto, auto) { return true; });
-  REQUIRE(overflowing.bind("echo", "host.echo", [](auto, char* dest,
+  REQUIRE(overflowing.bind("echo", "host.echo", "mas.echo.v1", [](auto, char* dest,
                       std::size_t size, std::size_t& written, const auto&) {
     dest[0] = 'X';
     written = size + 1;
@@ -105,7 +105,7 @@ int main() {
       throw std::runtime_error("revocation_reconcile_failed");
     return true;
   });
-  REQUIRE(races.bind("echo", "host.echo", echo));
+  REQUIRE(races.bind("echo", "host.echo", "mas.echo.v1", echo));
   const auto before = handled.load();
   REQUIRE(races.invoke("alice", "echo", 1, "x", output, sizeof(output),
                        cancelled).status == InvokeStatus::Stale);
@@ -121,7 +121,7 @@ int main() {
     return true;
   });
   current = &self_unbind;
-  REQUIRE(self_unbind.bind("echo", "host.echo", echo));
+  REQUIRE(self_unbind.bind("echo", "host.echo", "mas.echo.v1", echo));
   REQUIRE(self_unbind.invoke("bob", "echo", 2, "x", output, sizeof(output),
                              cancelled).status == InvokeStatus::Unbound);
   REQUIRE(handled == before);
