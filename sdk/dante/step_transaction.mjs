@@ -4,6 +4,7 @@ import {open, unlink} from 'node:fs/promises';
 import {saveCheckpoint, loadCheckpoint} from './checkpoint.mjs';
 import {safeStepValue} from './step_value_guard.mjs';
 export const STEP_SCHEMA = 'dante.step.v1';
+const safeResult = value => { try { return safeStepValue(value); } catch { throw Error('invalid_state'); } };
 const valid = s => s && s.schema === STEP_SCHEMA &&
   Number.isSafeInteger(s.tick) && s.tick >= 0 &&
   s.brain && typeof s.brain === 'object' && !Array.isArray(s.brain) &&
@@ -41,9 +42,9 @@ export async function commitStep(path, previous, observation, {
       throw Error('stale_step_checkpoint');
     const brain = structuredClone(cleanPrevious.brain);
     const world = structuredClone(cleanPrevious.world);
-    const updatedBrain = safeStepValue(await brainStep(brain, structuredClone(cleanObservation)));
-    const command = safeStepValue(await motorStep(structuredClone(updatedBrain), structuredClone(cleanObservation)));
-    const updatedWorld = safeStepValue(await worldStep(world, structuredClone(command)));
+    const updatedBrain = safeResult(await brainStep(brain, structuredClone(cleanObservation)));
+    const command = safeResult(await motorStep(structuredClone(updatedBrain), structuredClone(cleanObservation)));
+    const updatedWorld = safeResult(await worldStep(world, structuredClone(command)));
     const next = {schema: STEP_SCHEMA, tick: cleanPrevious.tick + 1,
       brain: updatedBrain, world: updatedWorld};
     if (!valid(next)) throw Error('invalid_step_result');
