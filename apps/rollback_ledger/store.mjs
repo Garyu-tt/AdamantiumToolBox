@@ -1,4 +1,5 @@
-import {mkdir,open,readFile,lstat} from 'node:fs/promises';
+import {mkdir,open,lstat,constants} from 'node:fs/promises';
+import {verifyStoredClaim} from './integrity.mjs';
 import {join,isAbsolute} from 'node:path';
 import {createHash} from 'node:crypto';
 import {verifyForReservation} from './proof.mjs';
@@ -9,7 +10,9 @@ export const leasePath=(root,id)=>join(root,digest(id));
 export async function checkRoot(root){
  if(!validRoot(root))return false;
  try{const st=await lstat(root);
-  return st.isDirectory()&&!st.isSymbolicLink()&&(st.mode&0o077)===0;
+  const uid=typeof process.getuid==='function'?process.getuid():null;
+  return st.isDirectory()&&!st.isSymbolicLink()&&(st.mode&0o077)===0&&
+   (uid===null||st.uid===uid);
  }catch{return false;}
 }
 async function syncDir(path){
@@ -25,20 +28,24 @@ export async function inspectLease(id,options={}){
   if(e.code==='ENOENT')return {status:'unseen',leaseId:id};
   return {status:'indeterminate',leaseId:id,reason:'directory_stat_failed'};
  }
- if(!st.isDirectory()||st.isSymbolicLink())
+ if(!st.isDirectory()||st.isSymbolicLink()||(st.mode&0o077)!==0)
   return {status:'indeterminate',leaseId:id,reason:'entry_not_private_directory'};
  try{
-  const file=await lstat(join(path,'claim.json'));
-  if(!file.isFile()||file.isSymbolicLink()||file.size>2048||
-   (file.mode&0o077)!==0)throw Error('record_invalid');
-  const claim=JSON.parse(await readFile(join(path,'claim.json'),'utf8'));
-  if(claim.schema!=='rollback-ledger-claim-1'||claim.leaseId!==id||
-   !/^[0-9a-f]{64}$/.test(claim.planDigest))throw Error('record_invalid');
+  const file=await open(join(path,'claim.json'),constants.O_RDONLY|constants.O_NOFOLLOW);
+  let claim;
+  try{
+   const stat=await file.stat();
+   const uid=typeof process.getuid==='function'?process.getuid():null;
+   if(!stat.isFile()||stat.size>2048||(stat.mode&0o077)!==0||
+    (uid!==null&&stat.uid!==uid))throw Error('record_invalid');
+   claim=JSON.parse(await file.readFile({encoding:'utf8'}));
+  }finally{await file.close();}
+  const proof=verifyStoredClaim(claim,id,options.trustedPublicKey);
   const now=options.nowSeconds??Math.floor(Date.now()/1000);
   return {status:'reserved',leaseId:id,planDigest:claim.planDigest,
    targetNode:claim.targetNode,expiresAt:claim.expiresAt,
    expired:now>=claim.expiresAt,localReplayConsumed:true,
-   globallyAttested:false,requiresReview:now>=claim.expiresAt,
+   ...proof,globallyAttested:false,requiresReview:now>=claim.expiresAt,
    readyToApply:false};
  }catch{return {status:'indeterminate',leaseId:id,
   reason:'incomplete_or_unreadable_reservation',localReplayConsumed:true,
@@ -59,7 +66,7 @@ export async function reserveLease(input,options={}){
  try{
   await syncDir(root);
   const data=JSON.stringify({schema:'rollback-ledger-claim-1',...claim,
-   reservedAt:now})+'\n';
+   signature:receipt.signature,reservedAt:now})+'\n';
   const file=await open(join(path,'claim.json'),'wx',0o600);
   try{await file.writeFile(data);await file.sync();}
   finally{await file.close();}
