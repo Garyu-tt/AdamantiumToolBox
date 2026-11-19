@@ -28,6 +28,56 @@ jobs:
           python tests/architecture.test.py
           python tools/check-size.py
           node tools/mas-check.mjs
+      - name: Mikoshi acoustic and online-prosody unit tests
+        run: |
+          node tests/mikoshi_speech.test.mjs
+          node tests/mikoshi_prosody.test.mjs
+          node tests/mikoshi_piper.test.mjs
+          node tests/mikoshi_phonetics.test.mjs
+          node tests/mikoshi_phonetics_service.test.mjs
+          node tests/mikoshi_microphone.test.mjs
+          node tests/mikoshi_motifs.test.mjs
+          node tests/mikoshi_motifs_service.test.mjs
+          node tests/mikoshi_sequences.test.mjs
+          node tests/mikoshi_sequences_service.test.mjs
+          node tests/mikoshi_hearing_sequence_integration.test.mjs
+          node tests/mikoshi_motorlinks.test.mjs
+          node tests/mikoshi_motorlinks_service.test.mjs
+          node tests/mikoshi_gestures.test.mjs
+          node tests/mikoshi_vocalstream.test.mjs
+          node tests/mikoshi_gesture_runtime.test.mjs
+          node tests/mikoshi_transition_feedback.test.mjs
+          node tests/mikoshi_transition_service.test.mjs
+          node tests/mikoshi_complete_loop.test.mjs
+          node tests/mikoshi_live_loop.test.mjs
+          node tests/mikoshi_segments.test.mjs
+          node tests/mikoshi_segments_service.test.mjs
+          node tests/mikoshi_stream_imitation.test.mjs
+          node tests/mikoshi_explorer.test.mjs
+          node tests/mikoshi_explorer_service.test.mjs
+          node tests/mikoshi_explorer_live.test.mjs
+          node tests/mikoshi_worldmodel.test.mjs
+          node tests/mikoshi_worldmodel_service.test.mjs
+          node tests/mikoshi_hypotheses.test.mjs
+          node tests/mikoshi_hypotheses_live.test.mjs
+          node tests/mikoshi_vision.test.mjs
+          node tests/mikoshi_grounding.test.mjs
+          node tests/mikoshi_av_live.test.mjs
+          node tests/mikoshi_avsync.test.mjs
+          node tests/mikoshi_avsync_live.test.mjs
+          node tests/mikoshi_av_capture.test.mjs
+          node tests/mikoshi_tracking.test.mjs
+          node tests/mikoshi_sourcepolicy.test.mjs
+          node tests/mikoshi_clockcal.test.mjs
+          node tests/mikoshi_r15_live.test.mjs
+          node tests/mikoshi_av_policy.test.mjs
+          node tests/mikoshi_av_gate_view.test.mjs
+          node tests/mikoshi_r16_secure_writes.test.mjs
+          node tests/mikoshi_permit_contract.test.mjs
+          node tests/mikoshi_r16_permit_expiry.test.mjs
+          node tests/mikoshi_reconciliation.test.mjs
+          node tests/mikoshi_reconciliation_service.test.mjs
+          node tests/mikoshi_av_recovery.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
