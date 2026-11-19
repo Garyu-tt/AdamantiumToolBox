@@ -50,8 +50,9 @@ export function normalizeSensor(input){
     !plain(event.payload)||(event.traceId!==undefined&&!name(event.traceId)))throw Error('invalid_event');
  const payload=event.payload,canonical=JSON.stringify(payload);
  if(Buffer.byteLength(canonical)>8192)throw Error('payload_too_large');
- const scalars=Object.keys(payload).filter(k=>typeof payload[k]==='number').slice(0,16);
- if(scalars.some(k=>!name(k)))throw Error('invalid_signal_name');
+ const allScalars=Object.keys(payload).filter(k=>typeof payload[k]==='number');
+ if(allScalars.some(k=>!name(k)))throw Error('invalid_signal_name');
+ const scalars=allScalars.slice(0,16);
  const signals=Object.fromEntries(scalars.map(k=>[k,payload[k]]));
  return {schema:OUTPUT_SCHEMA,source:event.source,kind:event.kind,
   sequence:event.sequence,observedAtMs:event.observedAtMs,
