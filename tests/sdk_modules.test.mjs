@@ -36,4 +36,7 @@ duplicate.modules[0].children[0].provides.push(cap('fixture.view','view'));
 assert.throws(()=>validateModules(duplicate,manifest),/invalid_capability/);
 const cycle=structuredClone(doc);cycle.modules[0].children.push(cycle.modules[0]);
 assert.throws(()=>validateModules(cycle,manifest),/invalid_tree/);
+const cycleByDependency=structuredClone(doc);
+cycleByDependency.modules[0].consumes=[{id:'fixture.ping',version:'^1.0.0',optional:false}];
+assert.throws(()=>validateModules(cycleByDependency,manifest),/dependency_cycle/);
 console.log('SDK_MODULES_OK recursion version gating optional deps isolation');
