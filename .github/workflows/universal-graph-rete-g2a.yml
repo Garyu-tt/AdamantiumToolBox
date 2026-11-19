@@ -35,6 +35,13 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Check direct and transitive license metadata
         run: npm run license
+      - name: Retain resolved lockfile for reproducible dependency review
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rete-g2a-resolved-lock
+          path: apps/universal_graph_rete/package-lock.json
+          if-no-files-found: error
       - name: Validate canonical JSON samples
         run: npm run test:contract
       - name: Static type-check
