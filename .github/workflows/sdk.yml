@@ -27,5 +27,7 @@ jobs:
         run: python tools/check-size.py
       - name: Recursive MAS contract
         run: node tests/sdk_modules.test.mjs
+      - name: Typed schema and invocation
+        run: node tests/sdk_schema.test.mjs
       - name: Isolated Core and generated App
         run: node tests/sdk_scaffold.test.mjs

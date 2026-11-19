@@ -32,9 +32,11 @@ needed at runtime. It reads `modules.json` on every graph/invoke request,
 validates the document, rejects dependency cycles and incompatible required
 local dependencies, and hides disabled modules with their descendants.
 Malformed modules fail closed; missing active action handlers invalidate the graph.
-**Limitations:** JSON Schema input/output enforcement and module-state persistence
-are separate work. This resolver does not yet implement live cross-app provider
-subscriptions, automatic migration or production-grade atomic module updates.
+**C03:** generated actions now validate input before handler execution and
+output before response using a strict JSON Schema subset; see
+`docs/TYPED-CAPABILITY.md`. Existing MAS 1.0 applications remain untouched.
+**Limitations:** there is no live cross-app provider subscription, persistent
+module-state transaction, full JSON Schema support or automatic migration.
 
 ## Existing integration / acceptance
 
