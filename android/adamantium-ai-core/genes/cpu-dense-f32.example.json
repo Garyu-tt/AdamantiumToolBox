@@ -1,0 +1,28 @@
+{
+  "schema": "adamantium-ai-core-gene-1",
+  "id": "cpu-dense-f32",
+  "version": "0.1.0",
+  "kind": "structural",
+  "immutable": {
+    "op": "ml.dense.f32",
+    "backend": "cpu-java",
+    "input": {"dtype": "f32", "rank": 1, "maxElements": 64},
+    "weights": {"dtype": "f32", "rank": 2, "layout": "output-by-input", "maxOutput": 64},
+    "bias": {"dtype": "f32", "rank": 1},
+    "activation": ["none", "relu"],
+    "maxMultiplyAdds": 4096,
+    "androidPermissionGrants": []
+  },
+  "acquiredCalibration": {
+    "status": "not_measured",
+    "device": null,
+    "latencyP50Ms": null,
+    "latencyP95Ms": null,
+    "energyMicroJ": null,
+    "accuracy": null,
+    "thermalBeforeAfter": null,
+    "benchmarkDigest": null
+  },
+  "optionalWeightGenome": null,
+  "source": "R01 test provider: not an LLM"
+}

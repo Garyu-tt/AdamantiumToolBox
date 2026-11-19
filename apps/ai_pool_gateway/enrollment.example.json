@@ -1,0 +1,9 @@
+{
+  "nodes": {
+    "<sha256-hex-of-DER-public-key>": {
+      "enabled": false,
+      "keyBase64": "<base64-DER-public-key-from-phone>",
+      "allowedOps": ["ml.dense.f32"]
+    }
+  }
+}
