@@ -1,7 +1,27 @@
 import {AtomicStore} from './atomic_store.mjs';
-import {open as openFile,mkdir,unlink} from 'node:fs/promises';
+import {open as openFile,mkdir,unlink,access} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {QUEUE_SCHEMA,encoded,keyOf,validateState} from './event_codec.mjs';
+// A durable, independent initialization witness survives deletion of the journal.
+// Written BEFORE the first journal commit; a crash in between fails closed.
+async function witnessExists(path){
+ try{await access(path+'.initialized');return true;}
+ catch(e){if(e.code==='ENOENT')return false;throw e;}
+}
+async function ensureWitness(path){
+ const witness=path+'.initialized';
+ let handle;
+ try{handle=await openFile(witness,'wx',0o600);}
+ catch(e){if(e.code==='EEXIST')return;throw e;}
+ try{
+  await handle.writeFile('dante.sensory.journal.initialized.v1\n');
+  await handle.sync();
+ }finally{await handle.close();}
+ let dir;
+ try{dir=await openFile(dirname(witness),'r');await dir.sync();}
+ catch(e){if(!['EINVAL','EISDIR','EPERM','EACCES','ENOTSUP'].includes(e.code))throw e;}
+ finally{await dir?.close();}
+}
 export class DurableQueue{
  #entries=[];#cursors=new Map();#acked=[];#tail=Promise.resolve();#observedDurable=false;
  constructor({path,capacity=64,maxSources=128,maxEventBytes=8192}={}){
@@ -13,7 +33,7 @@ export class DurableQueue{
   this.store=new AtomicStore(path,capacity*(maxEventBytes+400)+maxSources*256+8192);
  }
  async open(){
-  const s=await this.store.load();if(!s)return this;
+  const s=await this.store.load();if(!s){if(await witnessExists(this.store.path))throw Error('journal_missing_after_commit');return this;}
   validateState(s,this.config);
   this.#observedDurable=true;
   this.#entries=s.entries;this.#cursors=new Map(s.cursors);this.#acked=s.acked;
@@ -34,7 +54,7 @@ export class DurableQueue{
      this.#observedDurable=true;
      this.#entries=state.entries;this.#cursors=new Map(state.cursors);this.#acked=state.acked;
     }else{
-     if(this.#observedDurable)throw Error('journal_missing_after_commit');
+     if(this.#observedDurable||await witnessExists(this.store.path))throw Error('journal_missing_after_commit');
      this.#entries=[];this.#cursors=new Map();this.#acked=[];
     }
     return await fn();
@@ -48,6 +68,7 @@ export class DurableQueue{
   return task;
  }
  async #commit(entries,cursors,acked){
+  await ensureWitness(this.store.path);
   await this.store.save({schema:QUEUE_SCHEMA,entries,cursors:[...cursors],acked});
   this.#entries=entries;this.#cursors=cursors;this.#acked=acked;this.#observedDurable=true;
  }
@@ -71,7 +92,7 @@ export class DurableQueue{
   const task=this.#tail.then(async()=>{
    const state=await this.store.load();
    if(state)validateState(state,this.config);
-   else if(this.#observedDurable)throw Error('journal_missing_after_commit');
+   else if(this.#observedDurable||await witnessExists(this.store.path))throw Error('journal_missing_after_commit');
    if(state)this.#observedDurable=true;
    this.#entries=state?.entries??[];
    this.#cursors=new Map(state?.cursors??[]);
