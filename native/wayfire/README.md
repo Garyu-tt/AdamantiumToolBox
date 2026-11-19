@@ -15,3 +15,16 @@ Run: cmake -S native/wayfire -B build/wayfire && cmake --build build/wayfire
 
 The tests use a mock Unix socket and do NOT prove real Wayfire, Wayland
 session integration, frame pacing, screen capture, or window control.
+
+## Real compositor metrics (explicit opt-in)
+`mas_wayfire_diagnostics --socket /operator/approved/wayfire.sock --samples 60 --interval-ms 250`
+reads **only** the Wayfire IPC `wayfire/render-metrics` method from the
+owner-configured socket. stdout contains the Wayfire JSON response; stderr
+contains per-request transport latency in microseconds. This is not proof
+of application FPS; inspect `refresh-ns`, `predicted-path`, composed/direct
+scanout timers and presentation timestamps from the actual compositor.
+
+The IPC rules plugin must expose render-metrics; otherwise the compositor
+returns an error. Never infer a valid socket from a user or node identifier.
+The CLI performs no mutation and is not wired to MAS Core until an approved
+capability-bound service adapter exists.
