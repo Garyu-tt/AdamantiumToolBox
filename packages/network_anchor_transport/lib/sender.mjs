@@ -24,7 +24,7 @@ export async function deliver(cfg){const r=await candidate(cfg);
   expectedRevision:r.remote.revision});}
  catch(e){return {state:'delivery_unconfirmed',mayHaveCommitted:true,requiresReadback:true,
   automaticRetry:false,error:String(e.message).slice(0,80),enforcement:false};}
- const tip=r.batch.at(-1);verifyCommit(result,cfg.trust,tip,r.remote);
+ const tip=r.batch.at(-1);verifyCommit(result,cfg.trust,tip,r.remote,r.batch);
  const newState=verifyRemoteState({schema:'network-anchor-transport-state-v1',
   anchorId:cfg.trust.anchor.id,witnessId:cfg.trust.witness.id,
   revision:result.revision,count:result.attestation.anchorSeq,witnessSeq:result.attestation.witnessSeq,
