@@ -145,6 +145,11 @@ test('real TaskPool data reads through the allowed list contract, preserving unv
   assert.equal(JSON.stringify(payload).includes('finished but no QA'),false);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
+test('replaying allocator epoch cannot emit a duplicate signed snapshot',async()=>{
+ const p=makePublisher(async()=>9);
+ await p.publish(callInput(async()=>[task(1,'queued')]));
+ await assert.rejects(()=>p.publish(callInput(async()=>[task(1,'queued')])),/Replayed allocator sequence/);
+});
 test('sequential publisher epochs advance with trusted allocator',async()=>{
  let count=2;
  const p=makePublisher(async()=>++count);
