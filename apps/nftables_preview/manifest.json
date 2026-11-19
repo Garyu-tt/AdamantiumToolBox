@@ -40,6 +40,11 @@
       "from": "nftables_preview.transaction",
       "to": "network_inventory.reconcile",
       "type": "related"
+    },
+    {
+      "from": "nftables_preview.transaction",
+      "to": "nftables_lab.check",
+      "type": "related"
     }
   ]
 }
