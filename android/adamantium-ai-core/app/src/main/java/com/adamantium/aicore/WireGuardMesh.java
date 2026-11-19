@@ -98,6 +98,12 @@ final class WireGuardMesh {
             temporary.delete();
             throw new IOException("Could not atomically save mesh profile");
         }
+        // A changed peer/route profile immediately invalidates the old tunnel.
+        up = false;
+        worker.execute(() -> {
+            try { if (backend != null) backend.setState(tunnel,Tunnel.State.DOWN,null); }
+            catch (Exception e) { Log.w("AiCoreMesh","Profile rotation: "+e.getClass().getSimpleName()); }
+        });
     }
 
     private static Config load(Context c) throws Exception {
@@ -131,6 +137,7 @@ final class WireGuardMesh {
 
     static void stop(Context c) {
         Settings.prefs(c).edit().putBoolean(ENABLED,false).apply();
+        up = false;
         worker.execute(() -> {
             try { if (backend != null) backend.setState(tunnel,Tunnel.State.DOWN,null); }
             catch (Exception e) { Log.w("AiCoreMesh","Tunnel stop: "+e.getClass().getSimpleName()); }
