@@ -1,27 +1,8 @@
 import {AtomicStore} from './atomic_store.mjs';
-import {open as openFile,mkdir,unlink,access} from 'node:fs/promises';
+import {open as openFile,mkdir,unlink} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {QUEUE_SCHEMA,encoded,keyOf,validateState} from './event_codec.mjs';
-// A durable, independent initialization witness survives deletion of the journal.
-// Written BEFORE the first journal commit; a crash in between fails closed.
-async function witnessExists(path){
- try{await access(path+'.initialized');return true;}
- catch(e){if(e.code==='ENOENT')return false;throw e;}
-}
-async function ensureWitness(path){
- const witness=path+'.initialized';
- let handle;
- try{handle=await openFile(witness,'wx',0o600);}
- catch(e){if(e.code==='EEXIST')return;throw e;}
- try{
-  await handle.writeFile('dante.sensory.journal.initialized.v1\n');
-  await handle.sync();
- }finally{await handle.close();}
- let dir;
- try{dir=await openFile(dirname(witness),'r');await dir.sync();}
- catch(e){if(!['EINVAL','EISDIR','EPERM','EACCES','ENOTSUP'].includes(e.code))throw e;}
- finally{await dir?.close();}
-}
+import {witnessExists,ensureWitness} from './journal_witness.mjs';
 export class DurableQueue{
  #entries=[];#cursors=new Map();#acked=[];#tail=Promise.resolve();#observedDurable=false;
  constructor({path,capacity=64,maxSources=128,maxEventBytes=8192}={}){
