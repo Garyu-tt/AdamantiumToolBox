@@ -1,10 +1,8 @@
 # Mikoshi non-LLM skill ecosystem — R15
 
 **23 independent MAS providers plus Mikoshi Classroom**
-(24 MAS apps). All are CPU-first, capability-driven and usable with
-Core alone. No conversational language models or prompt-generated
-dialogues are required. The composite UI is a separate user-facing app,
-not a replacement monolith or a dependency of any provider.
+(24 MAS apps), CPU-first and independently discoverable.
+No conversational LLM; Classroom is an optional composition.
 
 ## Independently discoverable providers
 
