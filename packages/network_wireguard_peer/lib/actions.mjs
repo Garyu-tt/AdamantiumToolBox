@@ -8,7 +8,7 @@ return async(action,params)=>{
   let peerCount=null,reason=available?null:'unconfigured';
   if(available)try{peerCount=(await backend.state(iface)).length;}catch{reason='wg_probe_failed';}
   return {configured:available,applyEnabled:!!canWrite(),peerCount,reason,
-   mode:enabled?'gated_ephemeral':'read_only',persistent:false,profileReady:!!profile,
+   mode:enabled?'gated_ephemeral':'read_only',persistent:false,recoveryLedgerConfigured:!!process.env.NETWORK_WG_MANAGED_LEDGER,profileReady:!!profile,
    enforcement:enabled?'wireguard_peers_only':false};
  }
  if(!canRead())throw Error('capability_unavailable');
@@ -40,7 +40,7 @@ return async(action,params)=>{
   const peers=await backend.state(iface);
   checkTransition(plan,peers);
   // No firewall, routes, interface creation or config-file mutation is possible.
-  return await backend.commit(plan);
+  return await backend.commit(plan,params?.proofs,trust);
  }
  throw Error('unsupported_action');
 };
