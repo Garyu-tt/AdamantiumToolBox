@@ -62,7 +62,10 @@ test('recursive composite resolves by version but cannot claim runtime execution
  const p=planGraphComposition('root.program',[root,child]);
  assert.equal(p.graphs.length,2);assert.equal(p.runnable,false);
  assert.throws(()=>planGraphComposition('root.program',[root]),/subgraph_revision_unavailable/);
- assert.throws(()=>planGraphComposition('root.program',[root,child],{maxDepth:1}),/composite_depth_budget/);
+ const grandchild=graph('deep.program',[]);
+ const nested=graph('child.program',[{id:'deeper',kind:'composite',ports:[],
+  graphRef:{id:'deep.program',revision:1}}]);
+ assert.throws(()=>planGraphComposition('root.program',[root,nested,grandchild],{maxDepth:1}),/composite_depth_budget/);
  const cycle=graph('child.program',[{id:'back',kind:'composite',ports:[],
   graphRef:{id:'root.program',revision:1}}]);
  assert.throws(()=>planGraphComposition('root.program',[root,cycle]),/recursive_composite_cycle/);
