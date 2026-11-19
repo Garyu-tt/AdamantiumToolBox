@@ -7,8 +7,8 @@ export async function testHttp(){
   assert(graph.nodes.some(x=>x.id==='forge.remediation.plan'));
   assert(graph.nodes.some(x=>x.id==='forge.remediation.assess'));
   const desc=await (await query('/invoke',{action:'forge.describe'})).json();
-  assert.equal(desc.result.schema,'mechanicus.forge.adapter.v10');
-  assert.equal(desc.result.adapter_actions.length,23);
+  assert.equal(desc.result.schema,'mechanicus.forge.adapter.v11');
+  assert.equal(desc.result.adapter_actions.length,25);
   const p=await (await query('/invoke',{action:'forge.remediation.plan',params:planRequest})).json();
   assert.equal(p.result.ok,true);assert.equal(p.result.safe_candidates.length,1);
   const a=await (await query('/invoke',{action:'forge.remediation.assess',params:assessmentRequest})).json();

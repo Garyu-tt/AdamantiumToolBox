@@ -103,3 +103,11 @@ See `docs/FORGE-ACCESS-R09.md`.
 safe attempts with bounded budgets; `forge.remediation.assess` compares untrusted
 attempt, independent tests, graph restoration, incident and audit receipts.
 Neither action executes fixes or clears incidents. See `docs/FORGE-REMEDIATION-R10.md`.
+
+## R11 — graph integrity adapter
+
+`forge.integrity.audit` compares an externally supplied, revision-bound function,
+capability, inverse-dependency and UI mount snapshot. Findings explicitly name
+causes, impacted nodes and remedies; unverified and ghost UI actions are never
+admitted as working controls. `forge.integrity.plan` emits non-executable
+external graph/UI reconciliation intents. No internal graph, memory or jobs.

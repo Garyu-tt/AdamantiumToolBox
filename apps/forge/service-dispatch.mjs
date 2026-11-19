@@ -9,6 +9,7 @@ import {planReactive,assessReactive} from './reactive.mjs';
 import {planProjection,planReconnect} from './projection.mjs';
 import {planLeases,assessRevocation} from './access.mjs';
 import {planRemediation,assessRemediation} from './remediation.mjs';
+import {auditIntegrity,planIntegrityReconciliation} from './integrity.mjs';
 export function dispatch(spec,params,protocol){
  return spec.id==='forge.describe'?protocol:
   spec.id==='forge.validate'?validateFunction(params?.function):
@@ -31,5 +32,7 @@ export function dispatch(spec,params,protocol){
   spec.id==='forge.projection.reconnect'?planReconnect(params):
   spec.id==='forge.access.lease.plan'?planLeases(params):
   spec.id==='forge.access.revocation.assess'?assessRevocation(params):
-  spec.id==='forge.remediation.plan'?planRemediation(params):assessRemediation(params);
+  spec.id==='forge.remediation.plan'?planRemediation(params):
+  spec.id==='forge.remediation.assess'?assessRemediation(params):
+  spec.id==='forge.integrity.audit'?auditIntegrity(params):planIntegrityReconciliation(params);
 }

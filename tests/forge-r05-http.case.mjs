@@ -16,7 +16,7 @@ export async function runHttpR05({request,changed}){
  assert.equal(ci.result.ok,true);assert.equal(ci.result.ui_revoked,false);
  assert.equal((await query('/invoke',{action:'forge.composite.plan',params:request},false)).status,401);
  const info=await (await query('/invoke',{action:'forge.describe'})).json();
- assert.equal(info.result.schema,'mechanicus.forge.adapter.v10');
+ assert.equal(info.result.schema,'mechanicus.forge.adapter.v11');
  assert.equal(info.result.stores_state,false);assert.equal(info.result.external_effects,false);
  console.log('FORGE_R05_TEST_OK: recursive/shared function composition, cycle rejection, reverse impact, fail-closed HTTP');
  });

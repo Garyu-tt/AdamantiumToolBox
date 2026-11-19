@@ -21,5 +21,7 @@ export const actionNodes=[
  {id:'forge.access.lease.plan',title:'Plan lease expiry and UI invalidation',permission:'forge.validate'},
  {id:'forge.access.revocation.assess',title:'Assess scoped runtime and UI revocation receipts',permission:'forge.validate'},
  {id:'forge.remediation.plan',title:'Prepare safe deterministic blocker fixes',permission:'forge.validate'},
- {id:'forge.remediation.assess',title:'Assess external remedy acceptance evidence',permission:'forge.validate'}
+ {id:'forge.remediation.assess',title:'Assess external remedy acceptance evidence',permission:'forge.validate'},
+ {id:'forge.integrity.audit',title:'Audit external function-capability-UI graph snapshots',permission:'forge.validate'},
+ {id:'forge.integrity.plan',title:'Plan external graph integrity repairs',permission:'forge.validate'}
 ];

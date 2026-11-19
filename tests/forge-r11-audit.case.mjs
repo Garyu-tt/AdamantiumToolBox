@@ -1,0 +1,33 @@
+import {strict as assert} from 'node:assert';
+import {auditIntegrity} from '../apps/forge/integrity.mjs';
+import {auditRequest,clone} from './forge-r11-fixtures.mjs';
+const codes=r=>r.issues.map(i=>i.code);
+export function testAudit(){
+ const ok=auditIntegrity(auditRequest);
+ assert.equal(ok.ok,true);assert.equal(ok.consistent,true);assert.equal(ok.finding_count,0);
+ assert.equal(ok.authoritative,false);assert.equal(ok.executed,false);
+ let p=clone();p.snapshot.reverse_index[0].dependents=[];
+ assert(codes(auditIntegrity(p)).includes('REVERSE_INDEX_DRIFT'));
+ p=clone();p.snapshot.capabilities[1].state='revoked';
+ const ghost=auditIntegrity(p);
+ assert(codes(ghost).includes('GHOST_UI_ACTION'));
+ assert(codes(ghost).includes('MISSING_PUBLISHED_CAPABILITY'));
+ p=clone();p.snapshot.functions[0].request_ref='request-build';
+ assert(codes(auditIntegrity(p)).includes('SHARED_FUNCTION_REQUEST'));
+ p=clone();p.snapshot.functions[0].depends_on=['demo.build'];
+ assert(codes(auditIntegrity(p)).includes('DEPENDENCY_CYCLE'));
+ p=clone();p.snapshot.functions[1].depends_on=['demo.missing'];
+ assert(codes(auditIntegrity(p)).includes('MISSING_DEPENDENCY'));
+ p=clone();p.snapshot.functions[0].state='blocked';
+ assert(codes(auditIntegrity(p)).includes('UNEXPLAINED_BLOCKER'));
+ p=clone();p.snapshot.functions[1].verified=false;
+ assert(codes(auditIntegrity(p)).includes('UNVERIFIED_PUBLICATION'));
+ p=clone();p.snapshot.capabilities.push(p.snapshot.capabilities[0]);
+ assert.equal(auditIntegrity(p).ok,false);
+ p=clone();p.snapshot.reverse_index=[];
+ assert(codes(auditIntegrity(p)).includes('REVERSE_INDEX_DRIFT'));
+ p=clone();p.snapshot.functions[0].depends_on=['demo.lib'];
+ assert(codes(auditIntegrity(p)).includes('DEPENDENCY_CYCLE'));
+ p=clone();p.snapshot.functions[0].capability_refs=['demo.absent'];
+ assert(codes(auditIntegrity(p)).includes('BROKEN_CAPABILITY_LINK'));
+}
