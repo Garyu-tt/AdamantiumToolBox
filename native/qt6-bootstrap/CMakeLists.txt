@@ -99,3 +99,5 @@ set_tests_properties(native_leonardo_canvas PROPERTIES ENVIRONMENT "QT_QPA_PLATF
 include(plugins/leonardo/provider_selection.cmake)
 
 include(tests/epoch.cmake)
+
+include(tests/workspace_perf.cmake)

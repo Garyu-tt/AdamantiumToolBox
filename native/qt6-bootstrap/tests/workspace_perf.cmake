@@ -1,0 +1,6 @@
+add_executable(mas_workspace_delta_perf_test workspace_delta_perf_test.cpp)
+target_include_directories(mas_workspace_delta_perf_test PRIVATE
+ ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+target_link_libraries(mas_workspace_delta_perf_test PRIVATE Qt6::Widgets Qt6::Test)
+add_test(NAME native_workspace_noop_perf COMMAND mas_workspace_delta_perf_test)
+set_tests_properties(native_workspace_noop_perf PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
