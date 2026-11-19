@@ -173,6 +173,30 @@ int main() {
   invalid=base;
   invalid.lane=static_cast<Lane>(255);
   CHECK(!decode_genome(invalid,unchanged).ok);
+  invalid=base;
+  if (auto* h=std::get_if<HeaderGene>(&invalid.chromosomes[0].genes[0].body))
+    h->domain=static_cast<Domain>(255);
+  CHECK(!decode_genome(invalid,unchanged).ok);
+  invalid=base;
+  bool corrupted_port=false;
+  for(auto& chrom:invalid.chromosomes)
+    for(auto& gene:chrom.genes)
+      if(gene.kind==GeneKind::NodePort && !corrupted_port) {
+        auto* item=std::get_if<PortGene>(&gene.body);
+        if(item) { item->port.semantics=static_cast<Semantics>(255);
+                    corrupted_port=true; }
+      }
+  CHECK(corrupted_port && !decode_genome(invalid,unchanged).ok);
+  invalid=base;
+  for(auto& chrom:invalid.chromosomes)
+    if(chrom.graph_id=="mas.program")
+      for(auto& gene:chrom.genes)
+        if(gene.kind==GeneKind::Node) {
+          auto* item=std::get_if<NodeGene>(&gene.body);
+          if(item && item->id=="source")
+            item->kind=static_cast<NodeKind>(255);
+        }
+  CHECK(!decode_genome(invalid,unchanged).ok);
 
   // A genome cannot gain authority by changing edge metadata to dataflow.
   invalid=base;
