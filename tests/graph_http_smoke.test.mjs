@@ -18,6 +18,7 @@ const suites=[['graph_dns',39821,'graph_dns.audit','graph_dns.read',
  ['rollback_watchdog',39829,'rollback_watchdog.journal','rollback_watchdog.read',
  {schema:'rollback-watchdog-journal-1',leaseId:'lease-1',planDigest:'a'.repeat(64),
  deadlineSeconds:2000000000,events:[]}],
+ ['rollback_ledger',39830,'rollback_ledger.audit','rollback_ledger.read',{}],
  ['noosphere',39822,'noosphere.inspect','noosphere.read',{records:[]}]];
 for(const [name,port,action,permission,params] of suites){
  const proc=spawn(process.execPath,[resolve(root,'apps',name,'service.mjs')],{
