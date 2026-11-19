@@ -139,6 +139,33 @@ int main() {
   auto depth=compile(mas,"mas.program",Limits{2048,100000,200000,1});
   CHECK(!depth.ok && depth.diagnostics[0].code==ErrorCode::DepthLimit);
 
+
+  // Diamond DAG: a shared graph must be depth-checked on EVERY path.
+  // root -> shared -> leaf has depth 3; root -> a -> b -> shared
+  // -> leaf has depth 5. Visiting the short path first must not hide it.
+  Graph leaf{"depth.leaf",1,Domain::General,{},{},{}};
+  Graph shared{"depth.shared",1,Domain::General,{},
+      {module("leaf","depth.leaf")},{}};
+  Graph mid_b{"depth.b",1,Domain::General,{},
+      {module("shared","depth.shared")},{}};
+  Graph mid_a{"depth.a",1,Domain::General,{},
+      {module("b","depth.b")},{}};
+  Graph diamond{"depth.root",1,Domain::General,{},
+      {module("direct","depth.shared"),module("long","depth.a")},{}};
+  Catalog diamond_catalog{{leaf.id,leaf},{shared.id,shared},
+      {mid_b.id,mid_b},{mid_a.id,mid_a},{diamond.id,diamond}};
+  const Limits depth_four{2048,100000,200000,4};
+  const Limits depth_five{2048,100000,200000,5};
+  auto diamond_short_first=compile(diamond_catalog,"depth.root",depth_four);
+  CHECK(!diamond_short_first.ok &&
+        diamond_short_first.diagnostics[0].code==ErrorCode::DepthLimit);
+  std::swap(diamond_catalog["depth.root"].nodes[0],
+            diamond_catalog["depth.root"].nodes[1]);
+  auto diamond_long_first=compile(diamond_catalog,"depth.root",depth_four);
+  CHECK(!diamond_long_first.ok &&
+        diamond_long_first.diagnostics[0].code==ErrorCode::DepthLimit);
+  CHECK(compile(diamond_catalog,"depth.root",depth_five).ok);
+
   // CPU-first large graph validation with no editor or Node.js runtime.
   Graph many{"graph.large",1,Domain::General,{},{},{}};
   constexpr int count=10000;
