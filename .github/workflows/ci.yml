@@ -70,6 +70,7 @@ jobs:
           node tests/mikoshi_sourcepolicy.test.mjs
           node tests/mikoshi_clockcal.test.mjs
           node tests/mikoshi_r15_live.test.mjs
+          node tests/mikoshi_av_policy.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
