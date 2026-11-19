@@ -1,0 +1,32 @@
+name: Adamantium Genome R02 Attested Expression
+on:
+  push:
+    paths:
+      - 'apps/adamantium_genome/**'
+      - 'tests/adamantium_genome*.mjs'
+      - '.github/workflows/adamantium-genome-r02.yml'
+  pull_request:
+    paths:
+      - 'apps/adamantium_genome/**'
+      - 'tests/adamantium_genome*.mjs'
+      - '.github/workflows/adamantium-genome-r02.yml'
+permissions:
+  contents: read
+jobs:
+  expression-proof:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check apps/adamantium_genome/artifact-proof.mjs
+      - run: node --check apps/adamantium_genome/selfhost-proof.mjs
+      - run: node --test tests/adamantium_genome.test.mjs tests/adamantium_genome_guards.test.mjs tests/adamantium_genome_artifacts.test.mjs
