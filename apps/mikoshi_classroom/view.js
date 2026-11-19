@@ -1,3 +1,4 @@
+import {phoneticPanel} from './phonetic_panel.js';
 // Composition discovers live typed providers; no imports from other apps.
 export async function mount(host,api){
  host.replaceChildren();
@@ -43,6 +44,8 @@ export async function mount(host,api){
     }catch(e){result.textContent=String(e.message);}
    };
   }
+  const articulation=provider('articulation','preview');
+  if(articulation)phoneticPanel(controls,api,articulation,actions());
   if(teach){
    const labels=[['higher','Выше'],['lower','Ниже'],['faster','Быстрее'],
     ['slower','Медленнее'],['good','Подходит']];
