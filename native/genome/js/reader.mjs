@@ -20,6 +20,9 @@ export class Reader {
   str() {
     const len=this.small(2);
     check(len<=256 && this.at+len<=this.bytes.length,'wire_string_length');
+    for(let i=0;i<len;i++)
+      check(this.bytes[this.at+i]>=0x20 && this.bytes[this.at+i]<=0x7e,
+        'wire_nonascii');
     const s=this.bytes.toString('ascii',this.at,this.at+len);
     this.at+=len;
     check(ASCII.test(s),'wire_nonascii');
