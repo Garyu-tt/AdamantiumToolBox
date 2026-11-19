@@ -74,6 +74,12 @@ jobs:
             ADA_NFT_LAB_NFT="$(command -v nft)" \
             ADA_NFT_LAB_IP="$(command -v ip)" \
             "$(command -v node)" tests/graph_nftables_real.test.mjs
+          sudo env ADA_NFT_LAB_NAMESPACE="$namespace" \
+            ADA_NFT_LAB_NAMESPACE_ROOT="$nsroot" \
+            ADA_NFT_LAB_NFT="$(command -v nft)" \
+            ADA_NFT_LAB_IP="$(command -v ip)" \
+            ADA_NFT_LAB_DISPOSABLE_ONLY=1 \
+            "$(command -v node)" tests/native/nftables_watchdog_real.test.mjs
           after="$(sudo ip netns exec "$namespace" nft -j list ruleset)"
           test "$before" = "$after"
           echo "NFTABLES_RULESET_UNCHANGED_OK"
