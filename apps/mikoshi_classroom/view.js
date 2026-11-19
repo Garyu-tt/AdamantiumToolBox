@@ -1,3 +1,4 @@
+import {liveAVPanel} from './av_live_panel.js';
 import {avPanel} from './av_panel.js';
 import {hypothesesPanel} from './hypotheses_panel.js';
 import {streamPanel} from './stream_panel.js';
@@ -55,6 +56,12 @@ export async function mount(host,api){
   const motor=provider('motor-learning','propose');
   avPanel(controls,api,provider('visual-events','analyze'),
    provider('audiovisual-association','associate'),memory,articulation,actions());
+  liveAVPanel(controls,api,{
+   vision:provider('visual-events','analyze'),
+   audio:provider('auditory-events','analyze'),
+   sync:provider('av-alignment','align'),
+   memory,grounding:provider('audiovisual-association','associate')
+  },actions());
   hypothesesPanel(controls,api,{hypothesis:provider('hypothesis-search','generate'),
    world:provider('world-prediction','estimate'),articulation,motor},actions());
   streamPanel(controls,api,provider('auditory-events','analyze'),memory,
