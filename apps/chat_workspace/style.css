@@ -1,0 +1,10 @@
+.mas-chat-workspace{display:grid;grid-template-columns:minmax(12rem,1fr) minmax(20rem,3fr) minmax(12rem,1fr);gap:var(--mas-gap,1rem);min-height:50vh}
+.mas-chat-slot{min-width:0;overflow:auto}
+.mas-chat-slot[hidden]{display:none}
+.mas-chat-sidebar{grid-column:1}
+.mas-chat-full{grid-column:2}
+.mas-chat-widget{padding:var(--mas-gap,1rem);border:1px solid var(--mas-border,currentColor);border-radius:var(--mas-radius,0.75rem)}
+.mas-chat-widget button{margin:0.2rem;padding:0.45rem}
+.mas-chat-widget textarea{width:100%;box-sizing:border-box;resize:vertical}
+.mas-chat-bubble{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:55rem){.mas-chat-workspace{grid-template-columns:1fr}.mas-chat-sidebar,.mas-chat-full{grid-column:1}}

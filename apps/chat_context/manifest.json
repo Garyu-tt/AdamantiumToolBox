@@ -1,0 +1,34 @@
+{
+  "mas": "1.0",
+  "id": "chat_context",
+  "name": "Context Checkpoints",
+  "version": "0.2.0",
+  "icon": "editor",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8928,
+    "invokeTimeoutMs": 12000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "chat.context.read",
+    "chat.context.write"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  }
+}
