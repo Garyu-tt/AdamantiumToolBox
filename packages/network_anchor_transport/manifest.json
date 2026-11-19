@@ -1,0 +1,10 @@
+{
+ "mas":"1.0","id":"network_anchor_transport","name":"Independent Audit Anchor Transport","version":"0.1.0",
+ "icon":"network_anchor_transport","lifecycle":"independent",
+ "service":{"protocol":"mas-http-1","port":8935,"invokeTimeoutMs":8000},
+ "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},
+ "auth":{"mode":"host-delegated"},
+ "permissions":["network_anchor_transport.read","network_anchor_transport.send","network_anchor_transport.receive"],
+ "events":{"schema":"mas-event-1"},"data":{"refs":"mas-ref-1"},
+ "updates":{"strategy":"semver","migrations":[]}
+}
