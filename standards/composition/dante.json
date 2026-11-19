@@ -1,0 +1,36 @@
+{
+  "schema": "mas.composite.v1",
+  "id": "dante",
+  "exports": [],
+  "requires": [
+    {
+      "slot": "observe",
+      "contract": "dante.world.observe.v1"
+    },
+    {
+      "slot": "sensory",
+      "contract": "dante.sensory.deliver.v1"
+    },
+    {
+      "slot": "cognition",
+      "contract": "dante.genesis.apply.v1"
+    },
+    {
+      "slot": "motor",
+      "contract": "dante.motor.command.v1"
+    },
+    {
+      "slot": "apply",
+      "contract": "dante.world.apply.v1"
+    },
+    {
+      "slot": "checkpoint",
+      "contract": "dante.state.checkpoint.v1"
+    },
+    {
+      "slot": "restore",
+      "contract": "dante.state.restore.v1"
+    }
+  ],
+  "optional": []
+}
