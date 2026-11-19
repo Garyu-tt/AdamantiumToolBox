@@ -39,7 +39,8 @@ export async function permitLesson(api,actions,lesson,durationMs){
   pairBindings:await pairBindings(lesson)};
  const issued=await api.call(actions.authorize,{claim});
  if(!issued?.token)throw Error('source_policy_denied');
- const permit={digest,token:issued.token,pairs:lesson.length};
+ const permit={digest,token:issued.token,pairs:lesson.length,
+  expiresAt:issued.expiresAt};
  await verifyLesson(api,actions,lesson,permit);
  return permit;
 }
