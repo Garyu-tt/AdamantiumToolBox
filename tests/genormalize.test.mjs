@@ -15,6 +15,23 @@ test('fails closed for invalid, oversized, cyclic, nonfinite inputs',()=>{
  assert.throws(()=>normalizeSensor({...event,payload:{value:Infinity}}),/invalid_value/);
  assert.throws(()=>normalizeSensor({...event,payload:{long:'x'.repeat(9000)}}),/invalid_value/);
  const cyclic={};cyclic.self=cyclic;
- assert.throws(()=>normalizeSensor({...event,payload:cyclic}),/max_depth/);
+ assert.throws(()=>normalizeSensor({...event,payload:cyclic}),/cyclic_value|max_depth/);
  assert.throws(()=>normalizeSensor({...event,payload:JSON.parse('{"__proto__":123}')}),/unsafe_key/);
+});
+
+test('rejects accessor, sparse arrays and invalid scalar signal names without side effects',()=>{
+ let calls=0;
+ const payload={};
+ Object.defineProperty(payload,'x',{enumerable:true,get(){calls++;return 1;}});
+ assert.throws(()=>normalizeSensor({...event,payload}),/invalid_value/);
+ assert.equal(calls,0);
+ const top={...event};
+ Object.defineProperty(top,'payload',{enumerable:true,get(){calls++;return {x:1};}});
+ assert.throws(()=>normalizeSensor(top),/invalid_value/);
+ assert.equal(calls,0);
+ const sparse=new Array(2);sparse[1]=4;
+ assert.throws(()=>normalizeSensor({...event,payload:{array:sparse}}),/invalid_value/);
+ assert.throws(()=>normalizeSensor({...event,payload:{'':1}}),/invalid_signal_name/);
+ assert.throws(()=>normalizeSensor({...event,payload:{'1bad':1}}),/invalid_signal_name/);
+ assert.equal(normalizeSensor({...event,payload:{nested:{'':2}}}).signals[''],undefined);
 });
