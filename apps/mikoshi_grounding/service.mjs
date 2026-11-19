@@ -48,7 +48,7 @@ async function invoke(body){
   return associate(await load(),body.params?.visualVector);
  if(body.action===ids.recall)return recall(await load(),body.params?.soundId);
  if(body.action===ids.receipt&&secure){
-  const proof=checkTicket(sourceKey,body.params,Date.now());
+  const proof=checkTicket(sourceKey,body.params,Date.now(),true);
   const result=replay(await load(),proof);
   return {applied:result!==null,result};
  }
