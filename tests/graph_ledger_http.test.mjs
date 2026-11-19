@@ -60,6 +60,12 @@ try{
  assert.equal((await second.json()).result.status,'already_consumed');
  const audit=await invoke('rollback_ledger.audit',{});
  assert.equal((await audit.json()).result.entries[0].state,'reserved_unverified');
+ const checkpoint=await invoke('rollback_ledger.checkpoint',{});
+ const fingerprint=(await checkpoint.json()).result;
+ assert.equal(fingerprint.status,'observed');
+ const compare=await invoke('rollback_ledger.checkpoint',{expectedDigest:fingerprint.digest});
+ assert.equal((await compare.json()).result.callerAnchorMatches,true);
+ assert.equal(fingerprint.remoteAnchorVerified,false);
  const denied=await fetch(origin+'/graph');
  assert.equal(denied.status,401);
  console.log('GRAPH_LEDGER_HTTP_OK read/write split and no replay across service restart');
