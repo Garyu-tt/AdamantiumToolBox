@@ -74,6 +74,8 @@ expiry, purpose/digest binding and denied consent claims.
 `node tests/mikoshi_clockcal.test.mjs` rejects unpaired/unstable cues.
 `node tests/mikoshi_av_policy.test.mjs` tests exact lesson hashing and
 detecting a changed lesson after authorization.
+`node tests/mikoshi_av_gate_view.test.mjs` checks that source-policy
+unavailability disables live-training buttons but not read-only capture.
 `node tests/mikoshi_r15_live.test.mjs` runs **eight real independent
 MAS HTTP services**: vision, tracking, acoustic segmentation, known-cue
 clock estimate, time alignment, source policy, motif memory and
