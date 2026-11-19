@@ -1,6 +1,7 @@
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {randomBytes} from 'node:crypto';
+import {send,jsonBody} from './lib/http.mjs';
 import {createBackend} from './lib/backend.mjs';
 import {authorizedInternalKey,validatePlan,snapshotHash,checkTransition,authorizedSignatures,digest,publicKey,inPool} from './lib/contract.mjs';
 const m=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
@@ -22,13 +23,6 @@ const ready=()=>/^[A-Za-z0-9_.=-]{1,15}$/.test(iface)&&
 const canRead=()=>caps.has('network_wireguard_peer.read')&&ready();
 const canWrite=()=>canRead()&&caps.has('network_wireguard_peer.write')&&enabled&&
   trust&&typeof journal==='string'&&journal.startsWith('/');
-const send=(res,status,object)=>{res.writeHead(status,{
- 'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(object));};
-function jsonBody(req){return new Promise((resolve,reject)=>{
- let size=0;const chunks=[];req.on('data',v=>{size+=v.length;if(size>8192){reject(Error('body_too_large'));req.destroy();}else chunks.push(v)});
- req.on('end',()=>{try{resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')))}catch{reject(Error('bad_json'))}});
- req.on('error',reject);
-});}
 const graph=async()=>{
  const nodes=[],edges=[];
  if(caps.has('network_wireguard_peer.read')){
