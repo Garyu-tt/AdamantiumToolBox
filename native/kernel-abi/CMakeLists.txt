@@ -31,3 +31,18 @@ endif()
 add_executable(mas_native_graph_test tests/native_graph_test.cpp)
 target_link_libraries(mas_native_graph_test PRIVATE mas_native_graph Threads::Threads)
 add_test(NAME native_graph_authorized_projection COMMAND mas_native_graph_test)
+
+# N2a host-internal dispatcher. Graph + dispatcher remain independent of GUI,
+# Node and CppMicroServices; callable only from a trusted native host.
+add_library(mas_native_dispatch STATIC src/native_dispatch.cpp)
+target_include_directories(mas_native_dispatch PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(mas_native_dispatch PUBLIC mas_native_graph Threads::Threads)
+target_compile_features(mas_native_dispatch PUBLIC cxx_std_17)
+if(MSVC)
+  target_compile_options(mas_native_dispatch PRIVATE /W4 /WX)
+else()
+  target_compile_options(mas_native_dispatch PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+add_executable(mas_native_dispatch_test tests/native_dispatch_test.cpp)
+target_link_libraries(mas_native_dispatch_test PRIVATE mas_native_dispatch)
+add_test(NAME native_dispatch_guarded_invoke COMMAND mas_native_dispatch_test)
