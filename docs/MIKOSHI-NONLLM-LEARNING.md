@@ -1,94 +1,74 @@
-# Mikoshi Voice & Learning — MAS non-LLM experimental R07
+# Mikoshi non-LLM skill ecosystem — R08
 
-Eleven independent MAS providers plus a separate Classroom app; each boots
-with Core alone and advertises only real, permitted capabilities. Classroom composes
-resources discovered through `mikoshi.skill.v1`, not fixed app names.
+**Thirteen independently installable MAS providers plus Mikoshi Classroom**
+(14 MAS apps). All are CPU-first, capability-driven and usable with
+Core alone. No conversational language models or prompt-generated
+dialogues are required. The composite UI is a separate user-facing app,
+not a replacement monolith or a dependency of any provider.
 
-## Implemented in this proposal
-- `mikoshi_hearing`: bounded PCM acoustic features (energy, zero crossings,
-  approximate pitch). No ASR or comprehension.
-- `mikoshi_voice`: optional eSpeak NG CPU formant speech. Default parameters
-  pitch=74, speed=164, amplitude=95, Russian; these are *relative engine controls*
-  and not measured pitch in Hz. Private `MIKOSHI_VOICE_PROFILE_JSON` overrides them.
-  The timbre anchor is owner-configured, never changed by learning.
-- `mikoshi_learning`: supervised online acoustic-vector-to-label prototypes.
-  Private `MIKOSHI_LEARNING_STATE` opts into persistence.
-- `mikoshi_prosody`: independently trained 5-6-2 CPU neural network. Feedback
-  higher/lower/faster/slower adjusts pitch/speed corrections, and good rewards
-  the current attempt. No LLM, no samples of anybody's voice, no raw audio stored.
-  Requires private `MIKOSHI_PROSODY_STATE` for durable feedback.
-- `mikoshi_piper`: optional OHF-Voice Piper neural-acoustic TTS backend. No
-  conversational language model; no voice model bundled or downloaded.
-  Provider is hidden until its locally installed Python package, model/config
-  files, and owner-reviewed voice rights acknowledgement are all present.
-  Piper currently supports speed correction, not direct pitch correction.
-- `mikoshi_phonetics`: sound-to-articulation formant training from a short
-  reference frame; see `docs/MIKOSHI-PHONETICS-R03.md`.
-- `mikoshi_motifs`: auditory motif discovery and online memory from short
-  PCM frames, with no predefined phoneme labels or language models.
-  See `docs/MIKOSHI-MOTIFS-R04.md` for tests and limits.
-- `mikoshi_sequences`: order and coarse timing memory for motifs; context
-  prediction and phrase boundaries; see `docs/MIKOSHI-SEQUENCES-R05.md`.
-- `mikoshi_motorlinks`: bounded sensory-reward motor controller that maps
-  acoustic motif IDs to two learned vocal-formant parameters. It neither
-  synthesizes nor hears audio itself; Classroom composes these capabilities
-  dynamically. See `docs/MIKOSHI-MOTORLINKS-R06.md`.
-- `mikoshi_gestures`: bounded 10 ms motor trajectory planning with
-  smooth formant transitions and explicit pauses; see
-  `docs/MIKOSHI-GESTURES-R07.md`.
-- `mikoshi_vocalstream`: phase-continuous 12 kHz formant WAV rendering from
-  trajectory frames; owner-configured non-learnable pitch identity.
-  No language model and no engine required by `mikoshi_gestures`.
-- `mikoshi_classroom`: graph-discovered composition of voice, prosody,
-  articulation, auditory motifs, ordered sequences, motor learning
-  and continuously rendered coarticulation with opt-in feedback.
-  Provider selection uses declared skill priority and supported adjustments.
+## Independently discoverable providers
 
-## Optional Piper configuration (never put model files in this repository)
-- `MIKOSHI_PIPER_MODEL`: absolute owner-approved local ONNX voice path.
-- `MIKOSHI_PIPER_MODEL_RIGHTS=approved`: explicit reviewed model-license gate.
-- `MIKOSHI_PIPER_PYTHON`: optional Python executable with `piper-tts` installed.
-- Separate `.onnx.json` voice configuration must exist at model path + `.json`.
+| Skill domain | App | Function |
+|---|---|---|
+| hearing | `mikoshi_hearing` | PCM energy and pitch features |
+| speech | `mikoshi_voice` | Optional eSpeak NG parametric voice |
+| general | `mikoshi_learning` | Supervised feature prototypes |
+| prosody | `mikoshi_prosody` | Small online neural pitch/speed adjustments |
+| speech | `mikoshi_piper` | Optional rights-approved neural-acoustic Piper TTS |
+| articulation | `mikoshi_phonetics` | Short vowel-like motor trial and FFT hearing |
+| auditory-memory | `mikoshi_motifs` | Discover and reinforce acoustic prototypes |
+| auditory-sequence | `mikoshi_sequences` | Remember order and manually set coarse timing |
+| motor-learning | `mikoshi_motorlinks` | Learn acoustic motif → motor mapping |
+| gesture-planner | `mikoshi_gestures` | Smooth timed vocal motor transitions |
+| waveform-renderer | `mikoshi_vocalstream` | Continuous-phase formant WAV synthesis |
+| acoustic-feedback | `mikoshi_audiometry` | Compare aligned synthetic WAV exercises |
+| transition-learning | `mikoshi_transitions` | Learn a better between-motif join duration |
 
-The acknowledgement is not legal proof of license rights. Verify each voice's
-model card and training terms. No attempt to clone or impersonate a living
-performer's recognizable voice. Desired acoustic direction: an original,
-high-register, light, soft and clear tenor with expressive articulation.
-Formant speech does NOT sound like a natural singer; Piper voice quality depends
-on the selected permitted model. No particular singer-level similarity is claimed.
+`mikoshi_classroom` discovers `mikoshi.skill.v1` resource contracts
+from the authorized capability graph. It can mount isolated panels for
+voice, hearing, motor rehearsal, sequence memory and timing practice.
+`loop_panel.js` exposes one explicit opt-in complete synthetic lesson
+covering hearing → acoustic memory → motor action → audible result →
+scalar reward → motor/transition memory. Missing permissions hide it.
 
-## Security and lifecycle
-The existing read-only `plugins/mikoshi` is unchanged. New permissions:
-`hearing.observe`, `voice.inspect`, `voice.render`, `learning.inspect`,
-`learning.train`, `prosody.inspect`, `prosody.learn`, `motifs.inspect`,
-`motifs.learn`, `phonetics.inspect`, `phonetics.render`, `phonetics.learn`,
-`sequence.inspect`, `sequence.learn`, `motor.inspect`, `motor.learn`,
-`gesture.inspect`, `gesture.plan`, `waveform.inspect`, `waveform.render`,
-`classroom.view`.
-A user must separately grant rights through Toolbox policy. No automatic
-activation, copying of private data, recording, or changes to existing agents.
-Only explicit owner-approved training state is persisted. The current prototype
-is single-runtime rather than multi-tenant; per-agent isolation remains future work.
+## Immutable owner-chosen vocal identity
+- eSpeak NG: `MIKOSHI_VOICE_PROFILE_JSON` with language/pitch/speed/amplitude.
+  Default higher-register starting point is a relative engine preset, not Hz.
+- Vocal oscillator: `MIKOSHI_VOCAL_ANCHOR_HZ` (default 235 Hz, 170–340).
+  Must be provisioned consistently with the phonetics anchor.
+- Piper: optional `MIKOSHI_PIPER_MODEL` absolute ONNX path plus matching
+  JSON config, `MIKOSHI_PIPER_MODEL_RIGHTS=approved`, optional Python binary.
+  Model licensing/rights must actually be independently verified. No
+  third-party singer voice cloned or automatically downloaded.
+- Learned articulation, vocal timing and prosody remain distinct from
+  the operator-selected initial timbral identity.
 
-## Next separate modules
-1. Improve permissioned microphone capture, add denoising and VAD.
-2. Phoneme acquisition and audiovisual grounding from appropriately licensed
-   media, with robust feedback and no commands inferred from show dialogue.
-3. Recurrent or predictive world-model cognition with decision-making and
-   measurable generalization; current prototype classifier is not a thinker.
-4. Independent reading, writing, math, typing and safe action capabilities.
-5. Sleep consolidation, Noosphere memory, provenance and reversible learning.
+## Consent, permissions and scope
+Each module declares its own inspect/render/learn scopes. Owner-managed
+private state files are opt-in; no raw audio stored in long-term motor,
+motif or timing memory. Training flags do NOT prove license or consent;
+external media needs separate signed provenance and recording policies.
+Current prototypes are single-instance, not isolated multi-tenant hosting.
+No background microphone recording, Noosphere migration or active
+deployment was performed in this change.
 
-## Acceptance
-Run `node tests/mikoshi_speech.test.mjs`,
-`node tests/mikoshi_prosody.test.mjs`, `node tests/mikoshi_piper.test.mjs`,
-`node tests/mikoshi_motifs.test.mjs`, `node tests/mikoshi_motifs_service.test.mjs`,
-`node tests/mikoshi_sequences.test.mjs`, `node tests/mikoshi_sequences_service.test.mjs`,
-`node tests/mikoshi_motorlinks.test.mjs`, `node tests/mikoshi_motorlinks_service.test.mjs`,
-`node tests/mikoshi_gestures.test.mjs`, `node tests/mikoshi_vocalstream.test.mjs`,
-`node tests/mikoshi_gesture_runtime.test.mjs`,
-`node tools/mas-check.mjs` and `python tools/check-size.py`. Then test
-isolated services, actual eSpeak/Piper binaries, consent, output quality and
-permissions on a host. Piper's CLI currently reloads the neural model per
-utterance, so production low-latency streaming will require a persistent worker.
-No actual installed neural voice or full cognitive learning is claimed.
+**R08 is not speech understanding, speech recognition, a learned phoneme
+inventory, independent reasoning or proven autonomy.** The final sound
+is a synthetic learning demonstration. The target is a complete
+architecture able to acquire skills later, not a ready-made conversation.
+
+## Implementation and validation records
+- `docs/MIKOSHI-PHONETICS-R03.md` — short vowel imitation
+- `docs/MIKOSHI-MOTIFS-R04.md` — acoustic motifs
+- `docs/MIKOSHI-SEQUENCES-R05.md` — temporal patterns
+- `docs/MIKOSHI-MOTORLINKS-R06.md` — feedback-based motor learning
+- `docs/MIKOSHI-GESTURES-R07.md` — continuous coarticulation
+- `docs/MIKOSHI-CLOSED-LOOP-R08.md` — full circuit, limitations and gates
+
+Run `node tests/mikoshi_complete_loop.test.mjs`,
+`node tests/mikoshi_transition_feedback.test.mjs`,
+`node tests/mikoshi_transition_service.test.mjs`,
+`node tools/mas-check.mjs` and `python tools/check-size.py`.
+The CI also runs isolated Core+App and Windows regression checks.
+For real user deployment still need CPU and acoustic field benchmarks,
+recording consent, data isolation and robust recovery.
