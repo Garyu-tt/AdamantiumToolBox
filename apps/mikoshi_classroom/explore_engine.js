@@ -6,6 +6,9 @@ export async function explore(api,skills,lesson,budget,progress=()=>{},cancel=()
   for(const action of actions)
    if(typeof skills?.[role]?.[action]!=='string')
     throw Error('missing_capability_'+role+'_'+action);
+ if(skills.world)for(const action of ['forecast','observe','abort','status'])
+  if(typeof skills.world[action]!=='string')
+   throw Error('missing_capability_world_'+action);
  if(!Array.isArray(lesson)||lesson.length<2||lesson.length>6||
   !Number.isInteger(budget)||budget<2||budget>12||
   new Set(lesson.map(e=>e.id)).size!==lesson.length||
@@ -42,10 +45,16 @@ export async function explore(api,skills,lesson,budget,progress=()=>{},cancel=()
   const motor=proposal.ready?proposal.candidate:(await call('motor','status'))
    .records.find(r=>r.id===choice.id)?.best;
   if(!motor)throw Error('motor_skill_not_available');
+  // Fix the hypothesis before generating and hearing this motor's result.
+  const prediction=skills.world?await call('world','forecast',{
+   motor,sourceApproved:true}):null;
   const output=await call('articulation','preview',{motor});
   const voiced=(await call('articulation','observe',{
    samples:output.samples,sampleRate:12000})).vector;
   const loss=mse(observed,voiced);
+  // A failed observation leaves the ticket pending for explicit recovery.
+  const consequence=prediction?await call('world','observe',{
+   ticket:prediction.ticket,vector:voiced,sourceApproved:true}):null;
   if(choice.action==='practice'){
    if(!proposal.ready)throw Error('motor_training_exhausted');
    await call('motor','feedback',{id:choice.id,trial:proposal.trial,
@@ -54,9 +63,13 @@ export async function explore(api,skills,lesson,budget,progress=()=>{},cancel=()
   const result=await call('explorer','feedback',{sessionId,step:choice.step,
    id:choice.id,action:choice.action,loss,sourceApproved:true});
   decisions.push({id:choice.id,action:choice.action,
-   loss,improvement:result.progress});
+   loss,improvement:result.progress,
+   predicted:consequence?.predicted??false,
+   surprise:consequence?.surprise??false,
+   predictionError:consequence?.loss??null});
   progress('Шаг '+(i+1)+'/'+budget+' · '+choice.action+
-   ' · '+choice.id+' · ошибка '+loss.toFixed(4));
+   ' · '+choice.id+' · ошибка '+loss.toFixed(4)+
+   (consequence?.surprise?' · неожиданность!':''));
   if(result.status==='complete')break;
  }
  const state=await call('explorer','status');
