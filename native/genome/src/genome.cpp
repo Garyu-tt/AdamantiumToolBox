@@ -8,6 +8,7 @@
 
 namespace mas::genome {
 namespace {
+constexpr std::size_t kMaxGenomeGenes = 1000000;
 Validation pass() { return {true,{}}; }
 Validation reject(const char* code) { return {false,code}; }
 bool identifier(const std::string& id) {
@@ -102,6 +103,7 @@ Validation encode_graphs(const graph::Catalog& catalog,
   next.root_graph=root;
   next.lane=lane;
   next.chromosomes.reserve(catalog.size());
+  std::size_t total_genes=0;
   for (const auto& [id,g] : catalog) {
     Chromosome chrom;
     chrom.graph_id=id;
@@ -120,6 +122,9 @@ Validation encode_graphs(const graph::Catalog& catalog,
     for (std::size_t i=0;i<g.edges.size();++i)
       chrom.genes.push_back({GeneKind::Edge,static_cast<std::uint32_t>(i),
           EdgeGene{g.edges[i]}});
+    if (!fits(total_genes,chrom.genes.size(),kMaxGenomeGenes))
+      return reject("gene_resource_limit");
+    total_genes+=chrom.genes.size();
     next.chromosomes.push_back(std::move(chrom));
   }
   out=std::move(next);
@@ -134,14 +139,15 @@ Validation decode_genome(const Genome& genome, graph::Catalog& out,
       genome.chromosomes.size() > limits.max_graphs)
     return reject("genome_header_invalid");
   graph::Catalog next;
-  std::size_t nodes=0,edges=0;
+  std::size_t nodes=0,edges=0,total_genes=0;
   for (const auto& chromosome : genome.chromosomes) {
     if (!identifier(chromosome.graph_id) || chromosome.genes.empty())
       return reject("chromosome_invalid");
     // Budget before allocating any graph entries. Large per-node port
     // arrays are additionally rejected by valid_fields().
-    if (chromosome.genes.size() > 1000000)
+    if (!fits(total_genes,chromosome.genes.size(),kMaxGenomeGenes))
       return reject("gene_resource_limit");
+    total_genes+=chromosome.genes.size();
     graph::Graph g;
     g.id=chromosome.graph_id;
     bool has_header=false,started_nodes=false,started_edges=false;
