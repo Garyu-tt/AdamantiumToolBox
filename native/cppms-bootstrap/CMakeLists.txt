@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.21)
+project(MechanicusCppMsBridge LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(CppMicroServices REQUIRED)
+add_library(mas_cppms_registry STATIC registry.cpp registry.hpp)
+target_include_directories(mas_cppms_registry PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../common/include)
+target_link_libraries(mas_cppms_registry PUBLIC CppMicroServices)
+include(CTest)
+if(BUILD_TESTING)
+ add_executable(mas_cppms_registry_test tests/registry_test.cpp)
+ target_link_libraries(mas_cppms_registry_test PRIVATE mas_cppms_registry)
+ add_test(NAME cppms_service_registry COMMAND mas_cppms_registry_test)
+endif()

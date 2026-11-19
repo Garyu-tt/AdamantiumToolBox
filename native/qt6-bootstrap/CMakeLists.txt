@@ -1,0 +1,103 @@
+cmake_minimum_required(VERSION 3.21)
+project(MechanicusQtBootstrap VERSION 0.1 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets Network Test)
+add_library(mechanicus_sse STATIC events/sse.cpp events/sse.hpp)
+target_include_directories(mechanicus_sse PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/events)
+add_library(mechanicus_graph STATIC host/graph_client.cpp host/graph_client.hpp host/graph_events.cpp host/graph_events.hpp)
+target_include_directories(mechanicus_graph PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
+target_link_libraries(mechanicus_graph PUBLIC Qt6::Network mechanicus_sse)
+add_library(mechanicus_qt_surface STATIC window.cpp window.hpp)
+target_link_libraries(mechanicus_qt_surface PUBLIC Qt6::Widgets Qt6::Network)
+add_executable(mechanicus_qt_bootstrap main.cpp)
+target_link_libraries(mechanicus_qt_bootstrap PRIVATE mechanicus_qt_surface mechanicus_graph)
+option(MAS_WITH_CPPMS "Optional approved MAS graph metadata mirror" OFF)
+if(MAS_WITH_CPPMS)
+ add_subdirectory(../cppms-bootstrap cppms-integration)
+ target_link_libraries(mechanicus_qt_bootstrap PRIVATE mas_cppms_registry)
+ target_compile_definitions(mechanicus_qt_bootstrap PRIVATE MAS_WITH_CPPMS=1)
+endif()
+
+add_executable(mechanicus_qt_bootstrap_test window_test.cpp)
+target_link_libraries(mechanicus_qt_bootstrap_test PRIVATE mechanicus_qt_surface Qt6::Test)
+enable_testing()
+add_test(NAME qt6_bootstrap COMMAND mechanicus_qt_bootstrap_test)
+set_tests_properties(qt6_bootstrap PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+add_executable(mechanicus_sse_test events/sse_test.cpp)
+target_link_libraries(mechanicus_sse_test PRIVATE mechanicus_sse)
+add_test(NAME sse_parser COMMAND mechanicus_sse_test)
+add_executable(mechanicus_graph_events_test tests/graph_events_test.cpp)
+target_link_libraries(mechanicus_graph_events_test PRIVATE mechanicus_graph Qt6::Test)
+add_test(NAME graph_events_stream COMMAND mechanicus_graph_events_test)
+add_executable(mechanicus_graph_client_test tests/graph_client_test.cpp)
+target_link_libraries(mechanicus_graph_client_test PRIVATE mechanicus_graph Qt6::Test)
+add_test(NAME graph_client_hotplug COMMAND mechanicus_graph_client_test)
+
+# Each native UI capability is a separately loadable Qt plugin, not a Core dependency.
+add_library(mas_native_workspace MODULE plugins/desktop_workspace.cpp)
+add_library(mas_native_window_manager MODULE plugins/window_manager.cpp)
+foreach(module mas_native_workspace mas_native_window_manager)
+ target_include_directories(${module} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+ target_link_libraries(${module} PRIVATE Qt6::Widgets)
+ set_target_properties(${module} PROPERTIES
+   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins")
+endforeach()
+add_executable(mas_native_plugins_test tests/plugins_test.cpp)
+target_include_directories(mas_native_plugins_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+target_link_libraries(mas_native_plugins_test PRIVATE Qt6::Widgets Qt6::Test)
+add_test(NAME native_ui_plugins COMMAND mas_native_plugins_test
+  $<TARGET_FILE:mas_native_workspace> $<TARGET_FILE:mas_native_window_manager>
+  $<TARGET_FILE:mas_native_leonardo_view>)
+set_tests_properties(native_ui_plugins PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_library(mas_raw_ui STATIC host/host_bridge.hpp host/raw_view.hpp
+ host/raw_view.cpp host/raw_workspace.cpp host/raw_workspace.hpp)
+target_include_directories(mas_raw_ui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host
+ ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+target_link_libraries(mas_raw_ui PUBLIC Qt6::Widgets)
+add_executable(mas_raw_ui_test tests/raw_ui_test.cpp)
+target_link_libraries(mas_raw_ui_test PRIVATE mas_raw_ui Qt6::Test)
+add_test(NAME native_raw_ui COMMAND mas_raw_ui_test)
+set_tests_properties(native_raw_ui PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_library(mas_plugin_loader STATIC plugins/plugin_loader.cpp plugins/plugin_loader.hpp)
+target_include_directories(mas_plugin_loader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
+target_link_libraries(mas_plugin_loader PUBLIC Qt6::Widgets)
+add_executable(mas_plugin_loader_test tests/plugin_loader_test.cpp)
+target_link_libraries(mas_plugin_loader_test PRIVATE mas_plugin_loader)
+add_test(NAME native_plugin_policy COMMAND mas_plugin_loader_test
+  $<TARGET_FILE:mas_native_workspace> $<TARGET_FILE:mas_native_window_manager>
+  $<TARGET_FILE:mas_native_leonardo_view>)
+set_tests_properties(native_plugin_policy PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_executable(mas_native_desktop host/native_desktop.cpp)
+target_link_libraries(mas_native_desktop PRIVATE
+  mas_raw_ui mas_plugin_loader mechanicus_graph Qt6::Widgets)
+if(MAS_WITH_CPPMS)
+ target_link_libraries(mas_native_desktop PRIVATE mas_cppms_registry)
+ target_compile_definitions(mas_native_desktop PRIVATE MAS_WITH_CPPMS=1)
+endif()
+add_test(NAME native_desktop_smoke COMMAND mas_native_desktop --smoke-test)
+set_tests_properties(native_desktop_smoke PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_library(mas_native_leonardo_view MODULE plugins/leonardo/leonardo_view.cpp
+ plugins/leonardo/svg_canvas.cpp plugins/leonardo/svg_canvas.hpp)
+target_include_directories(mas_native_leonardo_view PRIVATE
+ ${CMAKE_CURRENT_SOURCE_DIR}/plugins ${CMAKE_CURRENT_SOURCE_DIR}/plugins/leonardo)
+target_link_libraries(mas_native_leonardo_view PRIVATE Qt6::Widgets)
+set_target_properties(mas_native_leonardo_view PROPERTIES
+ LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins")
+add_executable(mas_native_leonardo_test tests/leonardo_canvas_test.cpp
+ plugins/leonardo/svg_canvas.cpp)
+target_include_directories(mas_native_leonardo_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/plugins/leonardo)
+target_link_libraries(mas_native_leonardo_test PRIVATE Qt6::Widgets)
+add_test(NAME native_leonardo_canvas COMMAND mas_native_leonardo_test)
+set_tests_properties(native_leonardo_canvas PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+include(plugins/leonardo/provider_selection.cmake)
+
+include(tests/epoch.cmake)
+
+include(tests/workspace_perf.cmake)

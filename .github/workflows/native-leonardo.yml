@@ -1,0 +1,34 @@
+name: Native Leonardo CPU backend
+on:
+  push:
+    paths:
+      - 'native/leonardo/**'
+      - '.github/workflows/native-leonardo.yml'
+  pull_request:
+    paths:
+      - 'native/leonardo/**'
+      - '.github/workflows/native-leonardo.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  vector-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install C++17 and native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build g++ libssl-dev libboost-json1.83-dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Configure and compile standalone Leonardo
+        run: |
+          cmake -S native/leonardo -B build/native-leonardo -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/native-leonardo --parallel 2
+      - name: Execute SVG correctness and safety tests
+        run: ctest --test-dir build/native-leonardo --output-on-failure

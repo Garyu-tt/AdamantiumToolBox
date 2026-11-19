@@ -1,0 +1,74 @@
+name: Native Qt6 SDK bootstrap
+on:
+  push:
+    paths:
+      - 'native/qt6-bootstrap/**'
+      - '.github/workflows/native-qt6-bootstrap.yml'
+  pull_request:
+    paths:
+      - 'native/qt6-bootstrap/**'
+      - '.github/workflows/native-qt6-bootstrap.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux-qt6:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt6 SDK on isolated runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools cmake ninja-build
+          dpkg-query -W qt6-base-dev
+      - name: Configure and compile native surface
+        run: |
+          cmake -S native/qt6-bootstrap -B build/qt6-bootstrap -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/qt6-bootstrap --parallel 2
+      - name: Verify approved native plugins in running desktop
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          directory = Path('build/qt6-bootstrap/plugins')
+          files = sorted(directory.glob('libmas_native_*.so'))
+          assert len(files) == 3, [str(p) for p in files]
+          pins = [{"file":p.name, "sha256":hashlib.sha256(p.read_bytes()).hexdigest()}
+                  for p in files]
+          (Path(os.environ["RUNNER_TEMP"])/"native-pins.json").write_text(
+            json.dumps({"schema":"mas-native-plugin-pins-1","plugins":pins}))
+          PY
+          ./build/qt6-bootstrap/mas_native_desktop \
+            --plugins build/qt6-bootstrap/plugins \
+            --plugin-policy "$RUNNER_TEMP/native-pins.json" \
+            --require-native-modules --smoke-test
+      - name: Execute native UI tests (headless)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          ctest --test-dir build/qt6-bootstrap --output-on-failure
+          ./build/qt6-bootstrap/mechanicus_qt_bootstrap --smoke
+      - name: Create staging Linux binary bundle with SHA-256 pins
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python3 native/qt6-bootstrap/tools/package_linux.py build/qt6-bootstrap build/native-distribution
+          cd build/native-distribution
+          sha256sum -c mechanicus-native-linux-x86_64.tar.gz.sha256
+          cd mechanicus-native
+          sha256sum -c SHA256SUMS
+          ./mas_native_desktop --plugins ./plugins --plugin-policy ./plugin-pins.json \
+            --require-native-modules --smoke-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mechanicus-native-linux-x86_64-ci
+          path: |
+            build/native-distribution/mechanicus-native-linux-x86_64.tar.gz
+            build/native-distribution/mechanicus-native-linux-x86_64.tar.gz.sha256
+          retention-days: 7
+          if-no-files-found: error
