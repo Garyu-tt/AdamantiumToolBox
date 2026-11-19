@@ -32,7 +32,9 @@ export async function mount(host,api){
      let prosody={};
      if(coach){
       const data=await api.call(coach.skill.actions.suggest,{text:input.value});
-      prosody={pitchDelta:data.pitchDelta,speedDelta:data.speedDelta};
+      const available=voice.skill.prosody||[];
+      prosody={...(available.includes('pitchDelta')?{pitchDelta:data.pitchDelta}:{}),
+       ...(available.includes('speedDelta')?{speedDelta:data.speedDelta}:{})};
      }
      const rendered=await api.call(voice.skill.actions.speak,{text:input.value,prosody});
      audio.src='data:'+rendered.mime+';base64,'+rendered.audioBase64;
