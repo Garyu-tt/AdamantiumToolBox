@@ -43,7 +43,7 @@ export function inspectJournal(input,options={}){
     remediation:'verify lease and rollback status out of band'});break;
   }
   graph.push({id:'event:'+event.seq,type:'transition',label:event.kind,
-   atSeconds:event.atSeconds,hash:event.hash});
+   atSeconds:event.atSeconds,hash:event.hash,attested:false});
   if(i)edges.push({from:'event:'+i,to:'event:'+event.seq,type:'previous'});
   state=next;previous=event.hash;last=event.atSeconds;
  }
@@ -57,9 +57,11 @@ export function inspectJournal(input,options={}){
  const complete=issues.length===0;
  return {schema:'rollback-watchdog-journal-check-1',leaseId:input.leaseId,
   planDigest:input.planDigest,state,expired,issues,graph:{nodes:graph,edges},
-  journalIntegrityVerified:complete,writerAuthenticated:false,
+  chainConsistent:complete,journalIntegrityVerified:false,writerAuthenticated:false,
   nodeIdentityVerified:false,kernelReadbackVerified:false,
-  watchdogAliveVerified:false,rollbackCompleted:complete&&state==='rolled_back',
-  requiresRecovery:issues.some(x=>x.code.startsWith('rollback_')),
+  watchdogAliveVerified:false,rollbackClaimed:complete&&state==='rolled_back',
+  rollbackCompleted:false,
+  requiresRecovery:issues.some(x=>x.code.startsWith('rollback_'))||
+   (complete&&state==='rolled_back'),
   readyToApply:false,applied:false};
 }
