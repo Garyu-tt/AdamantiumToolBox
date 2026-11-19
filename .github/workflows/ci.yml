@@ -28,6 +28,11 @@ jobs:
           python tests/architecture.test.py
           python tools/check-size.py
           node tools/mas-check.mjs
+      - name: Mikoshi acoustic and online-prosody unit tests
+        run: |
+          node tests/mikoshi_speech.test.mjs
+          node tests/mikoshi_prosody.test.mjs
+          node tests/mikoshi_piper.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
