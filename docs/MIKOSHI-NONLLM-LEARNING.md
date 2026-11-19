@@ -1,7 +1,7 @@
-# Mikoshi non-LLM skill ecosystem — R14
+# Mikoshi non-LLM skill ecosystem — R15
 
-**Twenty independent MAS providers plus Mikoshi Classroom**
-(21 MAS apps). All are CPU-first, capability-driven and usable with
+**23 independent MAS providers plus Mikoshi Classroom**
+(24 MAS apps). All are CPU-first, capability-driven and usable with
 Core alone. No conversational language models or prompt-generated
 dialogues are required. The composite UI is a separate user-facing app,
 not a replacement monolith or a dependency of any provider.
@@ -13,7 +13,10 @@ not a replacement monolith or a dependency of any provider.
 | hearing | `mikoshi_hearing` | PCM energy and pitch features |
 | visual-events | `mikoshi_vision` | Unlabeled 8×8 RGB change detection |
 | audiovisual-association | `mikoshi_grounding` | Temporal motif/event correlations with abstention |
-| av-alignment | `mikoshi_avsync` | Conservative event timestamps; no raw media |
+| av-alignment | `mikoshi_avsync` | Bounded event-time matching |
+| visual-tracking | `mikoshi_tracking` | Anonymous coarse blob paths |
+| clock-calibration | `mikoshi_clockcal` | Known-cue clock offset estimates |
+| source-policy | `mikoshi_sourcepolicy` | Short-lived HMAC lesson permits |
 | auditory-events | `mikoshi_segments` | 2–4 second PCM stream acoustic event candidates |
 | speech | `mikoshi_voice` | Optional eSpeak NG parametric voice |
 | general | `mikoshi_learning` | Supervised feature prototypes |
@@ -31,8 +34,7 @@ not a replacement monolith or a dependency of any provider.
 | world-prediction | `mikoshi_worldmodel` | Predict acoustic outcome of a motor action before execution, then learn the error |
 | hypothesis-search | `mikoshi_hypotheses` | Pick untried vocal actions using model uncertainty |
 
-`mikoshi_classroom` discovers `mikoshi.skill.v1` resources from the
-capability graph. It mounts optional independent training panels.
+`mikoshi_classroom` mounts optional panels from live `mikoshi.skill.v1` skills.
 `loop_panel.js`: opt-in hearing → memory → motor → sound → feedback
 lesson, hidden when permissions are absent.
 `stream_panel.js` additionally connects explicitly recorded short clips
@@ -46,7 +48,7 @@ and updates its prediction from the resulting acoustic observation.
 `hypotheses_panel.js` lets the operator approve one untried vocal action,
 forecast it, hear the result and update prediction error.
 `av_panel.js` provides synthetic pairing; `av_live_panel.js` adds
-explicit capture, read-only alignment and separately approved learning.
+explicit capture, optional tracks and source-gated writes.
 No background tasks.
 
 ## Immutable owner-chosen vocal identity
@@ -66,13 +68,12 @@ Each module declares its own inspect/render/learn scopes. Owner-managed
 private state files are opt-in; no raw audio stored in long-term motor,
 motif or timing memory. Training flags do NOT prove license or consent;
 external media needs separate signed provenance and recording policies.
-Current prototypes are single-instance, not isolated multi-tenant hosting.
+Prototypes are single-instance, not secure multi-tenant hosting.
 No background microphone recording, Noosphere migration or active
 deployment was performed in this change.
 
-**R14 is not speech understanding, speech recognition, a learned phoneme
-inventory, independent reasoning or proven autonomy.** Synthetic demonstrations validate integration, not real speech,
-semantic learning or a ready-made conversation.
+**R15 does not establish speech understanding, object identity or causal
+reasoning.** Synthetic checks do not validate real hardware or permission.
 
 ## Implementation and validation records
 - `docs/MIKOSHI-PHONETICS-R03.md` — short vowel imitation
@@ -87,12 +88,12 @@ semantic learning or a ready-made conversation.
 - `docs/MIKOSHI-HYPOTHESES-R12.md` — test a new action
 - `docs/MIKOSHI-AV-GROUNDING-R13.md` — visual/audio associations
 - `docs/MIKOSHI-LIVE-AV-R14.md` — explicit capture, clock limits
+- `docs/MIKOSHI-TRACKING-SOURCE-R15.md` — tracks, known cues, signed claims
 
-Run `node tests/mikoshi_avsync.test.mjs` and
-`node tests/mikoshi_avsync_live.test.mjs` for R14.
-Full Mikoshi acoustic, isolated MAS and core regression coverage is
-listed in `.github/workflows/ci.yml`, alongside
+Run `node tests/mikoshi_r15_live.test.mjs` and its four R15 unit tests.
+Full test commands are in `.github/workflows/ci.yml`.
+Core/MAS regression coverage also includes
 `node tools/mas-check.mjs` and `python tools/check-size.py`.
 The CI also runs isolated Core+App and Windows regression checks.
-For real user deployment still need CPU and acoustic field benchmarks,
-recording consent, data isolation and robust recovery.
+Before deployment: measured CPU/clock error, verified source consent,
+per-agent isolation, provider-side permit enforcement and recovery.
