@@ -22,9 +22,11 @@ operator must configure the environment of the local MAS process:
 - `ADA_NFT_LAB_NAMESPACE`: explicitly selected existing laboratory netns
 - `ADA_NFT_LAB_NFT`: approved absolute path to the nft executable
 - `ADA_NFT_LAB_IP`: approved absolute path to the ip executable
+- `ADA_NFT_LAB_NAMESPACE_ROOT`: approved absolute directory containing the
+  kernel namespace handles that the selected iproute2 provider resolves
 
-The provider verifies `/proc/self/ns/net` and
-`/var/run/netns/<configured-name>` have different device/inode identities
+The provider verifies `/proc/self/ns/net` and the configured
+namespace-root plus selected namespace name have different device/inode identities
 before executing an exact argument vector, without a shell:
 `ip netns exec <name> nft --check --file -`.
 Missing tool paths, namespace, or privilege returns `unavailable` or
