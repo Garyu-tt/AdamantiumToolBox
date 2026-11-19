@@ -11,11 +11,13 @@ export async function mount(host,api){
  const result=document.createElement('pre');host.append(result);
  const refresh=document.createElement('button');refresh.textContent='Refresh status';
  const prepare=document.createElement('button');prepare.textContent='Prepare approval plan';
- host.append(refresh,prepare);
+ const profile=document.createElement('button');profile.textContent='Client config (enrolled only)';
+ host.append(refresh,prepare,profile);
  async function report(){try{
   const s=await api.call('network_wireguard_peer.status',{});
   status.textContent='Configured: '+String(s.configured)+' · peers: '+String(s.peerCount??'unavailable')+
-   ' · write enabled: '+String(s.applyEnabled)+' · persistent: false';
+   ' · write enabled: '+String(s.applyEnabled)+' · profile ready: '+String(s.profileReady)+' · persistent: false';
+  profile.disabled=!s.profileReady;
  }catch{status.textContent='No authorized peer capability available'}}
  refresh.addEventListener('click',report);
  prepare.addEventListener('click',async()=>{
@@ -24,6 +26,13 @@ export async function mount(host,api){
     operation:op.value,peerPublicKey:pk.value.trim(),allowedIP:address.value.trim()});
    result.textContent=JSON.stringify(s,null,2);
   }catch{result.textContent='Preview unavailable or invalid peer request'}
+ });
+ profile.addEventListener('click',async()=>{
+  try{
+   const s=await api.call('network_wireguard_peer.clientProfile',{
+    peerPublicKey:pk.value.trim(),address:address.value.trim()});
+   result.textContent=s.template+'\nLOCAL PRIVATE KEY IS NOT INCLUDED. Never enter it in the web UI.';
+  }catch{result.textContent='Client profile unavailable; verify enrollment and pinned server settings'}
  });
  await report();
 }
