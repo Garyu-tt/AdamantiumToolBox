@@ -40,18 +40,23 @@ export function decodePermit(secret,token,now){
   throw Error('source_permit_expired_or_mismatched');
  return p;
 }
-export function checkPair(secret,params,kind,now){
+export function checkTicket(secret,params,now){
  const p=decodePermit(secret,params?.sourcePermit,now);
  const index=params?.pairIndex;
  if(p.v!==2||p.digest!==params?.lessonDigest||
   !Number.isInteger(index)||index<0||index>=p.pairs)
   throw Error('source_pair_permit_required');
- const pair=p.pairBindings[index];
+ return {permit:p,pair:p.pairBindings[index],index,
+  key:digest({token:params.sourcePermit,index})};
+}
+export function checkPair(secret,params,kind,now){
+ const proof=checkTicket(secret,params,now);
  const actual=kind==='audio'?audioHash(params.samples,params.sampleRate):
   kind==='visual'?visualHash(params.visualVector,
    params.visualAtMs,params.soundAtMs):null;
- if(!actual||actual!==pair[kind+'Hash'])throw Error('source_pair_digest_mismatch');
- return {permit:p,pair,index,key:digest({token:params.sourcePermit,index})};
+ if(!actual||actual!==proof.pair[kind+'Hash'])
+  throw Error('source_pair_digest_mismatch');
+ return proof;
 }
 export function signReceipt(secret,proof,soundId){
  const p={v:1,lessonDigest:proof.permit.digest,index:proof.index,
