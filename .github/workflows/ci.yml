@@ -38,6 +38,8 @@ jobs:
           node tests/mikoshi_microphone.test.mjs
           node tests/mikoshi_motifs.test.mjs
           node tests/mikoshi_motifs_service.test.mjs
+          node tests/mikoshi_sequences.test.mjs
+          node tests/mikoshi_sequences_service.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
