@@ -49,6 +49,7 @@ jobs:
           node tests/mikoshi_transition_feedback.test.mjs
           node tests/mikoshi_transition_service.test.mjs
           node tests/mikoshi_complete_loop.test.mjs
+          node tests/mikoshi_live_loop.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
