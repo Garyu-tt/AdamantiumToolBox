@@ -87,6 +87,10 @@ InvokeResult NativeDispatcher::invoke(std::string_view verified_principal,
     if (cancelled.load()) return {InvokeStatus::Cancelled, latest.revision, 0};
     if (!binding->enabled.load(std::memory_order_acquire))
       return {InvokeStatus::Unbound, latest.revision, 0};
+    // Host policy may revoke independently during a running handler.
+    if (!host_authorize_ ||
+        !host_authorize_(verified_principal, action, expected_revision))
+      return {InvokeStatus::Denied, graph_.revision(), 0};
     // This read fences output publication; it cannot roll back side effects.
     const auto final_view = graph_.resolve(std::string(verified_principal),
                                            std::string(action), expected_revision);
@@ -96,25 +100,8 @@ InvokeResult NativeDispatcher::invoke(std::string_view verified_principal,
         !final_view.capability || (final_view.capability->owner != binding->owner ||
          final_view.capability->contract != binding->contract))
       return {InvokeStatus::Denied, final_view.revision, 0};
-    // Host policy may revoke independently of the graph while handler runs.
-    // Re-check before publishing any buffered output to the caller.
-    if (!host_authorize_ ||
-        !host_authorize_(verified_principal, action, expected_revision))
-      return {InvokeStatus::Denied, final_view.revision, 0};
-    // The policy callback itself may change graph or disable a binding.
-    const auto publish = graph_.resolve(std::string(verified_principal),
-                                        std::string(action), expected_revision);
-    if (publish.status == QueryStatus::StaleRevision)
-      return {InvokeStatus::Stale, publish.revision, 0};
-    if (publish.status != QueryStatus::Present || !publish.capability ||
-        publish.capability->owner != binding->owner ||
-        publish.capability->contract != binding->contract)
-      return {InvokeStatus::Denied, publish.revision, 0};
-    if (!binding->enabled.load(std::memory_order_acquire))
-      return {InvokeStatus::Unbound, publish.revision, 0};
-    if (cancelled.load()) return {InvokeStatus::Cancelled, publish.revision, 0};
     if (written > 0) std::memcpy(output, scratch.data(), written);
-    return {InvokeStatus::Ok, publish.revision, written};
+    return {InvokeStatus::Ok, final_view.revision, written};
   } catch (...) {
     // Never propagate an optional provider exception through host dispatch.
     return {InvokeStatus::HandlerFailed, 0, 0};
