@@ -53,3 +53,22 @@ jobs:
         run: |
           ctest --test-dir build/qt6-bootstrap --output-on-failure
           ./build/qt6-bootstrap/mechanicus_qt_bootstrap --smoke
+      - name: Create staging Linux binary bundle with SHA-256 pins
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python3 native/qt6-bootstrap/tools/package_linux.py build/qt6-bootstrap build/native-distribution
+          cd build/native-distribution
+          sha256sum -c mechanicus-native-linux-x86_64.tar.gz.sha256
+          cd mechanicus-native
+          sha256sum -c SHA256SUMS
+          ./mas_native_desktop --plugins ./plugins --plugin-policy ./plugin-pins.json \
+            --require-native-modules --smoke-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mechanicus-native-linux-x86_64-ci
+          path: |
+            build/native-distribution/mechanicus-native-linux-x86_64.tar.gz
+            build/native-distribution/mechanicus-native-linux-x86_64.tar.gz.sha256
+          retention-days: 7
+          if-no-files-found: error
