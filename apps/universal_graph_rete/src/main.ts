@@ -1,16 +1,35 @@
-import sample from '../samples/genesis.json';
+import { examples } from './demo';
 import { mountRete } from './rete_view';
+import { verifiedShape } from './projection';
 import './style.css';
 
 const viewport = document.querySelector<HTMLElement>('#graph');
 const status = document.querySelector<HTMLElement>('#status');
-if (!viewport || !status) throw Error('missing_editor_mount');
-mountRete(viewport, sample, draft => {
-  // No auto-commit: actor authorization and CAS belong to Graph Manager.
-  status.textContent='Draft proposal at revision '+
-    draft.baseRevision+'. Not executed or persisted.';
-}).then(() => {
-  status.textContent='Rete.js v2 view: Graph IR revision 1. Drag to explore.';
-}).catch(() => {
-  status.textContent='Graph validation failed; no editor actions admitted.';
-});
+const chooser = document.querySelector<HTMLSelectElement>('#scenario');
+if (!viewport || !status || !chooser) throw Error('missing_editor_mount');
+
+let current: {destroy():void} | null = null;
+let transition = Promise.resolve();
+function selectScenario(name:string) {
+  transition = transition.then(async () => {
+    current?.destroy();
+    current = null;
+    viewport.replaceChildren();
+    const chosen = examples[name];
+    if (!chosen) throw Error('unknown_graph_scenario');
+    const graph = verifiedShape(chosen);
+    const mounted = await mountRete(viewport, graph, draft => {
+      // This emits only a proposal; Graph Manager alone may authorize/commit.
+      status.textContent = 'DRAFT proposal based on revision '+
+        draft.baseRevision+' — not executed or saved.';
+    });
+    current = mounted;
+    status.textContent = graph.id+' · '+graph.nodes.length+' nodes · '+
+      graph.edges.length+' typed edges · read-only authoritative data';
+  }).catch(() => {
+    status.textContent='Graph rejected. No execution or write attempted.';
+  });
+}
+chooser.addEventListener('change', () => selectScenario(chooser.value));
+selectScenario(chooser.value);
+window.addEventListener('pagehide',()=>current?.destroy(),{once:true});
