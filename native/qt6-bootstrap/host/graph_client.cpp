@@ -48,19 +48,19 @@ void GraphClient::refresh() {
   const auto status=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
   if(status==401||status==403){revoke();reply->deleteLater();return;}
   if(again)QTimer::singleShot(0,this,&GraphClient::requestRefresh);
-  if(reply->error()!=QNetworkReply::NoError||status!=200){setAvailable(false);reply->deleteLater();return;}
+  if(reply->error()!=QNetworkReply::NoError||status!=200){revoke();reply->deleteLater();return;}
   QJsonParseError parse;
   const auto document=QJsonDocument::fromJson(reply->readAll(),&parse);
   reply->deleteLater();
-  if(parse.error!=QJsonParseError::NoError||!document.isObject()){setAvailable(false);return;}
+  if(parse.error!=QJsonParseError::NoError||!document.isObject()){revoke();return;}
   const auto object=document.object();
-  if(!object.value("nodes").isArray()||!object.value("edges").isArray()){setAvailable(false);return;}
+  if(!object.value("nodes").isArray()||!object.value("edges").isArray()){revoke();return;}
   QSet<QString> seen,actions;
   for(const auto& value:object.value("nodes").toArray()) {
    if(!value.isObject()){setAvailable(false);return;}
    const auto node=value.toObject();
    const auto id=node.value("id").toString(),kind=node.value("type").toString();
-   if(id.isEmpty()||seen.contains(id)||kind.isEmpty()){setAvailable(false);return;}
+   if(id.isEmpty()||seen.contains(id)||kind.isEmpty()){revoke();return;}
    seen.insert(id);
    if(kind=="action")actions.insert(id);
   }
