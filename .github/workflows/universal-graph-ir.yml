@@ -1,0 +1,36 @@
+name: Universal Graph IR R01
+on:
+  push:
+    paths:
+      - 'apps/universal_graph/**'
+      - 'tests/universal_graph_ir.test.mjs'
+      - 'tests/universal_graph_ir_native_test.cpp'
+      - '.github/workflows/universal-graph-ir.yml'
+  pull_request:
+    paths:
+      - 'apps/universal_graph/**'
+      - 'tests/universal_graph_ir.test.mjs'
+      - 'tests/universal_graph_ir_native_test.cpp'
+      - '.github/workflows/universal-graph-ir.yml'
+permissions:
+  contents: read
+jobs:
+  graph-ir:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check apps/universal_graph/ir.mjs
+      - run: node --check apps/universal_graph/composition.mjs
+      - run: node --test tests/universal_graph_ir.test.mjs
+      - run: cmake -S apps/universal_graph/native -B build-ugraph -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build-ugraph --config Release --parallel 2
+      - run: ctest --test-dir build-ugraph -C Release --output-on-failure
