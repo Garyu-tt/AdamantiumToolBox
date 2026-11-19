@@ -75,6 +75,9 @@ jobs:
           node tests/mikoshi_r16_secure_writes.test.mjs
           node tests/mikoshi_permit_contract.test.mjs
           node tests/mikoshi_r16_permit_expiry.test.mjs
+          node tests/mikoshi_reconciliation.test.mjs
+          node tests/mikoshi_reconciliation_service.test.mjs
+          node tests/mikoshi_av_recovery.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
