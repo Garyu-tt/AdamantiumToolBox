@@ -1,0 +1,212 @@
+{
+  "schema": "mechanicus.recovery.control-graph.v1",
+  "kind": "logical_control_plane",
+  "note": "Design-only graph. Runtimes discover providers; these are semantic state roles, not fixed app nodes.",
+  "nodes": [
+    {
+      "id": "observe",
+      "kind": "event"
+    },
+    {
+      "id": "reconcile",
+      "kind": "state"
+    },
+    {
+      "id": "goal_gate",
+      "kind": "decision"
+    },
+    {
+      "id": "receipt",
+      "kind": "state"
+    },
+    {
+      "id": "incident",
+      "kind": "event"
+    },
+    {
+      "id": "classify",
+      "kind": "state"
+    },
+    {
+      "id": "atomic_gate",
+      "kind": "decision"
+    },
+    {
+      "id": "decompose",
+      "kind": "action"
+    },
+    {
+      "id": "capability_gate",
+      "kind": "decision"
+    },
+    {
+      "id": "provider_branch",
+      "kind": "action"
+    },
+    {
+      "id": "fix_branch",
+      "kind": "action"
+    },
+    {
+      "id": "lease",
+      "kind": "gate"
+    },
+    {
+      "id": "execute",
+      "kind": "action"
+    },
+    {
+      "id": "test",
+      "kind": "action"
+    },
+    {
+      "id": "verify_gate",
+      "kind": "decision"
+    },
+    {
+      "id": "rollback",
+      "kind": "action"
+    },
+    {
+      "id": "integrate",
+      "kind": "action"
+    },
+    {
+      "id": "readback",
+      "kind": "gate"
+    },
+    {
+      "id": "wait_trigger",
+      "kind": "wait"
+    }
+  ],
+  "edges": [
+    {
+      "from": "observe",
+      "to": "reconcile",
+      "event": "event"
+    },
+    {
+      "from": "reconcile",
+      "to": "goal_gate",
+      "event": "reconcile"
+    },
+    {
+      "from": "goal_gate",
+      "to": "receipt",
+      "event": "predicate_true"
+    },
+    {
+      "from": "goal_gate",
+      "to": "incident",
+      "event": "predicate_false"
+    },
+    {
+      "from": "receipt",
+      "to": "observe",
+      "event": "next_tick"
+    },
+    {
+      "from": "incident",
+      "to": "classify",
+      "event": "diagnose"
+    },
+    {
+      "from": "classify",
+      "to": "atomic_gate",
+      "event": "candidate"
+    },
+    {
+      "from": "classify",
+      "to": "wait_trigger",
+      "event": "needs_external"
+    },
+    {
+      "from": "atomic_gate",
+      "to": "lease",
+      "event": "ready"
+    },
+    {
+      "from": "atomic_gate",
+      "to": "decompose",
+      "event": "cannot_execute"
+    },
+    {
+      "from": "decompose",
+      "to": "capability_gate",
+      "event": "analyze_missing"
+    },
+    {
+      "from": "capability_gate",
+      "to": "provider_branch",
+      "event": "missing_capability"
+    },
+    {
+      "from": "capability_gate",
+      "to": "fix_branch",
+      "event": "fixable_subtask"
+    },
+    {
+      "from": "provider_branch",
+      "to": "reconcile",
+      "event": "provider_candidate_result"
+    },
+    {
+      "from": "fix_branch",
+      "to": "reconcile",
+      "event": "patch_candidate_result"
+    },
+    {
+      "from": "lease",
+      "to": "execute",
+      "event": "fenced_claim"
+    },
+    {
+      "from": "execute",
+      "to": "test",
+      "event": "artifact"
+    },
+    {
+      "from": "test",
+      "to": "verify_gate",
+      "event": "independent_test_receipt"
+    },
+    {
+      "from": "verify_gate",
+      "to": "integrate",
+      "event": "passed"
+    },
+    {
+      "from": "verify_gate",
+      "to": "rollback",
+      "event": "failed"
+    },
+    {
+      "from": "rollback",
+      "to": "incident",
+      "event": "new_evidence"
+    },
+    {
+      "from": "integrate",
+      "to": "readback",
+      "event": "staged_implementation"
+    },
+    {
+      "from": "readback",
+      "to": "receipt",
+      "event": "runtime_restored"
+    },
+    {
+      "from": "readback",
+      "to": "incident",
+      "event": "runtime_regression"
+    },
+    {
+      "from": "wait_trigger",
+      "to": "observe",
+      "event": "resume_condition"
+    }
+  ],
+  "required_root": "observe",
+  "terminal_blocked_allowed": false
+}
