@@ -56,8 +56,10 @@ are available with permission:
 Orchestration imports **no provider implementation**, only typed
 actions resolved from the current live capability graph. There are
 no static service endpoints or dependencies in Toolbox Core.
-It can cancel between calls, never retries uncertain write outcomes
-without readback, and stops when any capability is missing.
+Before writing, it checks all required skills. It can cancel between calls,
+never retries uncertain write outcomes, and stops on missing permissions.
+Runtime revocation may leave completed partial learning; there is no
+cross-provider atomic transaction or rollback yet.
 
 ## Learning boundaries
 - Synthetic reference stimuli, manual one-click start, no microphone
@@ -79,12 +81,14 @@ without readback, and stops when any capability is missing.
 `node tests/mikoshi_transition_feedback.test.mjs`
 `node tests/mikoshi_transition_service.test.mjs`
 `node tests/mikoshi_complete_loop.test.mjs`
+`node tests/mikoshi_live_loop.test.mjs`
 `node tools/mas-check.mjs`
 `python tools/check-size.py`
 
 The functional integration test uses actual acoustic, motif, motor,
 sequence, gesture, waveform, scalar reward and transition algorithms
 across independent source modules; only the app invocation transport
-is mocked there. Separate live-service tests validate the real
-authenticated scoped R08 APIs. Real human microphone/voice listening,
+is mocked there. A second end-to-end test starts eight independent
+real MAS HTTP services, discovers their live action graphs, and runs the
+same learning loop with persistent private state and scoped authorization. Real human microphone/voice listening,
 latency and privacy must be tested before production deployment.
