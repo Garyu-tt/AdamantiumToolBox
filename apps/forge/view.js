@@ -1,7 +1,9 @@
+import {makeBaseSamples} from './view-base-samples.js';
 import {makeReactiveSamples} from './view-r07-samples.js';
 import {makeProjectionSamples} from './view-r08-samples.js';
 import {makeAccessSamples} from './view-r09-samples.js';
 import {makeRemediationSamples} from './view-r10-samples.js';
+import {makeIntegritySamples} from './view-r11-samples.js';
 export async function mount(host,api){
  const add=(tag,text,parent=host)=>{const el=document.createElement(tag);
   if(text!==undefined)el.textContent=text;parent.append(el);return el;};
@@ -13,39 +15,7 @@ export async function mount(host,api){
   request:{atomic:true,goal:'Inspect one function',acceptance:['Typed result must be verified']},
   capability:{action:'example.inspect',input_schema:{type:'object'},output_schema:{type:'object'}},
   dependencies:[],ui:{expose:true,role:'action',label:'Inspect'}};
- const samples={
-  'forge.validate':{function:functionNode},
-  'forge.prepare':{function:functionNode,request_id:'request-inspect-0001',arguments:{}},
-  'forge.compose':{function:functionNode,request_id:'request-inspect-0001'},
-  'forge.publication.plan':{function:functionNode,request_id:'request-inspect-0001'},
-  'forge.reconcile.prepare':{function_ref:functionNode.id,observed_revision:'rev-1',trigger:'dependency.changed'},
-  'forge.providers.negotiate':{flow:'publication',input:{function:functionNode,request_id:'request-inspect-0001'},
-   snapshot:{schema:'forge.provider.snapshot.v1',revision:'revision-from-host',policy_revision:'policy-from-host',
-    source:'host-runtime',observed_at:new Date().toISOString(),
-    expires_at:new Date(Date.now()+60000).toISOString(),capabilities:[]}},
-  'forge.events.project':{schema:'forge.events.batch.v1',stream_id:'host-events',
-   cursor:{stream_id:'host-events',sequence:0,revision:'host-rev-0'},events:[{schema:'forge.event.v1',
-    id:'event-1',sequence:1,type:'dependency.changed',function_ref:functionNode.id,observed_revision:'host-rev-1'}]},
-  'forge.integration.prepare':{schema:'forge.integration.request.v1',flow:'publication',
-   input:{function:functionNode,request_id:'request-inspect-0001',expected_revision:'graph-rev-1'},
-   snapshot:{schema:'forge.provider.snapshot.v1',revision:'host-rev-1',policy_revision:'policy-rev-1',
-    source:'host-runtime',observed_at:new Date().toISOString(),
-    expires_at:new Date(Date.now()+60000).toISOString(),capabilities:[]}},
-  'forge.visibility.assess':{schema:'forge.visibility.assessment.request.v1',mode:'publish',
-   request_id:'request-inspect-0001',function_ref:functionNode.id,
-   expected_revision:'graph-rev-1',capability_action:functionNode.capability.action,
-   evidence:{host:{},commit:{},capability:{},ui:{}}},
-  'forge.composite.plan':{schema:'forge.composite.request.v1',request_id:'forge-req-composite-1',
-   functions:[functionNode],root:{kind:'group',id:'mechanicus.example.group',version:'1.0.0',
-    label:'Example functions',children:[{kind:'function',ref:functionNode.id}]}},
-  'forge.composite.impact':{schema:'forge.composite.impact.request.v1',observed_revision:'host-rev-1',
-   trigger:'function.updated',changed_refs:[functionNode.id],graph_intent:{nodes:[
-    {id:functionNode.id,kind:'function'}],edges:[]}},
-  'forge.incident.validate':{incident_id:'incident-1',node_ref:functionNode.id,
-   cause:{code:'NO_PROVIDER',explanation:'Compatible provider was not discovered'},
-   evidence:[{ref:'diagnostic:trace-1'}],impact:{direct:[functionNode.id]},
-   remedies:[{action:'rerun authorized provider discovery',risk:'safe'}]}
- };
+ const samples=makeBaseSamples(functionNode);
  const submit=add('button','Inspect'),out=add('pre','');
  out.style.whiteSpace='pre-wrap';out.style.overflowWrap='anywhere';
  try{
@@ -67,7 +37,11 @@ export async function mount(host,api){
   }catch{}
   Object.assign(samples,await makeReactiveSamples(api,functionNode),
    makeProjectionSamples(functionNode),makeAccessSamples(functionNode),
-   makeRemediationSamples(functionNode));
+   makeRemediationSamples(functionNode),makeIntegritySamples());
+  try{const audit=await api.call('forge.integrity.audit',samples['forge.integrity.audit']);
+   if(audit?.ok)samples['forge.integrity.plan']={schema:'forge.integrity.plan.request.v1',
+    request_id:'request-integrity-plan-demo',audit};
+  }catch{}
   samples['forge.distribution.recover']={schema:'forge.distribution.recovery.request.v1',
    operation_id:'demo-operation-0001',request_id:'demo-distribution-request-0001',
    graph_revision:'demo-graph-revision',policy_revision:'demo-policy-revision',mode:'publish',

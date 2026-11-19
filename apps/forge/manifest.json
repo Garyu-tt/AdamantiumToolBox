@@ -2,7 +2,7 @@
   "mas": "1.0",
   "id": "forge",
   "name": "Mechanicus Forge Adapter",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "icon": "graph",
   "lifecycle": "independent",
   "service": {

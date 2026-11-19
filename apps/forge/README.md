@@ -103,3 +103,8 @@ See `docs/FORGE-ACCESS-R09.md`.
 safe attempts with bounded budgets; `forge.remediation.assess` compares untrusted
 attempt, independent tests, graph restoration, incident and audit receipts.
 Neither action executes fixes or clears incidents. See `docs/FORGE-REMEDIATION-R10.md`.
+
+## R11 — graph integrity
+
+External snapshot audit and non-executable reconciliation; see
+`docs/FORGE-INTEGRITY-R11.md`.

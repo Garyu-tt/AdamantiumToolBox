@@ -104,3 +104,11 @@ Pure `forge.remediation.plan` and `forge.remediation.assess` were added.
 Reversible idempotent attempts and independent checks remain external; unsafe
 or permissioned cases return explicit escalation and diagnostic actions.
 All returned plans are non-executable and no blocker is cleared inside Forge.
+
+## R11 — graph integrity and explained reconciliation
+
+Added pure `forge.integrity.audit` and `forge.integrity.plan`. An external,
+revision-bound graph snapshot is checked for request/function uniqueness,
+reciprocal capability/UI edges, reverse dependencies, cycles, ghost actions and
+unexplained blockers. Forge only emits explanations and non-executable host
+reconciliation candidates; Graph Manager, TaskPool and UI Graph own mutations.

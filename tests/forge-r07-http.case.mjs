@@ -6,10 +6,10 @@ export async function runHttpR07({request,plan}){
   assert(graph.nodes.some(x=>x.id==='forge.reactive.plan'));
   assert(graph.nodes.some(x=>x.id==='forge.reactive.assess'));
   const desc=await (await query('/invoke',{action:'forge.describe'})).json();
-  assert.equal(desc.result.schema,'mechanicus.forge.adapter.v10');
+  assert.equal(desc.result.schema,'mechanicus.forge.adapter.v11');
   assert.equal(desc.result.stores_state,false);
   assert.equal(desc.result.external_effects,false);
-  assert.equal(desc.result.adapter_actions.length,23);
+  assert.equal(desc.result.adapter_actions.length,25);
   const result=await (await query('/invoke',{
    action:'forge.reactive.plan',params:request})).json();
   assert.deepEqual(result.result.changes,plan.changes);
