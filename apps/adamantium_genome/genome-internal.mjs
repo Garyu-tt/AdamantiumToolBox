@@ -1,4 +1,4 @@
-import {MAX_GENES,check,plain,int,name,keys,cpy,hash,validateGraphShape} from './validation.mjs';
+import {GENOME_SCHEMA,MAX_GENES,check,plain,int,name,keys,cpy,hash,validateGraphShape} from './validation.mjs';
 function item(id,chromosome,ordinal,payload){
  return {id,chromosome,ordinal,payload};
 }
