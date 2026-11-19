@@ -27,6 +27,14 @@ its own memory. No neural language model is involved.
 - `stream_capture.js` uses the browser's permission prompt,
   stops microphone tracks on completion, decodes/resamples in memory
   and retains no audio file. Browser audio support is device-dependent.
+- A **second explicit** Classroom action, `stream_imitation.js`, can take
+  at least two already learned event IDs and attempt to reproduce their
+  short audio through independent `articulation.observe/preview`,
+  `motor-learning.propose/feedback/status`, `gesture-planner.plan`,
+  and `waveform-renderer.render` skills. Motor tuning is capped at
+  six trials per event. No synthesis is attempted until the user starts
+  this separate action and checks its approval box. It is a coarse
+  proof-of-linkage, not human-intelligible speech.
 
 ## Important limitations
 - This is an **acoustic event candidate detector, not phoneme or
@@ -53,11 +61,13 @@ its own memory. No neural language model is involved.
 ## Validation
 `node tests/mikoshi_segments.test.mjs`
 `node tests/mikoshi_segments_service.test.mjs`
+`node tests/mikoshi_stream_imitation.test.mjs`
 `node tools/mas-check.mjs`
 `python tools/check-size.py`
 
 The second test starts three **real independent MAS services**:
 segmenter → explicit auditory motif teaching → temporal sequence memory.
 Checks read-only, approval, authorization and absence of audio in the
-saved state. Browser/hardware microphone and human voice tests are
+saved state. A separate synthetic composition test checks event-to-motor
+training, bounded retries and one continuous WAV playback. Browser/hardware microphone and human voice tests are
 separate release gates; synthetic success does not validate them.
