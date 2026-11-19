@@ -13,10 +13,15 @@ const graph=()=>{
  if(configured()){
   nodes.push({id:'mikoshi_learning.provider',type:'resource',requires:[scope],
    skill:{schema:'mikoshi.skill.v1',domain:'general',actions:{
-    recognize:'mikoshi_learning.recognize',teach:'mikoshi_learning.teach'}}},
-   {id:'mikoshi_learning.recognize',type:'action',title:'Nearest prototype',requires:[scope]},
-   {id:'mikoshi_learning.teach',type:'action',title:'Learn with feedback',requires:[train]});
-  edges.push({from:'mikoshi_learning.view',to:'mikoshi_learning.provider',type:'uses'});
+    recognize:'mikoshi_learning.recognize',
+    ...(can(train)?{teach:'mikoshi_learning.teach'}:{})}}},
+   {id:'mikoshi_learning.recognize',type:'action',title:'Nearest prototype',requires:[scope]});
+  if(can(train))nodes.push({id:'mikoshi_learning.teach',type:'action',
+   title:'Learn with feedback',requires:[train]});
+  edges.push({from:'mikoshi_learning.view',to:'mikoshi_learning.provider',type:'uses'},
+   {from:'mikoshi_learning.provider',to:'mikoshi_learning.recognize',type:'provides'});
+  if(can(train))edges.push({from:'mikoshi_learning.provider',to:'mikoshi_learning.teach',
+   type:'provides'});
  }
  return {app:'mikoshi_learning',version:1,nodes,edges};
 };
