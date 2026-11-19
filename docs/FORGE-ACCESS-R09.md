@@ -24,6 +24,8 @@ permission among several required by the same function. `retain_candidates`
 are always `invokable:false`. `renewal_candidates` are *advisory*, not timers;
 when time-to-expiry <= `renew_before_seconds`, a host can request revalidation.
 At `observed_at === valid_until`, a lease is already expired.
+An inactive or unverified UI mount triggers a **UI-only** invalidation plan;
+it must not by itself revoke an otherwise valid runtime action.
 
 **Clock provenance:** `observed_at` is merely a host claim; Forge NEVER reads
 its own wall clock or proves freshness. The runtime must use its own trusted

@@ -53,6 +53,8 @@ export function planLeases(p){
   else retain_candidates.push({mount_ref:m.mount_ref,function_ref:m.function_ref,
    action_id:m.action_id,invokable:false,authorized:false});
  }
+ const runtimeBlocks=revocations.filter(x=>x.reason_codes.some(code=>
+  ['MISSING_GRANT','EXPLICIT_DENY','NOT_YET_VALID','LEASE_EXPIRED'].includes(code)));
  return {ok:true,schema:'forge.access.lease.plan.v1',request_id:p.request_id,
   client_ref:p.client_ref,principal_ref:p.principal_ref,snapshot_ref:s.snapshot_ref,
   claimed_observed_at:s.observed_at,expected_revisions:{graph:s.graph_revision,
@@ -62,11 +64,11 @@ export function planLeases(p){
   requires_exact_action_reauthorization:true,
   steps:[step('read-current-authoritative-entitlements','policy.entitlements.read',
    {snapshot_ref:s.snapshot_ref,principal_ref:p.principal_ref}),
-   ...(revocations.length?[step('enforce-scoped-action-denial','capability.access.revoke',
+   ...(runtimeBlocks.length?[step('enforce-scoped-action-denial','capability.access.revoke',
     {principal_ref:p.principal_ref,client_ref:p.client_ref,
-     affected_actions:[...new Set(revocations.map(x=>x.action_id))],
-     policy_revision:s.policy_revision,identity_revision:s.identity_revision}),
-    step('invalidate-affected-ui-mounts','ui.projection.invalidate',
+     affected_actions:[...new Set(runtimeBlocks.map(x=>x.action_id))],
+     policy_revision:s.policy_revision,identity_revision:s.identity_revision})]:[]),
+   ...(revocations.length?[step('invalidate-affected-ui-mounts','ui.projection.invalidate',
     {principal_ref:p.principal_ref,client_ref:p.client_ref,
      mount_refs:revocations.map(x=>x.mount_ref),ui_revision:s.ui_revision})]:[]),
    step('verify-runtime-deny-and-ui-readback','ui.projection.readback',

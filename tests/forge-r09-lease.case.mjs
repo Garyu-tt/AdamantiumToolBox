@@ -49,5 +49,7 @@ export function testLease(){
  p=clone();p.renew_before_seconds=90000;
  assert.equal(planLeases(p).ok,false,'unbounded horizon');
  p=clone();p.snapshot.mounts=[mount('inactive',['demo.safe'],'disabled')];
- assert.equal(planLeases(p).revocation_candidates.length,1);
+ const inactive=planLeases(p);assert.equal(inactive.revocation_candidates.length,1);
+ assert(!inactive.steps.some(x=>x.port==='capability.access.revoke'),
+  'inactive UI contribution must not cause principal-wide action denial');
 }
