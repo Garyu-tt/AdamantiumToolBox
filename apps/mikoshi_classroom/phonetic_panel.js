@@ -1,8 +1,9 @@
+import {motorPanel} from './motor_panel.js';
 import {sequencesPanel} from './sequences_panel.js';
 import {motifsPanel} from './motifs_panel.js';
 import {captureLesson} from './mic_capture.js';
 // Optional classroom widget: one live skill resource, zero provider imports.
-export function phoneticPanel(host,api,resource,allowed,memory,sequence){
+export function phoneticPanel(host,api,resource,allowed,memory,sequence,motor){
  const a=resource?.skill?.actions;
  if(!a||!allowed.has(a.preview))return;
  const add=(tag,text,where=host)=>{const el=document.createElement(tag);
@@ -16,7 +17,9 @@ export function phoneticPanel(host,api,resource,allowed,memory,sequence){
  const ownAudio=add('audio');ownAudio.controls=true;
  const result=add('pre','Сначала послушайте образец');
  let teacher=null;
- const onMotif=sequencesPanel(host,api,sequence,allowed);
+ const onSequence=sequencesPanel(host,api,sequence,allowed);
+ const onMotor=motorPanel(host,api,resource,motor,allowed,()=>teacher);
+ const onMotif=id=>{onSequence(id);onMotor(id);};
  if(memory)motifsPanel(host,api,memory,allowed,()=>teacher,onMotif);
  const teacherButton=add('button','Слушать образец');
  teacherButton.onclick=async()=>{
