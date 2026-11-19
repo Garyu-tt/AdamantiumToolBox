@@ -1,11 +1,12 @@
 // Pure recursive composition planner; no runtime invocation or activation.
 export const COMPOSITION_SCHEMA='mas.composite.v1';
 const ident=/^[a-z][a-z0-9_-]{1,39}$/;
+const semver=/^\d+\.\d+\.\d+$/;
 const contract=/^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+\.v[1-9][0-9]*$/;
 const action=/^[a-z][a-z0-9_-]{1,39}\.[a-z][a-z0-9_.-]{0,95}$/;
 const validSlot=x=>x&&ident.test(x.slot)&&contract.test(x.contract);
 function verify(spec){
- if(!spec||spec.schema!==COMPOSITION_SCHEMA||!ident.test(spec.id)||
+ if(!spec||spec.schema!==COMPOSITION_SCHEMA||!ident.test(spec.id)||!semver.test(spec.version)||
     !Array.isArray(spec.exports)||!Array.isArray(spec.requires)||
     !Array.isArray(spec.optional)||spec.exports.length>16||
     spec.requires.length>32||spec.optional.length>32||
@@ -26,7 +27,7 @@ export function resolveComposition(root,specs,graph,{maxDepth=16,maxNodes=512}={
  const providers=Array.isArray(graph?.nodes)?graph.nodes.filter(n=>n&&n.type==='action'&&
   typeof n.id==='string'&&action.test(n.id)&&contract.test(n.contract)):[];
  if(providers.length>maxNodes)throw Error('too_many_providers');
- const index=new Map();let calls=0;
+ let calls=0;
  const getCandidates=c=>{
   const result=[];
   for(const p of providers)if(p.contract===c)result.push({kind:'action',id:p.id,fixture:p.fixture===true});
