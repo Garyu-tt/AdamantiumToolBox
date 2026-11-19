@@ -48,13 +48,15 @@ export function validateUniversalGraph(graph,{maxNodes=512,maxEdges=4096}={}){
    from.role===e.kind&&to.role===e.kind&&from.datatype===to.datatype,
    'incompatible_typed_ports');
   assert(e.source.node!==e.target.node||!dagRoles.has(e.kind),'self_cycle_forbidden');
-  // Non-DAG feedback is explicit and never silently made executable.
-  if(e.feedback!==undefined)assert(e.feedback===true,'invalid_feedback');
+  // Only neural/event links may close a feedback loop, and must declare it.
+  if(e.feedback!==undefined)assert(e.feedback===true&&
+   (e.kind==='neural'||e.kind==='event'),'invalid_feedback');
   if(e.source.node===e.target.node)assert(e.feedback===true,'feedback_must_be_declared');
-  if(dagRoles.has(e.kind))dag.push([e.source.node,e.target.node]);
+  if(dagRoles.has(e.kind)||((e.kind==='neural'||e.kind==='event')&&e.feedback!==true))
+   dag.push([e.source.node,e.target.node]);
   seenEdges.add(e.id);
  }
- // Kahn over DAG-only semantics. Neural/event feedback is handled by its own executor.
+ // Kahn over mandatory-acyclic links; declared feedback breaks neural/event cycles.
  const degree=new Map([...nodeById.keys()].map(k=>[k,0])),adj=new Map();
  for(const [a,b] of dag){
   degree.set(b,degree.get(b)+1);
