@@ -21,6 +21,11 @@ read-only `plugins/mikoshi` adapter.
 - `mikoshi_classroom/phonetic_panel.js`: optional live-discovered skill
   with three synthetic example vowels. Teacher and learner playback,
   immediate feedback and the error metric form one interactive experience.
+- `mikoshi_classroom/mic_capture.js`: opt-in, short (950 ms) microphone capture
+  using browser media permissions, decoded in memory only. `pcm.js` resamples
+  to 12 kHz and selects the loudest 200 ms window; it is NOT a VAD or ASR.
+  No microphone is started until the user explicitly clicks a button.
+  Training remains a separate action after recording.
 
 ## Security and consent
 Scopes: `phonetics.inspect`, `phonetics.render`, `phonetics.learn`.
@@ -28,7 +33,9 @@ Training only exists when private state path is explicitly configured and
 learning permission is granted. It also requires `sourceApproved:true`;
 that bit is a caller assertion, NOT a license or consent verification.
 Real media ingestion must validate its own provenance/consent separately.
-No microphone capture or internet download is performed by R03.
+The capture UI asks for browser microphone permission; no background recording
+or internet download occurs. Recording permission is not the same as permission
+to train on material or speaker identities.
 Private state and agent identity must not be committed to the repository.
 The audio, formants and pitch anchor are not copied from a real singer.
 
@@ -51,10 +58,13 @@ No claims of sentience or similarity to an identifiable singer.
 ## Tests
 `node tests/mikoshi_phonetics.test.mjs`
 `node tests/mikoshi_phonetics_service.test.mjs`
+`node tests/mikoshi_microphone.test.mjs`
 `python tools/check-size.py`
 `node tools/mas-check.mjs`
 
-The tests verify real spectral loss reduction, isolated MAS startup, refusal
+The tests verify real spectral loss reduction, isolated MAS startup, PCM
+preprocessing and silence rejection; microphone hardware/browser permission
+must still be tested manually. They also verify refusal
 of unapproved training and non-retention of audio in persistent state.
 Do not deploy to production without rights checks, authorization review
 and live microphone/audio quality validation.
