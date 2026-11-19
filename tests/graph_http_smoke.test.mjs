@@ -40,6 +40,16 @@ for(const [name,port,action,permission,params] of suites){
    body:JSON.stringify({action,params})});
   assert.equal(r.status,200,name+':invoke');
   const data=await r.json();assert(data.result);
+  if(name==='rollback_watchdog'){
+   assert(doc.nodes.some(x=>x.id==='rollback_watchdog.receipt'));
+   assert(doc.nodes.some(x=>x.id==='rollback_watchdog.diagnose'));
+   const missing=await fetch(origin+'/invoke',{method:'POST',headers:auth,
+    body:JSON.stringify({action:'rollback_watchdog.receipt',params:{}})});
+   assert.equal(missing.status,200);
+   const check=(await missing.json()).result;
+   assert.equal(check.signatureValid,false);
+   assert.equal(check.readyToApply,false);
+  }
   if(name==='nftables_lab'){
    assert(doc.nodes.some(x=>x.id==='nftables_lab.rollback_trial'));
    const res=await fetch(origin+'/invoke',{method:'POST',headers:auth,
