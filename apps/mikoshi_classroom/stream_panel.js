@@ -1,16 +1,18 @@
+import {streamMotorPanel} from './stream_motor_panel.js';
 import {captureStream} from './stream_capture.js';
 // Composite discovery only; no fixed sibling MAS imports or endpoints.
-export function streamPanel(host,api,events,memory,sequence,articulation,allowed){
+export function streamPanel(host,api,events,memory,sequence,articulation,allowed,motor,gesture,wave){
  const ev=events?.skill?.actions,mem=memory?.skill?.actions;
  if(!ev?.analyze||!allowed.has(ev.analyze))return;
  const add=(tag,text,parent=host)=>{const e=document.createElement(tag);
   if(text!==undefined)e.textContent=text;parent.append(e);return e;};
  add('h3','Непрерывное слушание — короткие события');
  const info=add('pre','Запись и обучение запускаются только вручную');
- let source=null,detected=null,busy=false;
+ let source=null,detected=null,learned=null,busy=false;
+ streamMotorPanel(host,api,{articulation,motor,gesture,wave},allowed,()=>learned);
  const capture=add('button','Записать 2 секунды с микрофона');
  capture.onclick=async()=>{
-  if(busy)return;busy=true;capture.disabled=true;detected=null;
+  if(busy)return;busy=true;capture.disabled=true;detected=null;learned=null;
   try{
    source=await captureStream();info.textContent='Запись в памяти: 2 секунды. '+
     'Можно выделить звуковые события, ничего не сохраняя.';
@@ -21,7 +23,7 @@ export function streamPanel(host,api,events,memory,sequence,articulation,allowed
   allowed.has(articulation.skill.actions.preview)){
   const synthetic=add('button','Создать контрольный сигнал без микрофона');
   synthetic.onclick=async()=>{
-   if(busy)return;busy=true;synthetic.disabled=true;detected=null;
+   if(busy)return;busy=true;synthetic.disabled=true;detected=null;learned=null;
    try{
     const speak=articulation.skill.actions.preview;
     const a=await api.call(speak,{motor:{f1:810,f2:1290}});
@@ -38,7 +40,7 @@ export function streamPanel(host,api,events,memory,sequence,articulation,allowed
  analyze.onclick=async()=>{
   if(busy)return;
   if(!source){info.textContent='Сначала получите аудиообразец';return;}
-  busy=true;analyze.disabled=true;
+  busy=true;analyze.disabled=true;learned=null;
   try{
    detected=await api.call(ev.analyze,{samples:source.samples,
     sampleRate:source.sampleRate});
@@ -82,6 +84,7 @@ export function streamPanel(host,api,events,memory,sequence,articulation,allowed
      allowed.has(sequence.skill.actions.teach))
      await api.call(sequence.skill.actions.teach,{events:timeline,
       sourceApproved:true});
+    learned=detected.events.map((event,i)=>({...event,id:timeline[i].id}));
     info.textContent='Закреплено образов: '+timeline.length+
      '\nПоследовательность: '+timeline.map(e=>e.id).join(' → ');
     detected=null;consent.checked=false;
