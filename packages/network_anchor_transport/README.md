@@ -15,7 +15,7 @@ An ambiguous POST returns `delivery_unconfirmed`, `mayHaveCommitted:true`, with 
 
 ## Receiver mode
 
-Operator JSON sets `mode:"receiver"`, `trustFile`, `receiver:{listenHost,listenPort,caFile,serverCertFile,serverKeyFile,clientSpkiSha256,localAnchorUrl}`. Receiver uses mTLS client CA **and leaf SPKI pin**. The downstream Anchor URL is an operator-provisioned loopback-only HTTP root; no dynamic target URL is accepted from a client. Receiver only forwards to the independently installed Anchor `/invoke` API, requiring `network_anchor_transport.receive`, `network_anchor.read`, and `network_anchor.write` for commits. Only exact CAS and batch boundaries are accepted. No signing private keys are present in receiver.
+Operator JSON sets `mode:"receiver"`, `trustFile`, `receiver:{listenHost,listenPort,caFile,serverCertFile,serverKeyFile,clientSpkiSha256,localAnchorUrl}`. Receiver uses mTLS client CA **and leaf SPKI pin**. The downstream Anchor URL is an operator-provisioned loopback-only HTTP root; no dynamic target URL is accepted from a client. Receiver only forwards to the independently installed Anchor `/invoke` API, requiring `network_anchor_transport.read`, `.receive`, `network_anchor.read`, and `network_anchor.write` before the mTLS listener is even bound. Missing grants leave only the local status action discoverable. Only exact CAS and batch boundaries are accepted. No signing private keys are present in receiver.
 
 ## Security, deployment and tests
 
