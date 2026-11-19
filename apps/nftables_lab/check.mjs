@@ -3,7 +3,7 @@ import {isAbsolute,join} from 'node:path';
 import {spawn} from 'node:child_process';
 import {compileLabScript} from './compile.mjs';
 const nsName=x=>typeof x==='string'&&/^[a-zA-Z][a-zA-Z0-9_.-]{0,47}$/.test(x);
-const isBinary=x=>typeof x==='string'&&isAbsolute(x)&&!x.includes('\\n');
+const isBinary=x=>typeof x==='string'&&isAbsolute(x)&&!/\r|\n|\0/.test(x);
 export function spawnReadOnly(command,args,stdin){
  return new Promise(resolve=>{
   const child=spawn(command,args,{shell:false,stdio:['pipe','ignore','pipe'],
