@@ -4,14 +4,16 @@ import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {reserveLease,inspectLease} from './store.mjs';
 import {auditReservations} from './audit.mjs';
+import {checkpointReservations} from './checkpoint.mjs';
 const manifest=JSON.parse(await readFile(join(dirname(fileURLToPath(import.meta.url)),
  'manifest.json'),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('internal_key_missing');
 const can=x=>new Set((process.env.ADA_CAPS||'').split(',')).has(x);
-const inspect='rollback_ledger.inspect',audit='rollback_ledger.audit',reserve='rollback_ledger.reserve';
+const inspect='rollback_ledger.inspect',audit='rollback_ledger.audit';
+const checkpoint='rollback_ledger.checkpoint',reserve='rollback_ledger.reserve';
 const read='rollback_ledger.read',write='rollback_ledger.reserve';
-const caps={[inspect]:read,[audit]:read,[reserve]:write};
+const caps={[inspect]:read,[audit]:read,[checkpoint]:read,[reserve]:write};
 const visible=()=>Object.keys(caps).filter(x=>can(caps[x]));
 const graph=()=>{
  const actions=visible(),view=can(read);
@@ -42,6 +44,8 @@ http.createServer((req,res)=>{
      trustedPublicKey:process.env.ADA_ROLLBACK_TRUST_SPKI||''};
     const result=action===inspect?await inspectLease(params.leaseId,options):
      action===audit?await auditReservations(options):
+     action===checkpoint?await checkpointReservations({...options,
+      expectedDigest:params.expectedDigest}):
      await reserveLease(params,options);
     return reply(res,200,{result});
    }catch(e){return reply(res,400,{error:String(e.message).slice(0,96)});}
