@@ -1,5 +1,6 @@
 // Signed short-lived claims, NOT independent proof of legal recording consent.
-import {createHmac,timingSafeEqual,randomBytes} from 'node:crypto';
+import {createHmac,randomBytes} from 'node:crypto';
+import {bindingsOK,decodePermit} from '../../contracts/mikoshi-av-permit.mjs';
 const PURPOSE='audiovisual-association-training',TTL=60000;
 const DIGEST=/^[0-9a-f]{64}$/;
 const encode=x=>Buffer.from(JSON.stringify(x)).toString('base64url');
@@ -19,40 +20,27 @@ export function validateClaim(claim){
   !Number.isInteger(claim.pairs)||claim.pairs<1||claim.pairs>12||
   typeof claim.digest!=='string'||!DIGEST.test(claim.digest))
   throw Error('source_policy_denied');
+ if(claim.pairBindings!==undefined&&
+  !bindingsOK(claim.pairBindings,claim.pairs))
+  throw Error('invalid_source_pair_bindings');
  return {sourceKind:claim.sourceKind,purpose:claim.purpose,
-  pairs:claim.pairs,digest:claim.digest};
+  pairs:claim.pairs,digest:claim.digest,
+  ...(claim.pairBindings?{pairBindings:claim.pairBindings}:{})};
 }
 export function issue(secret,claim,now){
  const fields=validateClaim(claim);
  if(!Number.isSafeInteger(now)||now<0)throw Error('invalid_source_clock');
  const payload=encode({...fields,issuedAt:now,expiresAt:now+TTL,
-  nonce:randomBytes(12).toString('hex'),v:1});
+  nonce:randomBytes(12).toString('hex'),v:fields.pairBindings?2:1});
  return {schema:'mikoshi.source.permit.v1',token:payload+'.'+signature(secret,payload),
   expiresAt:now+TTL,verifiedConsent:false,operatorAttested:true};
 }
 export function verify(secret,token,digest,purpose,now){
- if(typeof token!=='string'||token.length>2400||typeof digest!=='string'||
-  !DIGEST.test(digest)||purpose!==PURPOSE||
-  !Number.isSafeInteger(now)||now<0)throw Error('invalid_source_permit');
- const parts=token.split('.');
- if(parts.length!==2||!parts.every(x=>/^[A-Za-z0-9_-]+$/.test(x)))
-  throw Error('invalid_source_permit');
- const expected=Buffer.from(signature(secret,parts[0]),'base64url');
- const supplied=Buffer.from(parts[1],'base64url');
- if(expected.length!==supplied.length||!timingSafeEqual(expected,supplied))
-  throw Error('invalid_source_signature');
- let payload;
- try{payload=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));}
- catch{throw Error('invalid_source_permit');}
- if(payload.v!==1||payload.purpose!==purpose||payload.digest!==digest||
-  payload.sourceKind!=='user-live-av'||!Number.isInteger(payload.pairs)||
-  payload.pairs<1||payload.pairs>12||
-  !Number.isSafeInteger(payload.issuedAt)||
-  !Number.isSafeInteger(payload.expiresAt)||
-  payload.expiresAt-payload.issuedAt!==TTL||
-  now<payload.issuedAt||now>payload.expiresAt)
+ const p=decodePermit(secret,token,now);
+ if(p.digest!==digest||p.purpose!==purpose)
   throw Error('source_permit_expired_or_mismatched');
  return {schema:'mikoshi.source.verification.v1',allowed:true,
-  pairs:payload.pairs,expiresAt:payload.expiresAt,
-  verifiedConsent:false,operatorAttested:true,oneTime:false};
+  pairs:p.pairs,expiresAt:p.expiresAt,
+  permitVersion:p.v,verifiedConsent:false,
+  operatorAttested:true,oneTime:false};
 }
