@@ -7,6 +7,7 @@ on:
       - 'apps/task_snapshot/**'
       - 'tests/task_snapshot_publisher.test.mjs'
       - 'tests/task_snapshot_sequence.test.mjs'
+      - 'tools/interop/r07-r05-contract.mjs'
       - '.github/workflows/task-snapshot-publisher.yml'
   pull_request:
     paths:
@@ -33,5 +34,14 @@ jobs:
           node --check apps/task_snapshot/sequence_store.mjs
       - name: Verify authenticated-read dependency and signed R05 wire contract
         run: node --test tests/task_snapshot_publisher.test.mjs tests/task_snapshot_sequence.test.mjs
+      - name: Check out pinned Adamantium-node R06 verifier for real wire-compatibility
+        uses: actions/checkout@v4
+        with:
+          repository: Garyu-tt/adamantium-node
+          ref: acaedbc5706eaa683f113136fb7f4f41748f1b14
+          path: _interop/adamantium-node
+          persist-credentials: false
+      - name: Verify R07 envelopes with actual R05 Ed25519 validator
+        run: node tools/interop/r07-r05-contract.mjs
       - name: Regression Task Pool state machine
         run: node --test tests/task_pool.test.mjs tests/task_pool_graph_readonly.test.mjs
