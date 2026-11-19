@@ -7,7 +7,7 @@ Parent rules: ADR-0001, ADR-0002, Typed Capability and Graph Manager.
 
 A universal graph is a portable versioned description of a program, network, neural region, UI, policy relationship or recursive composite. It is NOT an implicit executable script, host connection, remote service discovery result or permission grant.
 
-The canonical representation is mas.universal-graph.v1, validated by the pure module apps/universal_graph/ir.mjs. Rete.js v2 (candidate), a CLI, Graph Manager and runtime plugins may consume the same description through independently installed adapters. Closing the GUI must not stop any executor.
+The canonical representation is mas.universal-graph.v1. A standalone C++17 structural validator and non-executing topological compiler live under apps/universal_graph/native; apps/universal_graph/ir.mjs is the browser/Node-side reference validator. Both have independent portability tests. Rete.js v2 (candidate), a CLI, Graph Manager and runtime plugins may consume the same description through independently installed adapters. Closing the GUI must not stop any executor.
 
 Existing sdk/graph.mjs, Core /graph, Graph Manager and GENESIS Portable remain unchanged. Explicitly version any future adapter.
 
@@ -34,7 +34,7 @@ Defaults: up to 512 nodes, 4096 edges and 16 recursive graph levels in this slic
 
 Rete.js v2 remains optional. The Rete license page explicitly excludes rete-scopes-plugin and rete-structures from ordinary commercial MIT permissions: these advanced packages are CC-BY-NC-SA-4.0. For a commercial Toolbox avoid bundling them; use independently developed traversal/nesting or negotiate a separate license. https://retejs.org/docs/licensing/
 
-The R01 IR requires no npm packages, mandatory GPU or network. Do not copy implementation code from non-commercial Rete plugins.
+R01 has no mandatory Node.js, npm packages, GPU, browser or network for native C++17 structural validation; the JavaScript implementation is optional at runtime. Do not copy implementation code from non-commercial Rete plugins.
 
 ## Acceptance gates
 
@@ -43,7 +43,7 @@ The R01 IR requires no npm packages, mandatory GPU or network. Do not copy imple
 3. Infrastructure: server and policy claim view; no authorization implied.
 4. Nested composites: pinned child revision, reject missing or cyclic graph, enforce depth/budget.
 
-Test: node --test tests/universal_graph_ir.test.mjs (Linux/Windows CI). This test does NOT prove a real distributed runtime is running.
+Test: node --test tests/universal_graph_ir.test.mjs. Native test: cmake -S apps/universal_graph/native -B build-ugraph && cmake --build build-ugraph && ctest --test-dir build-ugraph --output-on-failure. Linux/Windows CI runs both. C++17 currently validates typed in-memory structs, not arbitrary JSON bytes; a language-neutral wire decoder and differential conformance corpus remain separate gates. No test proves a real distributed runtime.
 
 ## Next independent slices
 
