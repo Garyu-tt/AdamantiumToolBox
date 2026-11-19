@@ -40,6 +40,11 @@
       "from": "nftables_lab.rollback_trial",
       "to": "rollback_watchdog.journal",
       "type": "related"
+    },
+    {
+      "from": "nftables_lab.check",
+      "to": "nftables_readback.observe",
+      "type": "related"
     }
   ]
 }
