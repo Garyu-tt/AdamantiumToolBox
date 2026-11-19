@@ -23,8 +23,8 @@ test('failure modes: fixture, ambiguity, missing',()=>{
  assert.equal(resolveComposition('dante',specs,{nodes:[...all,{id:'extra.run',type:'action',contract:genesisReq[0]}]}).tree.roles.find(x=>x.slot==='cognition').status,'blocked');
 });
 test('cycles, limits, invalid specs and misleading metadata fail safely',()=>{
- const a={schema:'mas.composite.v1',id:'alpha',exports:['alpha.entry.v1'],requires:[{slot:'next',contract:'beta.entry.v1'}],optional:[]};
- const b={schema:'mas.composite.v1',id:'beta',exports:['beta.entry.v1'],requires:[{slot:'next',contract:'alpha.entry.v1'}],optional:[]};
+ const a={schema:'mas.composite.v1',id:'alpha',version:'0.1.0',exports:['alpha.entry.v1'],requires:[{slot:'next',contract:'beta.entry.v1'}],optional:[]};
+ const b={schema:'mas.composite.v1',id:'beta',version:'0.1.0',exports:['beta.entry.v1'],requires:[{slot:'next',contract:'alpha.entry.v1'}],optional:[]};
  const p=resolveComposition('alpha',[a,b],{nodes:[]});
  assert.equal(p.discovered,false);assert.equal(p.tree.roles[0].child.roles[0].child.status,'cycle');
  assert.equal(resolveComposition('dante',specs,{nodes:nodes([...genesisReq,...danteReq])},{maxDepth:1}).discovered,false);
