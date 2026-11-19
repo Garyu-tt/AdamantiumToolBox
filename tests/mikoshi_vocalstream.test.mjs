@@ -28,7 +28,7 @@ assert(seam<=Math.max(...local)+1e-8,'boundary click must not exceed local slope
 const pause=plan([{motor:A,durationMs:180,pauseMs:200},
  {motor:I,durationMs:180}]);
 const paused=render(pause);
-const quiet=paused.slice(2100,4400);
+const quiet=paused.slice(2400,4350); // central pause, excluding fade boundaries
 const rms=Math.sqrt(quiet.reduce((v,x)=>v+x*x,0)/quiet.length);
 assert(rms<.04,'explicit pause should be nearly silent');
 const tampered={...trajectory,frames:[...trajectory.frames]};
