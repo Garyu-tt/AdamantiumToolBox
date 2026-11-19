@@ -1,5 +1,5 @@
 const NS='http://www.w3.org/2000/svg';
-const layerOrder=['project','plugin','module','capability','task','dependency','artifact','node'];
+const layerOrder=['project','plugin','module','capability','task','dependency','artifact','node','file'];
 const make=(tag,parent,attrs={},text)=>{
  const e=document.createElementNS(NS,tag);
  for(const [key,value] of Object.entries(attrs))e.setAttribute(key,String(value));
