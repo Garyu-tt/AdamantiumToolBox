@@ -59,3 +59,28 @@ backup, encrypted store, multitenancy, concurrent-process lock or HA claims.
 - No hardcoded VM, domain, provider, API key, optional plugin, navigation entry,
   model name, renderer, theme color or node topology.
 - Never promote a prototype without tests, signed release review and rollback.
+
+## R02 incremental implementation: interruption and checkpoints (2026-11-19)
+Two **optional**, Core+App-independent MAS applications extend the R01 shell:
+
+- `chat_turns` (`conversation-turns-1`) stores committed user-message references
+  and generation claims. New input during a claim marks it `interruptRequested`.
+  A stale completion cannot be committed; superseded or failed work preserves
+  all unconsumed inputs. The model adapter must acknowledge cancellation.
+- `chat_context` (`conversation-checkpoints-1`) stores versioned, SHA-256
+  content-hashed summaries with source IDs and producer. `due` determines
+  whether 10 more thread messages have accumulated since the last snapshot.
+  A model-backed context compiler is not part of this prototype.
+
+The composer uses a stable operation ID for ambiguous retries. An independent
+turn widget can reconcile message receipts from the durable chat store when a
+cross-plugin registration fails or a browser session ends unexpectedly.
+
+Limitations: single-process JSONL ledgers, no full LibreChat UI parity, no
+live model transport or actual model cancellation, no agent execution,
+no background reconciliation and no cross-node transactional guarantee.
+New capability permissions must be explicitly authorized.
+
+Tests: `node tests/conversation_hub.test.mjs`,
+`node tests/conversation_turns_context.test.mjs`,
+`node tests/conversation_services.test.mjs`.
