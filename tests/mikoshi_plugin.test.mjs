@@ -6,6 +6,17 @@ import {validateManifest,validateGraph} from '../core/contract.mjs';
 import {probePlugin} from '../standards/lifecycle/probe.mjs';
 
 const root=resolve(fileURLToPath(new URL('../plugins/mikoshi/',import.meta.url)));
+const {childEnvironment}=await import('../plugins/mikoshi/backend.mjs');
+const original=process.env.ADA_INTERNAL_KEY;
+process.env.ADA_INTERNAL_KEY='NEVER_LEAK_THIS';
+const environment=childEnvironment('ephemeral-mikoshi',47001);
+assert.equal(environment.MIKOSHI_API_TOKEN,'ephemeral-mikoshi');
+assert.equal(environment.MIKOSHI_PORT,'47001');
+assert(!Object.hasOwn(environment,'ADA_INTERNAL_KEY'));
+assert(!Object.hasOwn(environment,'ADA_TOKEN'));
+if(original===undefined)delete process.env.ADA_INTERNAL_KEY;
+else process.env.ADA_INTERNAL_KEY=original;
+
 const manifest=JSON.parse(await readFile(join(root,'manifest.json'),'utf8'));
 const mapping=JSON.parse(await readFile(join(root,'routes.json'),'utf8'));
 assert(validateManifest(manifest));

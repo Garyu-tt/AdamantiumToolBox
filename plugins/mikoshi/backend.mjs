@@ -36,6 +36,17 @@ function config(){
   throw Error('python_unavailable');
  return {c,source};
 }
+export function childEnvironment(apiToken,apiPort){
+ const env={};
+ for(const key of ['SystemRoot','WINDIR','ComSpec','PATH','PATHEXT',
+  'TEMP','TMP','APPDATA','LOCALAPPDATA','USERPROFILE','HOME',
+  'LANG','LC_ALL','HOMEDRIVE','HOMEPATH']){
+  if(typeof process.env[key]==='string')env[key]=process.env[key];
+ }
+ return {...env,MIKOSHI_API_TOKEN:apiToken,MIKOSHI_HOST:'127.0.0.1',
+  MIKOSHI_PORT:String(apiPort),MIKOSHI_STATE_DIR:join(base,'state'),
+  PYTHONDONTWRITEBYTECODE:'1'};
+}
 export async function boot(){
  if(worker)return;
  try{
@@ -44,9 +55,7 @@ export async function boot(){
   port=await probePort();secret=randomBytes(32).toString('hex');
   worker=spawn(c.pythonExecutable,['-B','-m','server.api'],{
    cwd:source,windowsHide:true,stdio:'ignore',
-   env:{...process.env,MIKOSHI_API_TOKEN:secret,MIKOSHI_HOST:'127.0.0.1',
-        MIKOSHI_PORT:String(port),MIKOSHI_STATE_DIR:join(base,'state'),
-        PYTHONDONTWRITEBYTECODE:'1'}
+   env:childEnvironment(secret,port)
   });
   worker.on('error',()=>{ready=false;reason='python_spawn_error';});
   worker.on('exit',()=>{ready=false;reason='python_exited';worker=null;});
