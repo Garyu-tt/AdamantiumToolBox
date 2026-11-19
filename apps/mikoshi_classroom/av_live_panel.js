@@ -1,4 +1,5 @@
-import {commitAV,inspectAV} from './av_commit.js';
+import {commitAV} from './av_commit.js';
+import {recoveryControls} from './av_recovery_ui.js';
 import {captureAV} from './av_capture.js';
 // Optional in-memory composition; only browser owns camera/microphone tracks.
 export function liveAVPanel(host,api,providers,allowed){
@@ -12,11 +13,13 @@ export function liveAVPanel(host,api,providers,allowed){
  const grounding=providers.grounding?.skill?.actions||{};
  const policy=providers.policy?.skill?.actions||{};
  const writer={remember:memory.remember,teach:grounding.teach,
-  motifReceipt:memory.receipt,groundingReceipt:grounding.receipt,policy};
+  motifReceipt:memory.receipt,groundingReceipt:grounding.receipt,
+  reconcile:providers.reconciliation?.skill?.actions?.assess,policy};
  const canTeach=Boolean(policy.authorize&&policy.verify&&
   [writer.remember,writer.teach,writer.motifReceipt,writer.groundingReceipt,
    policy.authorize,policy.verify].every(x=>allowed.has(x)));
 
+ const canReconcile=Boolean(canTeach&&writer.reconcile&&allowed.has(writer.reconcile));
  const tracking=providers.tracking?.skill?.actions?.track;
  const canTrack=Boolean(tracking&&allowed.has(tracking));
  const add=(tag,value,parent=host)=>{const el=document.createElement(tag);
@@ -31,10 +34,12 @@ export function liveAVPanel(host,api,providers,allowed){
  const analyze=add('button','Выделить и сопоставить события без обучения');
  const teach=canTeach?add('button','Сохранить подтверждённые совпадения'):null;
  const clear=add('button','Очистить временные образцы');
- const recover=canTeach?add('button','Проверить сохранённые пары'):null;
  let capture=null,lesson=null,pending=null,busy=false;
  const call=(role,action,params)=>api.call(skills[role][action],params);
  const erase=()=>{capture=null;lesson=null;pending=null;if(checked)checked.checked=false;};
+ recoveryControls(host,api,writer,canTeach,canReconcile,
+  ()=>({pending,lesson,busy,checked,info}),
+  state=>{busy=state;},erase);
  clear.onclick=()=>{if(busy)return;erase();
   info.textContent='Временные аудио- и видеоданные очищены';};
  captureButton.onclick=async()=>{
@@ -74,16 +79,6 @@ export function liveAVPanel(host,api,providers,allowed){
     '\nЧасы устройства: не аттестованы. Обучение отдельно.';
   }catch(e){lesson=null;info.textContent=String(e.message);}
   finally{busy=false;analyze.disabled=false;}
- };
- if(recover)recover.onclick=async()=>{
-  if(busy)return;
-  if(!pending){info.textContent='Нет незавершённой записи для проверки';return;}
-  try{
-   const rows=await inspectAV(api,writer,pending.permit,pending.count);
-   info.textContent=rows.map(x=>
-    'Пара '+(x.pairIndex+1)+': слух '+(x.motif?'есть':'нет')+
-    ', связь '+(x.grounding?'есть':'нет')).join('\\n');
-  }catch(e){info.textContent=String(e.message);}
  };
  if(teach)teach.onclick=async()=>{
   if(busy)return;
