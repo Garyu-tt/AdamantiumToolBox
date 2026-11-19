@@ -1,7 +1,8 @@
 import {strict as assert} from 'node:assert';
 import {webcrypto} from 'node:crypto';
-import {permitLesson,verifyLesson,digestLesson,PURPOSE} from
+import {permitLesson,verifyLesson,digestLesson,pairBindings,PURPOSE} from
  '../apps/mikoshi_classroom/av_policy.js';
+import {audioHash,visualHash} from '../contracts/mikoshi-av-permit.mjs';
 import {issue,verify} from '../apps/mikoshi_sourcepolicy/policy.mjs';
 Object.defineProperty(globalThis,'crypto',{value:webcrypto,configurable:true});
 const secret='owner-policy-key-0123456789-abcdef-abcdef123456';
@@ -10,6 +11,11 @@ const item=(id)=>({visual:{vector:Array(10).fill(id/10)},
  audio:{samples:Array(2400).fill(.05*id)}});
 const lesson=[item(1),item(2)];
 const digest=await digestLesson(lesson);
+const hashes=await pairBindings(lesson);
+assert.deepEqual(hashes,lesson.map(e=>({
+ audioHash:audioHash(e.audio.samples,12000),
+ visualHash:visualHash(e.visual.vector,e.pair.visualAtMs,e.pair.soundAtMs)
+})), 'browser WebCrypto and MAS provider hashes must match byte-for-byte');
 assert.equal(digest.length,64);
 assert.equal(digest,await digestLesson(structuredClone(lesson)));
 const now=1_800_000_000_000,log=[];
