@@ -5,6 +5,7 @@ import {standardApi} from './api.mjs';
 import {semanticApi} from './semantic_api.mjs';
 import {linkTree} from './linkfs.mjs';
 import {resolveAsset} from './assets.mjs';
+import {createGraphEvents} from './graph_events.mjs';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -55,6 +56,8 @@ async function graph(){
  }
  return {doc:{version:1,nodes,edges},routes};
 }
+const graphEvents=createGraphEvents(async()=>(await graph()).doc,
+ process.env.ADA_GRAPH_EVENT_POLL_MS);
 const mime={'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.ico':'image/x-icon'};
 async function asset(req,res){
  try{
@@ -72,6 +75,11 @@ http.createServer(async(req,res)=>{
  if(await standardApi(req,res,{reply,token,secret,caps}))return;
  if(await semanticApi(req,res,{reply,token,secret,caps,backend:async()=>(await graph()).doc}))return;
  if(url.pathname==='/health')return reply(res,200,{service:'Adamantium Toolbox',version:1});
+ if(url.pathname==='/api/graph/events'){
+  if(req.method!=='GET')return reply(res,405,{error:'method'});
+  if(!authorized(req))return reply(res,401,{error:'unauthorized'});
+  return graphEvents(res);
+ }
  if(req.method==='GET'&&url.pathname==='/api/navigation'){
   if(!authorized(req))return reply(res,401,{error:'unauthorized'});
   try{return reply(res,200,await linkTree(root,(await graph()).doc));}
