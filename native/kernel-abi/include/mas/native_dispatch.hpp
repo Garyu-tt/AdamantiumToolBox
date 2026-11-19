@@ -37,7 +37,8 @@ class NativeDispatcher final {
   static constexpr std::size_t kMaxBytes = 65536;
   NativeDispatcher(CapabilityGraph& graph, Authorize host_authorize);
   // Bind/unbind are trusted host lifecycle operations, never plugin exports.
-  bool bind(const std::string& action, const std::string& owner, Handler handler);
+  bool bind(const std::string& action, const std::string& owner,
+            const std::string& contract, Handler handler);
   bool unbind(const std::string& action);
   InvokeResult invoke(std::string_view verified_principal, std::string_view action,
                       std::uint64_t expected_revision,
@@ -48,10 +49,11 @@ class NativeDispatcher final {
  private:
   struct Binding {
     std::string owner;
+    std::string contract;
     Handler handler;
     std::atomic_bool enabled{true};
-    Binding(std::string p, Handler h)
-        : owner(std::move(p)), handler(std::move(h)) {}
+    Binding(std::string p, std::string c, Handler h)
+        : owner(std::move(p)), contract(std::move(c)), handler(std::move(h)) {}
   };
   CapabilityGraph& graph_;
   Authorize host_authorize_;
