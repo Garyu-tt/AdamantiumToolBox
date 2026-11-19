@@ -8,11 +8,12 @@ NativeDispatcher::NativeDispatcher(CapabilityGraph& graph, Authorize host_author
     : graph_(graph), host_authorize_(std::move(host_authorize)) {}
 
 bool NativeDispatcher::bind(const std::string& action, const std::string& owner,
-                            Handler handler) {
+                            const std::string& contract, Handler handler) {
   if (action.empty() || action.size() > 128 || owner.empty() ||
-      owner.size() > 128 || !handler) return false;
+      owner.size() > 128 || contract.empty() ||
+      contract.size() > 256 || !handler) return false;
   std::lock_guard<std::mutex> lock(mutex_);
-  return bindings_.emplace(action, std::make_shared<Binding>(owner, std::move(handler))).second;
+  return bindings_.emplace(action, std::make_shared<Binding>(owner, contract, std::move(handler))).second;
 }
 bool NativeDispatcher::unbind(const std::string& action) {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -51,7 +52,8 @@ InvokeResult NativeDispatcher::invoke(std::string_view verified_principal,
       binding = found->second;
     }
     if (!binding->enabled.load(std::memory_order_acquire) ||
-        view.capability->owner != binding->owner)
+        (view.capability->owner != binding->owner ||
+         view.capability->contract != binding->contract))
       return {InvokeStatus::Denied, view.revision, 0};
     if (!host_authorize_ ||
         !host_authorize_(verified_principal, action, expected_revision))
@@ -65,7 +67,8 @@ InvokeResult NativeDispatcher::invoke(std::string_view verified_principal,
     if (latest.status == QueryStatus::StaleRevision)
       return {InvokeStatus::Stale, latest.revision, 0};
     if (latest.status != QueryStatus::Present ||
-        !latest.capability || latest.capability->owner != binding->owner)
+        !latest.capability || (latest.capability->owner != binding->owner ||
+         latest.capability->contract != binding->contract))
       return {InvokeStatus::Denied, latest.revision, 0};
     if (!binding->enabled.load(std::memory_order_acquire))
       return {InvokeStatus::Unbound, latest.revision, 0};
@@ -90,7 +93,8 @@ InvokeResult NativeDispatcher::invoke(std::string_view verified_principal,
     if (final_view.status == QueryStatus::StaleRevision)
       return {InvokeStatus::Stale, final_view.revision, 0};
     if (final_view.status != QueryStatus::Present ||
-        !final_view.capability || final_view.capability->owner != binding->owner)
+        !final_view.capability || (final_view.capability->owner != binding->owner ||
+         final_view.capability->contract != binding->contract))
       return {InvokeStatus::Denied, final_view.revision, 0};
     if (written > 0) std::memcpy(output, scratch.data(), written);
     return {InvokeStatus::Ok, final_view.revision, written};
