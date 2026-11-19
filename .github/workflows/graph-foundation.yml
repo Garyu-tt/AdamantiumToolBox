@@ -8,6 +8,8 @@ on:
       - 'apps/nftables_lab/**'
       - 'apps/rollback_watchdog/**'
       - 'apps/rollback_ledger/**'
+      - 'apps/nftables_readback/**'
+      - 'tests/native/nftables_*.test.mjs'
       - 'apps/network_inventory/**'
       - 'apps/wireguard_graph/**'
       - 'apps/noosphere/**'
@@ -47,6 +49,7 @@ jobs:
           node tests/graph_watchdog_diagnostics.test.mjs
           node tests/graph_rollback_ledger.test.mjs
           node tests/graph_ledger_http.test.mjs
+          node tests/graph_nftables_readback.test.mjs
           node tests/graph_network_inventory.test.mjs
           node tests/graph_wireguard.test.mjs
           node tests/graph_transaction.test.mjs
@@ -87,6 +90,12 @@ jobs:
             ADA_NFT_LAB_IP="$(command -v ip)" \
             ADA_NFT_LAB_DISPOSABLE_ONLY=1 \
             "$(command -v node)" tests/native/nftables_watchdog_real.test.mjs
+          sudo env ADA_NFT_OBSERVE_NAMESPACE="$namespace" \
+            ADA_NFT_OBSERVE_NAMESPACE_ROOT="$nsroot" \
+            ADA_NFT_OBSERVE_NFT="$(command -v nft)" \
+            ADA_NFT_OBSERVE_IP="$(command -v ip)" \
+            ADA_NFT_LAB_DISPOSABLE_ONLY=1 \
+            "$(command -v node)" tests/native/nftables_readback_real.test.mjs
           after="$(sudo ip netns exec "$namespace" nft -j list ruleset)"
           test "$before" = "$after"
           echo "NFTABLES_RULESET_UNCHANGED_OK"
