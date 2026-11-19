@@ -1,0 +1,43 @@
+name: Universal Graph Rete G2a
+on:
+  pull_request:
+    paths:
+      - 'apps/universal_graph_rete/**'
+      - 'standards/universal-graph/**'
+      - '.github/workflows/universal-graph-rete-g2a.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/universal_graph_rete/**'
+      - 'standards/universal-graph/**'
+      - '.github/workflows/universal-graph-rete-g2a.yml'
+permissions:
+  contents: read
+jobs:
+  visual-adapter:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: apps/universal_graph_rete
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned direct dependencies (prototype only)
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check direct and transitive license metadata
+        run: npm run license
+      - name: Validate canonical JSON samples
+        run: npm run test:contract
+      - name: Static type-check
+        run: npm run check
+      - name: Build isolated browser bundle
+        run: npm run build
