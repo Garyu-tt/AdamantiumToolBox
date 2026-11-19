@@ -1,4 +1,4 @@
-const TYPES=new Set(['project','plugin','module','capability','task','dependency','artifact','node']);
+const TYPES=new Set(['project','plugin','module','capability','task','dependency','artifact','node','file']);
 const STATUS=new Set(['blocked','failed','running','queued','completed','unknown']);
 const safe=s=>typeof s==='string'&&s.length>0&&s.length<=160;
 const claim=s=>typeof s==='string'&&s.length<=600?s:null;
@@ -53,7 +53,7 @@ export function findCycles(nodes,edges){
 }
 export function impacted(graph,id){
  const reverse=new Map();
- for(const e of graph.edges)if(e.type==='depends'){
+ for(const e of graph.edges)if(e.type==='depends'||e.type==='imports'||e.type==='requires'){
   if(!reverse.has(e.to))reverse.set(e.to,[]);reverse.get(e.to).push(e.from);
  }
  const seen=new Set([id]),queue=[id];
