@@ -52,7 +52,7 @@ export function propose(state){
  const targets=t.skills.filter(x=>x.attempts<MAX&&x.loss>.012);
  if(!targets.length)return {ready:false,reason:'learning_goal_reached'};
  // Greedy learning potential with uncertainty bonus: changes with feedback.
- const score=x=>x.loss+.13/Math.sqrt(x.attempts+1);
+ const score=x=>.6*x.loss+.28*Math.sqrt(Math.log(t.step+2)/(x.attempts+1));
  targets.sort((a,b)=>score(b)-score(a)||a.id.localeCompare(b.id));
  return {ready:true,sessionId:t.id,step:t.step,id:targets[0].id,
   action:'practice',reason:'learning_potential_and_uncertainty',
