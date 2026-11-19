@@ -24,7 +24,7 @@ try {
   const sparse = Array(2); sparse[0] = 1;
   await assert.rejects(commitStep(path, base, {sparse}, funcs), /invalid_step_value/);
   const callback = {...funcs, brainStep:()=>({get charge(){getterCalls++;return 5;}})};
-  await assert.rejects(commitStep(path, base, {}, callback), /invalid_step_value/);
+  await assert.rejects(commitStep(path, base, {}, callback), /invalid_state/);
   assert.equal(getterCalls, 0);
   assert.equal((await restoreStep(path)).state.tick, 0);
   const ok = await commitStep(path, base, {}, funcs);
