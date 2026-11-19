@@ -55,3 +55,8 @@ Count separately: tasks selected; tasks delegated; validated source patches; pas
 Success criterion: under a permitted live Claude bridge, at least one peer can take an unclaimed GitHub task, delegate a bounded implementation packet, receive a real patch, rerun tests, get another peer's independent review, then take the next ready task without owner intervention.
 
 Related: [bypass](./PEER-WORKERS-BYPASS-R01.md), [recovery loop](./RECURSIVE-RECOVERY-CYCLE-R01.md), PR #92, #47, #25.
+
+
+## Repository routing note — Adamantez R01 (additive; original worker policy unchanged)
+
+Use the public `Garyu-tt/AdamantiumToolBox` repository for redistributable code and public contracts; use the separately controlled **private** `Garyu-tt/AdamantezTolls` repository for nonpublic plugin/server implementations, only when authorized. Classify task output PUBLIC / PRIVATE / RESTRICTED before creating a patch or delegated job. Do **not** put closed source, secrets, user data, private workspace contents, privileged CI artifacts or credentials into public branches, PRs, logs or model prompts. The public client can consume sanitized authorized capability contracts; an unavailable private provider is not a reason to invent access or stop unrelated work. A branch/worktree is not a repository permission boundary. Preserve existing five-peer roles, schedules, Claude delegation, independent QA, no-blocker recovery and current task selection unchanged. Architecture reference: `docs/ADAMANTEZ-SOURCE-BOUNDARY-R01.md` on `design/adamantez-source-boundary-r01` (until merged).
