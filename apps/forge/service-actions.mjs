@@ -19,5 +19,7 @@ export const actionNodes=[
  {id:'forge.projection.plan',title:'Prepare scoped UI projection',permission:'forge.validate'},
  {id:'forge.projection.reconnect',title:'Prepare fail-closed session resync',permission:'forge.validate'},
  {id:'forge.access.lease.plan',title:'Plan lease expiry and UI invalidation',permission:'forge.validate'},
- {id:'forge.access.revocation.assess',title:'Assess scoped runtime and UI revocation receipts',permission:'forge.validate'}
+ {id:'forge.access.revocation.assess',title:'Assess scoped runtime and UI revocation receipts',permission:'forge.validate'},
+ {id:'forge.remediation.plan',title:'Prepare safe deterministic blocker fixes',permission:'forge.validate'},
+ {id:'forge.remediation.assess',title:'Assess external remedy acceptance evidence',permission:'forge.validate'}
 ];

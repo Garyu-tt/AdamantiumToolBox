@@ -1,4 +1,4 @@
-# Mechanicus Forge — stateless contract adapter R02
+# Mechanicus Forge — stateless contract adapter R10
 
 `forge.describe`, `forge.validate`, `forge.prepare` (R01) plus:
 
@@ -96,3 +96,10 @@ of policy, graph scope, runtime denial, UI CAS, readback and event cursor
 receipts. All are host claims, never authorization. No clock, sessions,
 state, graph, background scheduler or revocation worker exists in Forge.
 See `docs/FORGE-ACCESS-R09.md`.
+
+## R10: deterministic blocker remediation (contract-only)
+
+`forge.remediation.plan` proposes externally authorized, reversible, idempotent
+safe attempts with bounded budgets; `forge.remediation.assess` compares untrusted
+attempt, independent tests, graph restoration, incident and audit receipts.
+Neither action executes fixes or clears incidents. See `docs/FORGE-REMEDIATION-R10.md`.
