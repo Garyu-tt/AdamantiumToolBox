@@ -23,7 +23,7 @@ test('SIGKILL during locked mutation leaves durable spool intact and refuses nex
    const script=`
     import {DurableQueue} from ${JSON.stringify(new URL('../apps/dantesensory/queue.mjs',import.meta.url).href)};
     const q=await new DurableQueue({path:process.argv[1]}).open();
-    q.store.save=async()=>{process.stdout.write('LOCK_HELD\\n');await new Promise(()=>{});};
+    q.store.save=async()=>{process.stdout.write('LOCK_HELD\\n');setInterval(()=>{},1000);await new Promise(()=>{});};
     await q.publish({schema:'dante.sensory.event.v1',source:'world.mock',
      kind:'position',sequence:1,observedAtMs:1,payload:{position:1}});
    `;
