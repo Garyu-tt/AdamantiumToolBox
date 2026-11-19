@@ -15,6 +15,9 @@ const actions={
 const nodes=[{id:'task_pool.view',type:'view',title:manifest.name,icon:manifest.icon,
  requires:['tasks.read']},...Object.entries(actions).filter(([_,permission])=>caps.has(permission))
  .map(([id,permission])=>({id,type:'action',title:id,requires:[permission]}))];
+if(caps.has('tasks.read'))nodes.push({id:'task_pool.index',type:'resource',
+ requires:['tasks.read'],provider:{schema:'mas-task-provider-1',
+ listAction:'task_pool.list',getAction:'task_pool.get'}});
 if(caps.has('tasks.claim'))nodes.push({id:'task_pool.provider',type:'resource',
  requires:['tasks.claim'],provider:{schema:'mas-task-provider-1',
  claimAction:'task_pool.claim',heartbeatAction:'task_pool.heartbeat',
