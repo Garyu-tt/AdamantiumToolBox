@@ -1,4 +1,6 @@
-add_library(mas_graphics_discovery STATIC provider_selection.cpp provider_selection.hpp)
+add_library(mas_graphics_discovery STATIC
+  ${CMAKE_CURRENT_LIST_DIR}/provider_selection.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/provider_selection.hpp)
 target_link_libraries(mas_graphics_discovery PUBLIC Qt6::Core)
 set_target_properties(mas_graphics_discovery PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(mas_graphics_discovery PUBLIC ${CMAKE_CURRENT_LIST_DIR})
