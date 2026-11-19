@@ -50,6 +50,9 @@ try{
  await rm(path);
  await symlink('/dev/null',path);
  assert.equal((await inspectLease(base.leaseId,options)).status,'indeterminate');
+ const symlinkAudit=await auditReservations(options);
+ assert.equal(symlinkAudit.allLeasesRecovered,false);
+ assert(symlinkAudit.issues.some(x=>x.code==='unreadable_or_partial_lease'));
  assert.equal((await reserveLease({receipt,context},options)).status,'already_consumed');
  console.log('GRAPH_LEDGER_INTEGRITY_OK signed reread, tamper, mode, symlink, replay');
 }finally{await rm(root,{recursive:true,force:true});}
