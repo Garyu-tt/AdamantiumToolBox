@@ -1,0 +1,31 @@
+name: Adamantium Genome R01
+on:
+  push:
+    paths:
+      - 'apps/adamantium_genome/**'
+      - 'tests/adamantium_genome.test.mjs'
+      - '.github/workflows/adamantium-genome-r01.yml'
+  pull_request:
+    paths:
+      - 'apps/adamantium_genome/**'
+      - 'tests/adamantium_genome.test.mjs'
+      - '.github/workflows/adamantium-genome-r01.yml'
+permissions:
+  contents: read
+jobs:
+  genome-codec:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check apps/adamantium_genome/genome.mjs
+      - run: node --test tests/adamantium_genome.test.mjs
