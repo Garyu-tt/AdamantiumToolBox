@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Mechanicus Universal Graph — Rete.js v2</title>
+</head>
+<body>
+<main>
+<header>
+<h1>Mechanicus Universal Graph</h1>
+<div class="toolbar">
+<label for="scenario">Graph scenario</label>
+<select id="scenario" aria-label="Graph scenario">
+<option value="program">MAS composition</option>
+<option value="genesis" selected>GENESIS CPU pipeline</option>
+<option value="brain">Dante neural feedback</option>
+</select>
+<strong class="safety">Projection only · no execution</strong>
+</div>
+<p id="status" role="status" aria-live="polite">Validating graph definition…</p>
+</header>
+<div id="graph" aria-label="Rete.js typed graph visualization"></div>
+</main>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

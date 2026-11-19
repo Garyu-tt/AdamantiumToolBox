@@ -1,0 +1,81 @@
+{
+  "schema": "mechanicus.universal-graph/1",
+  "id": "genesis.demo",
+  "schemaVersion": 1,
+  "revision": 1,
+  "domain": "genesis",
+  "interfacePorts": [],
+  "nodes": [
+    {
+      "id": "genome",
+      "kind": "capability",
+      "typeRef": "genesis.genome.lookup@1",
+      "graphRef": "",
+      "graphRefRevision": 0,
+      "ports": [
+        {
+          "id": "result",
+          "dataType": "genome.ref@1",
+          "direction": "output",
+          "semantics": "data"
+        }
+      ]
+    },
+    {
+      "id": "restore",
+      "kind": "capability",
+      "typeRef": "genesis.weight.restore@1",
+      "graphRef": "",
+      "graphRefRevision": 0,
+      "ports": [
+        {
+          "id": "genome",
+          "dataType": "genome.ref@1",
+          "direction": "input",
+          "semantics": "data"
+        },
+        {
+          "id": "tensor",
+          "dataType": "tensor.handle@1",
+          "direction": "output",
+          "semantics": "data"
+        }
+      ]
+    },
+    {
+      "id": "consumer",
+      "kind": "capability",
+      "typeRef": "genesis.tensor.consume@1",
+      "graphRef": "",
+      "graphRefRevision": 0,
+      "ports": [
+        {
+          "id": "tensor",
+          "dataType": "tensor.handle@1",
+          "direction": "input",
+          "semantics": "data"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge.genome",
+      "fromNode": "genome",
+      "fromPort": "result",
+      "toNode": "restore",
+      "toPort": "genome",
+      "semantics": "data",
+      "delayTicks": 0
+    },
+    {
+      "id": "edge.tensor",
+      "fromNode": "restore",
+      "fromPort": "tensor",
+      "toNode": "consumer",
+      "toPort": "tensor",
+      "semantics": "data",
+      "delayTicks": 0
+    }
+  ]
+}
