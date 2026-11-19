@@ -34,6 +34,9 @@ language or generalization to unexperienced real-world conditions.
 - `.forecast`, `.observe`, `.abort` require `prediction.learn`,
   explicit `sourceApproved:true` and owner-private storage path
   `MIKOSHI_WORLD_STATE`. That flag is NOT evidence of recording consent.
+- A standalone UI offers an explicit recovery button when an authorized
+  `abort` action is present. It clears only the unfinished ticket, not
+  previous observations or trained associations.
 - Only one in-flight forecast per instance. Duplicate or mismatched
   tickets fail closed; a crashed forecast can be inspected and explicitly
   aborted by an authorized operator. No automatic replay of uncertain
