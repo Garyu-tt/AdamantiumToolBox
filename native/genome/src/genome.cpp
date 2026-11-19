@@ -18,6 +18,43 @@ bool identifier(const std::string& id) {
           c == '.' || c == '-' || c == '_')) return false;
   return true;
 }
+bool known_domain(graph::Domain d) {
+  return d == graph::Domain::General || d == graph::Domain::Program ||
+         d == graph::Domain::Genesis || d == graph::Domain::Neural ||
+         d == graph::Domain::Infrastructure || d == graph::Domain::Interface;
+}
+bool known_kind(graph::NodeKind k) {
+  return k == graph::NodeKind::Capability ||
+         k == graph::NodeKind::Composite || k == graph::NodeKind::Service ||
+         k == graph::NodeKind::Device || k == graph::NodeKind::Sensor ||
+         k == graph::NodeKind::Effector ||
+         k == graph::NodeKind::BrainRegion ||
+         k == graph::NodeKind::Resource || k == graph::NodeKind::View ||
+         k == graph::NodeKind::Policy;
+}
+bool known_semantics(graph::Semantics k) {
+  return k == graph::Semantics::Data || k == graph::Semantics::Control ||
+         k == graph::Semantics::Event || k == graph::Semantics::Signal ||
+         k == graph::Semantics::Dependency ||
+         k == graph::Semantics::Permission || k == graph::Semantics::Route;
+}
+bool valid_port(const graph::Port& p) {
+  return (p.direction == graph::Direction::Input ||
+          p.direction == graph::Direction::Output) &&
+         known_semantics(p.semantics);
+}
+bool valid_fields(const graph::Graph& g) {
+  if (!known_domain(g.domain) || g.interface_ports.size()>4096)
+    return false;
+  for (const auto& p:g.interface_ports) if(!valid_port(p))return false;
+  for (const auto& n:g.nodes) {
+    if(!known_kind(n.kind) || n.ports.size()>4096)return false;
+    for (const auto& p:n.ports) if(!valid_port(p))return false;
+  }
+  for(const auto& e:g.edges)
+    if(!known_semantics(e.semantics))return false;
+  return true;
+}
 bool known_lane(Lane lane) {
   return lane == Lane::Baseline || lane == Lane::Acquired ||
          lane == Lane::Experimental;
@@ -34,6 +71,7 @@ Validation validate_all(const graph::Catalog& catalog,
   std::size_t nodes=0, edges=0;
   for (const auto& entry : catalog) {
     const auto& g=entry.second;
+    if (!valid_fields(g)) return reject("graph_enum_or_port_invalid");
     if (!fits(nodes,g.nodes.size(),limits.max_nodes) ||
         !fits(edges,g.edges.size(),limits.max_edges))
       return reject("graph_resource_limit");
@@ -100,14 +138,10 @@ Validation decode_genome(const Genome& genome, graph::Catalog& out,
   for (const auto& chromosome : genome.chromosomes) {
     if (!identifier(chromosome.graph_id) || chromosome.genes.empty())
       return reject("chromosome_invalid");
-    // Prevent unbounded decoding of malformed descriptions before Graph IR.
-    if (chromosome.genes.size() >
-        limits.max_nodes + limits.max_edges + 1) {
-      // Port genes add extra entries, so this check is only a soft sanity cap;
-      // valid graphs with many ports are handled by the stricter guard below.
-      if (chromosome.genes.size() > 1000000)
-        return reject("gene_resource_limit");
-    }
+    // Budget before allocating any graph entries. Large per-node port
+    // arrays are additionally rejected by valid_fields().
+    if (chromosome.genes.size() > 1000000)
+      return reject("gene_resource_limit");
     graph::Graph g;
     g.id=chromosome.graph_id;
     bool has_header=false,started_nodes=false,started_edges=false;
