@@ -3,7 +3,7 @@ import {open as openFile,mkdir,unlink} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {QUEUE_SCHEMA,encoded,keyOf,validateState} from './event_codec.mjs';
 export class DurableQueue{
- #entries=[];#cursors=new Map();#acked=[];#tail=Promise.resolve();
+ #entries=[];#cursors=new Map();#acked=[];#tail=Promise.resolve();#observedDurable=false;
  constructor({path,capacity=64,maxSources=128,maxEventBytes=8192}={}){
   if(typeof path!=='string'||!path||!Number.isSafeInteger(capacity)||capacity<1||capacity>256||
      !Number.isSafeInteger(maxSources)||maxSources<1||maxSources>256||
@@ -15,6 +15,7 @@ export class DurableQueue{
  async open(){
   const s=await this.store.load();if(!s)return this;
   validateState(s,this.config);
+  this.#observedDurable=true;
   this.#entries=s.entries;this.#cursors=new Map(s.cursors);this.#acked=s.acked;
   return this;
  }
@@ -30,8 +31,10 @@ export class DurableQueue{
     const state=await this.store.load();
     if(state){
      validateState(state,this.config);
+     this.#observedDurable=true;
      this.#entries=state.entries;this.#cursors=new Map(state.cursors);this.#acked=state.acked;
     }else{
+     if(this.#observedDurable)throw Error('journal_missing_after_commit');
      this.#entries=[];this.#cursors=new Map();this.#acked=[];
     }
     return await fn();
@@ -46,7 +49,7 @@ export class DurableQueue{
  }
  async #commit(entries,cursors,acked){
   await this.store.save({schema:QUEUE_SCHEMA,entries,cursors:[...cursors],acked});
-  this.#entries=entries;this.#cursors=cursors;this.#acked=acked;
+  this.#entries=entries;this.#cursors=cursors;this.#acked=acked;this.#observedDurable=true;
  }
  publish(event){return this.#run(async()=>{
   const item=encoded(event,this.config.maxEventBytes),key=keyOf(item.event);
@@ -68,6 +71,8 @@ export class DurableQueue{
   const task=this.#tail.then(async()=>{
    const state=await this.store.load();
    if(state)validateState(state,this.config);
+   else if(this.#observedDurable)throw Error('journal_missing_after_commit');
+   if(state)this.#observedDurable=true;
    this.#entries=state?.entries??[];
    this.#cursors=new Map(state?.cursors??[]);
    this.#acked=state?.acked??[];
