@@ -45,11 +45,11 @@ int main() {
   auto ok = call("alice", 1, "hello");
   REQUIRE(ok.status == InvokeStatus::Ok && ok.bytes == 5);
   REQUIRE(std::string(output, ok.bytes) == "hello");
-  REQUIRE(handled == 1 && authorized == 1);
+  REQUIRE(handled == 1 && authorized == 2); // pre/post handler policy checks
   REQUIRE(call("bob", 1, "private").status == InvokeStatus::Denied);
-  REQUIRE(handled == 1 && authorized == 2); // graph visibility != invoke authority
+  REQUIRE(handled == 1 && authorized == 3); // visible but host policy denied
   REQUIRE(call("eve", 1, "private").status == InvokeStatus::Denied);
-  REQUIRE(handled == 1 && authorized == 2); // unauthorized view never reaches policy
+  REQUIRE(handled == 1 && authorized == 3); // hidden from graph, no policy call
   policy_allows = false;
   REQUIRE(call("alice", 1, "private").status == InvokeStatus::Denied);
   REQUIRE(handled == 1);
