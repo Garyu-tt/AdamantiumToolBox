@@ -1,4 +1,4 @@
-import {permitLesson,verifyLesson} from './av_policy.js';
+import {commitAV,inspectAV} from './av_commit.js';
 import {captureAV} from './av_capture.js';
 // Optional in-memory composition; only browser owns camera/microphone tracks.
 export function liveAVPanel(host,api,providers,allowed){
@@ -8,16 +8,15 @@ export function liveAVPanel(host,api,providers,allowed){
   if(!actions||names.some(n=>!allowed.has(actions[n])))return;
   skills[role]=Object.fromEntries(names.map(n=>[n,actions[n]]));
  }
- const writer={memory:providers.memory?.skill?.actions?.remember,
-  grounding:providers.grounding?.skill?.actions?.teach};
- const policy=providers.policy?.skill?.actions;
- const canTeach=Boolean(writer.memory&&writer.grounding&&
-  policy?.authorize&&policy?.verify&&
-  [writer.memory,writer.grounding,policy.authorize,policy.verify]
-   .every(action=>allowed.has(action)));
- if(canTeach){
-  skills.memory={remember:writer.memory};skills.grounding={teach:writer.grounding};
- }
+ const memory=providers.memory?.skill?.actions||{};
+ const grounding=providers.grounding?.skill?.actions||{};
+ const policy=providers.policy?.skill?.actions||{};
+ const writer={remember:memory.remember,teach:grounding.teach,
+  motifReceipt:memory.receipt,groundingReceipt:grounding.receipt,policy};
+ const canTeach=Boolean(policy.authorize&&policy.verify&&
+  [writer.remember,writer.teach,writer.motifReceipt,writer.groundingReceipt,
+   policy.authorize,policy.verify].every(x=>allowed.has(x)));
+
  const tracking=providers.tracking?.skill?.actions?.track;
  const canTrack=Boolean(tracking&&allowed.has(tracking));
  const add=(tag,value,parent=host)=>{const el=document.createElement(tag);
@@ -32,9 +31,10 @@ export function liveAVPanel(host,api,providers,allowed){
  const analyze=add('button','Выделить и сопоставить события без обучения');
  const teach=canTeach?add('button','Сохранить подтверждённые совпадения'):null;
  const clear=add('button','Очистить временные образцы');
- let capture=null,lesson=null,busy=false;
+ const recover=canTeach?add('button','Проверить сохранённые пары'):null;
+ let capture=null,lesson=null,pending=null,busy=false;
  const call=(role,action,params)=>api.call(skills[role][action],params);
- const erase=()=>{capture=null;lesson=null;if(checked)checked.checked=false;};
+ const erase=()=>{capture=null;lesson=null;pending=null;if(checked)checked.checked=false;};
  clear.onclick=()=>{if(busy)return;erase();
   info.textContent='Временные аудио- и видеоданные очищены';};
  captureButton.onclick=async()=>{
@@ -49,7 +49,7 @@ export function liveAVPanel(host,api,providers,allowed){
  analyze.onclick=async()=>{
   if(busy)return;
   if(!capture){info.textContent='Сначала разрешите короткую запись';return;}
-  busy=true;analyze.disabled=true;lesson=null;
+  busy=true;analyze.disabled=true;lesson=null;pending=null;
   try{
    const visual=await call('vision','analyze',{frames:capture.frames});
    const audio=await call('audio','analyze',{
@@ -75,32 +75,34 @@ export function liveAVPanel(host,api,providers,allowed){
   }catch(e){lesson=null;info.textContent=String(e.message);}
   finally{busy=false;analyze.disabled=false;}
  };
+ if(recover)recover.onclick=async()=>{
+  if(busy)return;
+  if(!pending){info.textContent='Нет незавершённой записи для проверки';return;}
+  try{
+   const rows=await inspectAV(api,writer,pending.permit,pending.count);
+   info.textContent=rows.map(x=>
+    'Пара '+(x.pairIndex+1)+': слух '+(x.motif?'есть':'нет')+
+    ', связь '+(x.grounding?'есть':'нет')).join('\\n');
+  }catch(e){info.textContent=String(e.message);}
+ };
  if(teach)teach.onclick=async()=>{
   if(busy)return;
-  if(!checked.checked){info.textContent='Нужно явное разрешение на обучение';return;}
-  if(!lesson?.length){info.textContent='Нет однозначных событий для обучения';return;}
+  if(!checked.checked){info.textContent='Нужно разрешение на обучение';return;}
+  if(!lesson?.length){info.textContent='Нет событий для обучения';return;}
   busy=true;teach.disabled=true;checked.checked=false;
-  let saved=0;
+  let complete=false;
   try{
    const durationMs=Math.round(capture.samples.length/12);
-   const signed=await permitLesson(api,policy,lesson,durationMs);
-   const result=[];
-   for(const [pairIndex,{visual,audio,pair}] of lesson.entries()){
-    await verifyLesson(api,policy,lesson,signed);
-    const heard=await call('memory','remember',{
-     samples:audio.samples,sampleRate:12000,sourceApproved:true,
-     sourcePermit:signed.token,lessonDigest:signed.digest,pairIndex});
-    const linked=await call('grounding','teach',{
-     visualVector:visual.vector,soundId:heard.id,
-     visualAtMs:pair.visualAtMs,soundAtMs:pair.soundAtMs,
-     sourceApproved:true,sourcePermit:signed.token,
-     lessonDigest:signed.digest,pairIndex,motifReceipt:heard.sourceReceipt});
-    result.push(linked.visualId+' ↔ '+heard.id);saved++;
-   }
-   info.textContent='Сохранено совпадений: '+saved+'\n'+result.join('\n')+
-    '\nСвязи только статистические, без смысла и причинности.';
-  }catch(e){info.textContent='Возможна частичная запись: '+saved+
-   '. Проверьте состояние перед повтором. '+String(e.message);}
-  finally{erase();busy=false;teach.disabled=false;}
+   const result=await commitAV(api,writer,lesson,durationMs,
+    permit=>{pending={permit,count:lesson.length};});
+   info.textContent='Связано '+result.saved+' пар. Никаких слов не задано.';
+   complete=true;
+  }catch(e){
+   info.textContent='Неизвестный результат записи. Проверьте пары;'+
+    ' не повторяйте автоматически. '+String(e.message);
+  }finally{
+   if(complete)erase();
+   busy=false;teach.disabled=false;
+  }
  };
 }
