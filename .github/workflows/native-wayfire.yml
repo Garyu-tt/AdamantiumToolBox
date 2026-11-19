@@ -1,0 +1,26 @@
+name: Native Wayfire IPC adapter
+on:
+  push:
+    paths:
+      - 'native/wayfire/**'
+      - '.github/workflows/native-wayfire.yml'
+  pull_request:
+    paths:
+      - 'native/wayfire/**'
+      - '.github/workflows/native-wayfire.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux-codec:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test optional Wayfire IPC client
+        run: |
+          cmake -S native/wayfire -B build/wayfire -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/wayfire --parallel 2
+          ctest --test-dir build/wayfire --output-on-failure
