@@ -1,0 +1,23 @@
+name: Network Checkpoint Transport MAS isolation
+on:
+  push:
+    paths:
+      - 'packages/network_checkpoint/**'
+      - '.github/workflows/network-checkpoint-isolation.yml'
+  pull_request:
+    paths:
+      - 'packages/network_checkpoint/**'
+      - '.github/workflows/network-checkpoint-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source, TLS and real MAS isolation tests
+        run: node --test packages/network_checkpoint/tests/*.test.mjs
