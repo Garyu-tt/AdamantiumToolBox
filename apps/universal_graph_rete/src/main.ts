@@ -3,10 +3,14 @@ import { mountRete } from './rete_view';
 import { verifiedShape } from './projection';
 import './style.css';
 
-const viewport = document.querySelector<HTMLElement>('#graph');
-const status = document.querySelector<HTMLElement>('#status');
-const chooser = document.querySelector<HTMLSelectElement>('#scenario');
-if (!viewport || !status || !chooser) throw Error('missing_editor_mount');
+function requiredElement<T extends Element>(selector:string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw Error('missing_editor_mount: '+selector);
+  return element;
+}
+const viewport = requiredElement<HTMLElement>('#graph');
+const status = requiredElement<HTMLElement>('#status');
+const chooser = requiredElement<HTMLSelectElement>('#scenario');
 
 let current: {destroy():void} | null = null;
 let transition = Promise.resolve();
