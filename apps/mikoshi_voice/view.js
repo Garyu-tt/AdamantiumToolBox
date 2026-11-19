@@ -5,6 +5,8 @@ export async function mount(host,api){
  const input=add('textarea');input.value='Привет! Я учусь говорить.';input.maxLength=80;
  const btn=add('button','Произнести'),status=add('pre');
  const audio=add('audio');audio.controls=true;
+ const canSpeak=api.graph().nodes.some(n=>n.id==='mikoshi_voice.speak');
+ btn.hidden=!canSpeak;input.hidden=!canSpeak;audio.hidden=!canSpeak;
  btn.onclick=async()=>{
   status.textContent='Generating locally…';
   try{
