@@ -126,6 +126,50 @@ int main() {
                              cancelled).status == InvokeStatus::Unbound);
   REQUIRE(handled == before);
 
+  // Owner match without contract match must never dispatch a stale ABI.
+  NativeDispatcher wrong_contract(graph, [](auto, auto, auto) { return true; });
+  REQUIRE(wrong_contract.bind("echo", "host.echo", "mas.echo.v2", echo));
+  REQUIRE(wrong_contract.invoke("bob", "echo", 2, "x", output,
+                                sizeof(output), cancelled).status ==
+          InvokeStatus::Denied);
+  REQUIRE(handled == before);
+
+  // Cancellation after a handler wrote into its staging buffer must not leak.
+  NativeDispatcher cancelled_during(graph, [](auto, auto, auto) { return true; });
+  REQUIRE(cancelled_during.bind("echo", "host.echo", "mas.echo.v1",
+      [&](std::string_view, char* dest, std::size_t size,
+          std::size_t& written, const std::atomic_bool&) {
+        if (size < 1) return false;
+        dest[0] = 'X';
+        written = 1;
+        cancelled.store(true);
+        return true;
+      }));
+  output[0] = 'S';
+  REQUIRE(cancelled_during.invoke("bob", "echo", 2, "x", output,
+                                  sizeof(output), cancelled).status ==
+          InvokeStatus::Cancelled);
+  REQUIRE(output[0] == 'S');
+  cancelled = false;
+
+  // An unbind that happens within an active callback blocks publication.
+  NativeDispatcher in_handler(graph, [](auto, auto, auto) { return true; });
+  REQUIRE(in_handler.bind("echo", "host.echo", "mas.echo.v1",
+      [&](std::string_view, char* dest, std::size_t size,
+          std::size_t& written, const std::atomic_bool&) {
+        if (size < 1) return false;
+        dest[0] = 'X';
+        written = 1;
+        if (!in_handler.unbind("echo"))
+          throw std::runtime_error("concurrent_unbind_failed");
+        return true;
+      }));
+  output[0] = 'S';
+  REQUIRE(in_handler.invoke("bob", "echo", 2, "x", output,
+                            sizeof(output), cancelled).status ==
+          InvokeStatus::Unbound);
+  REQUIRE(output[0] == 'S');
+
   // An in-flight physical side effect cannot be undone by this software API.
   // It requires an external fenced lease/transaction + idempotent outbox.
   std::cout << "MAS_NATIVE_DISPATCH_R01_OK: identity gate, CAS, no leak, cancel, revoke\n";
