@@ -46,9 +46,12 @@ async function main(){
    const m=await fh.stat();
    if(!m.isFile()||m.nlink!==1||(m.mode&0o077)!==0||m.size>1024*1024)throw Error('unsafe_journal');
    const previous=await fh.readFile({encoding:'utf8'});
-   if(previous.split(/\r?\n/).filter(Boolean).some(line=>{try{return JSON.parse(line).id===id}catch{throw Error('corrupt_journal')}}))
-    throw Error('restore_already_attempted');
+   const records=previous.split(/\r?\n/).filter(Boolean).map(line=>{try{return JSON.parse(line)}catch{throw Error('corrupt_journal')}});
    if(plan.missing.length===0){console.log(JSON.stringify({mode:'apply',restored:0,verified:true}));return}
+   const history=records.filter(x=>x.id===id);
+   if(history.length&&history.at(-1).stage!=='verified')throw Error('restore_unverified_attempt');
+   if(history.length&&history.filter(x=>x.stage==='attempted').length!==history.filter(x=>x.stage==='verified').length)
+    throw Error('restore_ambiguous_history');
    await fh.writeFile(JSON.stringify({id,stage:'attempted',when:Date.now()})+'\n');await fh.sync();
   }finally{await fh.close()}
   const runner=async(args)=>exec(bin,args,{shell:false,timeout:4000,maxBuffer:4096,windowsHide:true});
