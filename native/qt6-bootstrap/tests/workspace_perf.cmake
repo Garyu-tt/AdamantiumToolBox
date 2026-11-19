@@ -1,4 +1,4 @@
-add_executable(mas_workspace_delta_perf_test workspace_delta_perf_test.cpp)
+add_executable(mas_workspace_delta_perf_test tests/workspace_delta_perf_test.cpp)
 target_include_directories(mas_workspace_delta_perf_test PRIVATE
  ${CMAKE_CURRENT_SOURCE_DIR}/plugins)
 target_link_libraries(mas_workspace_delta_perf_test PRIVATE Qt6::Widgets Qt6::Test)
