@@ -1,0 +1,40 @@
+import {strict as assert} from 'node:assert';
+import {DedupVramModel,capabilities} from '../standards/gpu/vram-model.mjs';
+assert.equal(capabilities.hardwareAliasing,false);
+const make=n=>new Uint8Array(1024).fill(n);
+const pool=new DedupVramModel();
+const a=pool.allocate(make(3)),b=pool.allocate(make(3));
+assert.equal(pool.stats().logical_aligned_bytes,131072);
+assert.equal(pool.stats().unique_aligned_bytes,65536);
+assert.equal(pool.readByte(a,0),3);
+const lease=pool.beginReadKernel(a);
+assert.throws(()=>pool.write(a,0,Uint8Array.of(4)),/gpu_allocation_busy/);
+assert.throws(()=>pool.release(a),/gpu_allocation_busy/);
+pool.endReadKernel(lease);
+assert.throws(()=>pool.endReadKernel(lease),/invalid_kernel_lease/);
+pool.write(a,0,Uint8Array.of(4));
+assert.equal(pool.readByte(a,0),4);
+assert.equal(pool.readByte(b,0),3);
+assert.equal(pool.stats().unique_aligned_bytes,131072);
+pool.write(a,0,Uint8Array.of(3));
+assert.equal(pool.stats().unique_allocations,1);
+pool.release(a);pool.release(b);
+assert.equal(pool.stats().unique_aligned_bytes,0);
+
+const collision=new DedupVramModel({hash:()=> 'constant'});
+const x=collision.allocate(make(1)),y=collision.allocate(make(2));
+assert.equal(collision.stats().unique_allocations,2);
+collision.release(x);collision.release(y);
+
+const separate=new DedupVramModel();
+const t1=separate.allocate(make(1),{tenant:'one'});
+const t2=separate.allocate(make(1),{tenant:'two'});
+assert.equal(separate.stats().unique_allocations,2);
+separate.release(t1);separate.release(t2);
+
+const budget=new DedupVramModel({maxPhysicalBytes:65536});
+const original=budget.allocate(make(8));
+assert.throws(()=>budget.write(original,0,Uint8Array.of(9)),/gpu_budget_exceeded/);
+assert.equal(budget.readByte(original,0),8);
+budget.release(original);
+console.log('DVRAM_MODEL_OK alias state, COW, kernel lease, collision, isolation, granularity, limits');
