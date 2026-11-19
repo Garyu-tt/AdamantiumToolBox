@@ -33,7 +33,7 @@ final class DeviceProbe {
         metrics.put("batteryPercent", percent);
         metrics.put("charging", charging);
         metrics.put("thermalStatus", thermal);
-        metrics.put("batteryLow", memory.lowMemory); // OS memory pressure
+        metrics.put("memoryLow", memory.lowMemory); // OS memory pressure
         return metrics;
     }
 
