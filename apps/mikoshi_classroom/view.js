@@ -53,7 +53,8 @@ export async function mount(host,api){
   const motor=provider('motor-learning','propose');
   streamPanel(controls,api,provider('auditory-events','analyze'),memory,
    sequence,articulation,actions(),motor,provider('gesture-planner','plan'),
-   provider('waveform-renderer','render'),provider('exploration','choose'));
+   provider('waveform-renderer','render'),provider('exploration','choose'),
+   provider('world-prediction','estimate'));
   if(articulation)phoneticPanel(controls,api,articulation,actions(),memory,sequence,motor);
   await gesturesPanel(controls,api,motor,provider('gesture-planner','plan'),
    provider('waveform-renderer','render'),actions());
