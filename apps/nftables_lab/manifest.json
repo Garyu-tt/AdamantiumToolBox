@@ -35,6 +35,11 @@
       "from": "nftables_lab.check",
       "to": "nftables_preview.transaction",
       "type": "related"
+    },
+    {
+      "from": "nftables_lab.rollback_trial",
+      "to": "rollback_watchdog.journal",
+      "type": "related"
     }
   ]
 }
