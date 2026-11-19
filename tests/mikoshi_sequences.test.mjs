@@ -9,6 +9,9 @@ const first=learn(start,seq(A,B,C));
 assert(first.result.updated);
 assert.equal(first.result.discovered,3); // A→B, B→C, A→B→C
 assert.equal(first.state.episodes,1);
+assert(first.state.patterns.every(p=>p.events.every((e,j)=>
+ j===0?e.gapMs===0:[90,300,650].includes(e.gapMs))),
+ 'persistent motor timing must be coarsely quantized');
 assert.deepEqual(start,original,'source state must not change');
 const again=learn(first.state,seq(A,B,C));
 assert.equal(again.result.discovered,0);
