@@ -1,7 +1,7 @@
-# Mikoshi Voice & Learning — MAS non-LLM experimental R02
+# Mikoshi Voice & Learning — MAS non-LLM experimental R05
 
-Seven independent MAS 1.0 applications; each boots with Core alone and
-advertises only real, permitted capabilities. A single Classroom UI composes
+Eight independent MAS providers plus a separate Classroom app; each boots
+with Core alone and advertises only real, permitted capabilities. Classroom composes
 resources discovered through `mikoshi.skill.v1`, not fixed app names.
 
 ## Implemented in this proposal
@@ -22,11 +22,15 @@ resources discovered through `mikoshi.skill.v1`, not fixed app names.
   Provider is hidden until its locally installed Python package, model/config
   files, and owner-reviewed voice rights acknowledgement are all present.
   Piper currently supports speed correction, not direct pitch correction.
+- `mikoshi_phonetics`: sound-to-articulation formant training from a short
+  reference frame; see `docs/MIKOSHI-PHONETICS-R03.md`.
 - `mikoshi_motifs`: auditory motif discovery and online memory from short
   PCM frames, with no predefined phoneme labels or language models.
   See `docs/MIKOSHI-MOTIFS-R04.md` for tests and limits.
+- `mikoshi_sequences`: order and coarse timing memory for motifs; context
+  prediction and phrase boundaries; see `docs/MIKOSHI-SEQUENCES-R05.md`.
 - `mikoshi_classroom`: graph-discovered composition of voice, prosody,
-  articulation and auditory memory providers, including explicit sample learning.
+  articulation, auditory motifs and ordered sequences, with opt-in learning.
   Provider selection uses declared skill priority and supported adjustments.
 
 ## Optional Piper configuration (never put model files in this repository)
@@ -46,7 +50,8 @@ on the selected permitted model. No particular singer-level similarity is claime
 The existing read-only `plugins/mikoshi` is unchanged. New permissions:
 `hearing.observe`, `voice.inspect`, `voice.render`, `learning.inspect`,
 `learning.train`, `prosody.inspect`, `prosody.learn`, `motifs.inspect`,
-`motifs.learn`, `classroom.view`.
+`motifs.learn`, `phonetics.inspect`, `phonetics.render`, `phonetics.learn`,
+`sequence.inspect`, `sequence.learn`, `classroom.view`.
 A user must separately grant rights through Toolbox policy. No automatic
 activation, copying of private data, recording, or changes to existing agents.
 Only explicit owner-approved training state is persisted. The current prototype
@@ -65,6 +70,7 @@ is single-runtime rather than multi-tenant; per-agent isolation remains future w
 Run `node tests/mikoshi_speech.test.mjs`,
 `node tests/mikoshi_prosody.test.mjs`, `node tests/mikoshi_piper.test.mjs`,
 `node tests/mikoshi_motifs.test.mjs`, `node tests/mikoshi_motifs_service.test.mjs`,
+`node tests/mikoshi_sequences.test.mjs`, `node tests/mikoshi_sequences_service.test.mjs`,
 `node tools/mas-check.mjs` and `python tools/check-size.py`. Then test
 isolated services, actual eSpeak/Piper binaries, consent, output quality and
 permissions on a host. Piper's CLI currently reloads the neural model per
