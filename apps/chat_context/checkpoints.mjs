@@ -2,7 +2,7 @@ import {mkdir,open,readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {homedir} from 'node:os';
 import {createHash,randomUUID} from 'node:crypto';
-const root=process.env.ADA_APP_DATA_DIR||join(process.env.LOCAPPDATA||process.env.LOCALAPPDATA||homedir(),'Adamantium Toolbox','data','chat_context');
+const root=process.env.ADA_APP_DATA_DIR||join(process.env.LOCALAPPDATA||homedir(),'Adamantium Toolbox','data','chat_context');
 const file=join(root,'events.jsonl'),valid=v=>typeof v==='string'&&/^[\w-]{1,90}$/.test(v);
 let chain=Promise.resolve();
 const serial=fn=>{const task=chain.then(fn);chain=task.catch(()=>{});return task;};
