@@ -1,0 +1,34 @@
+import {strict as assert} from 'node:assert';
+import {mkdtemp, rm} from 'node:fs/promises';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {commitStep, restoreStep} from '../sdk/dante/step_transaction.mjs';
+import {saveCheckpoint} from '../sdk/dante/checkpoint.mjs';
+const root = await mkdtemp(join(tmpdir(), 'dante-step-guard-'));
+const path = join(root, 'step.json');
+const base = {schema:'dante.step.v1', tick:0, brain:{charge:0}, world:{position:0}};
+const funcs = {brainStep:b=>b, motorStep:()=>({delta:0}), worldStep:w=>w};
+try {
+  await saveCheckpoint(path, base);
+  let getterCalls = 0;
+  const supplied = structuredClone(base);
+  Object.defineProperty(supplied.world, 'position', {enumerable:true, get(){getterCalls++;return 0;}});
+  await assert.rejects(commitStep(path, supplied, {}, funcs), /invalid_step_value/);
+  assert.equal(getterCalls, 0);
+  assert.equal((await restoreStep(path)).state.tick, 0);
+  const observation = {}; Object.defineProperty(observation, 'x', {enumerable:true,get(){getterCalls++;return 1;}});
+  await assert.rejects(commitStep(path, base, observation, funcs), /invalid_step_value/);
+  assert.equal(getterCalls, 0);
+  const cyclic = {}; cyclic.self = cyclic;
+  await assert.rejects(commitStep(path, base, cyclic, funcs), /invalid_step_value/);
+  const sparse = Array(2); sparse[0] = 1;
+  await assert.rejects(commitStep(path, base, {sparse}, funcs), /invalid_step_value/);
+  const callback = {...funcs, brainStep:()=>({get charge(){getterCalls++;return 5;}})};
+  await assert.rejects(commitStep(path, base, {}, callback), /invalid_step_value/);
+  assert.equal(getterCalls, 0);
+  assert.equal((await restoreStep(path)).state.tick, 0);
+  const ok = await commitStep(path, base, {}, funcs);
+  assert.equal(ok.state.tick, 1);
+  assert.equal((await restoreStep(path)).state.tick, 1);
+  console.log('DANTE_STEP_GETTER_GUARD_OK');
+} finally {await rm(root,{recursive:true,force:true});}
