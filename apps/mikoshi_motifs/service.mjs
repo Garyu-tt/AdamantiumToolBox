@@ -1,8 +1,12 @@
+import {checkPair,signReceipt,replay,journal} from '../../contracts/mikoshi-av-permit.mjs';
 import http from 'node:http';
 import {encode} from './encoder.mjs';
 import {recognize,learn,catalog} from './cluster.mjs';
 import {configured,load,save} from './store.mjs';
 const key=process.env.ADA_INTERNAL_KEY||'';
+const sourceKey=process.env.MIKOSHI_SOURCE_SIGNING_KEY||'';
+const secure=Boolean(sourceKey)||process.env.MIKOSHI_REQUIRE_SOURCE_PERMIT==='1';
+if(secure&&Buffer.byteLength(sourceKey)<32)throw Error('source_signing_key_missing');
 if(key.length<24)throw Error('internal_key_missing');
 const can=s=>new Set((process.env.ADA_CAPS||'').split(',')).has(s);
 const r='motifs.inspect',w='motifs.learn';
@@ -31,7 +35,7 @@ const send=(res,status,doc)=>{res.writeHead(status,{'Content-Type':'application/
 let serial=Promise.resolve();
 async function invoke(body){
  if(!can(r))throw Error('capability_denied');
- if(body.action===ids.status){const state=await load();return {...catalog(state),configured:configured()};}
+ if(body.action===ids.status){const state=await load();return {...catalog(state),configured:configured(),secureSourceWrites:secure,sourceReceipts:(state.sourceWrites||[]).length};}
  if(body.action!==ids.recognize&&body.action!==ids.remember)
   throw Error('action_unavailable');
  const feature=encode(body.params?.samples,body.params?.sampleRate);
@@ -39,7 +43,16 @@ async function invoke(body){
  if(!can(w)||!configured())throw Error('capability_denied');
  if(body.params?.sourceApproved!==true)throw Error('source_permission_required');
  const task=serial.then(async()=>{
-  const {state,result}=learn(await load(),feature.vector);await save(state);return result;
+  const current=await load();
+  const proof=secure?checkPair(sourceKey,body.params,'audio',Date.now()):null;
+  if(proof){
+   const seen=replay(current,proof);if(seen)return seen;
+  }
+  const {state,result}=learn(current,feature.vector);
+  const output=proof?{...result,
+   sourceReceipt:signReceipt(sourceKey,proof,result.id)}:result;
+  if(proof)journal(state,proof,output);
+  await save(state);return output;
  });
  serial=task.catch(()=>{});return task;
 }
