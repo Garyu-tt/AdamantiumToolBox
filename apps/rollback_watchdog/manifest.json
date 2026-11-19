@@ -40,6 +40,16 @@
       "from": "rollback_watchdog.journal",
       "to": "nftables_lab.rollback_trial",
       "type": "related"
+    },
+    {
+      "from": "rollback_watchdog.receipt",
+      "to": "rollback_ledger.reserve",
+      "type": "related"
+    },
+    {
+      "from": "rollback_watchdog.journal",
+      "to": "rollback_ledger.audit",
+      "type": "related"
     }
   ]
 }
