@@ -2,6 +2,7 @@ import {AtomicStore} from './atomic_store.mjs';
 import {open as openFile,mkdir,unlink} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {QUEUE_SCHEMA,encoded,keyOf,validateState} from './event_codec.mjs';
+import {witnessExists,ensureWitness} from './journal_witness.mjs';
 export class DurableQueue{
  #entries=[];#cursors=new Map();#acked=[];#tail=Promise.resolve();#observedDurable=false;
  constructor({path,capacity=64,maxSources=128,maxEventBytes=8192}={}){
@@ -13,7 +14,7 @@ export class DurableQueue{
   this.store=new AtomicStore(path,capacity*(maxEventBytes+400)+maxSources*256+8192);
  }
  async open(){
-  const s=await this.store.load();if(!s)return this;
+  const s=await this.store.load();if(!s){if(await witnessExists(this.store.path))throw Error('journal_missing_after_commit');return this;}
   validateState(s,this.config);
   this.#observedDurable=true;
   this.#entries=s.entries;this.#cursors=new Map(s.cursors);this.#acked=s.acked;
@@ -34,7 +35,7 @@ export class DurableQueue{
      this.#observedDurable=true;
      this.#entries=state.entries;this.#cursors=new Map(state.cursors);this.#acked=state.acked;
     }else{
-     if(this.#observedDurable)throw Error('journal_missing_after_commit');
+     if(this.#observedDurable||await witnessExists(this.store.path))throw Error('journal_missing_after_commit');
      this.#entries=[];this.#cursors=new Map();this.#acked=[];
     }
     return await fn();
@@ -48,6 +49,7 @@ export class DurableQueue{
   return task;
  }
  async #commit(entries,cursors,acked){
+  await ensureWitness(this.store.path);
   await this.store.save({schema:QUEUE_SCHEMA,entries,cursors:[...cursors],acked});
   this.#entries=entries;this.#cursors=cursors;this.#acked=acked;this.#observedDurable=true;
  }
@@ -71,7 +73,7 @@ export class DurableQueue{
   const task=this.#tail.then(async()=>{
    const state=await this.store.load();
    if(state)validateState(state,this.config);
-   else if(this.#observedDurable)throw Error('journal_missing_after_commit');
+   else if(this.#observedDurable||await witnessExists(this.store.path))throw Error('journal_missing_after_commit');
    if(state)this.#observedDurable=true;
    this.#entries=state?.entries??[];
    this.#cursors=new Map(state?.cursors??[]);
