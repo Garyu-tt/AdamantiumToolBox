@@ -1,0 +1,23 @@
+name: WireGuard Peer Enrollment isolation
+on:
+  push:
+    paths:
+      - 'packages/network_wireguard_peer/**'
+      - '.github/workflows/network-wireguard-peer-isolation.yml'
+  pull_request:
+    paths:
+      - 'packages/network_wireguard_peer/**'
+      - '.github/workflows/network-wireguard-peer-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Peer enrollment fail-closed tests
+        run: node --test packages/network_wireguard_peer/tests/*.test.mjs
