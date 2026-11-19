@@ -4,6 +4,8 @@
 #include <QJsonObject>
 #include <QListWidget>
 #include <QMdiArea>
+#include <QMdiSubWindow>
+#include <QPointer>
 #include <QMetaObject>
 #include <QPluginLoader>
 #include <QTest>
@@ -62,9 +64,20 @@ int main(int argc,char** argv) {
  if(!area)return 8;
  manager->openWindow("test.view","Test",new QWidget());
  if(area->subWindowList().size()!=1)return 9;
+ QPointer<QMdiSubWindow> firstWindow=area->subWindowList().front();
+ manager->closeWindow("test.view");
+ // Re-authorization occurs before the old QMdiSubWindow is destroyed.
+ manager->openWindow("test.view","Restored",new QWidget());
+ if(area->subWindowList().isEmpty())return 17;
+ QPointer<QMdiSubWindow> restored=area->activeSubWindow();
+ if(!restored||restored==firstWindow)return 18;
+ QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);
+ if(firstWindow||area->subWindowList().size()!=1||
+    area->subWindowList().front()!=restored)return 19;
+ // A late old-window destroyed callback must not remove the new registry entry.
  manager->closeWindow("test.view");
  QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);
- if(!area->subWindowList().isEmpty())return 10;
+ if(!area->subWindowList().isEmpty()||restored)return 10;
  delete desktop;delete area;
  std::cout<<"NATIVE_PLUGINS_OK two panels, revoked panel cleanup, window close\n";
  return 0;

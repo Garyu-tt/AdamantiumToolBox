@@ -15,6 +15,7 @@
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QTimer>
+#include <cstdint>
 #include <QWidget>
 int main(int argc,char** argv) {
  QApplication app(argc,argv);
@@ -60,6 +61,8 @@ int main(int argc,char** argv) {
   [&nativeRegistry](bool available){if(!available)nativeRegistry.reconcile({});});
 #endif
  QMap<QString,QPointer<QWidget>> active;
+ QMap<QString,std::uint64_t> openGenerations;
+ std::uint64_t nextGeneration=0;
  QObject::connect(&bridge,&HostBridge::openRequested,&shell,[&](const QString& id) {
   if(auto* existing=active.value(id).data()){existing->setFocus();return;}
   QJsonObject view;
@@ -71,8 +74,16 @@ int main(int argc,char** argv) {
   auto* provider=extensions.views.value(id,nullptr);
   QWidget* content=provider?provider->createView(surface,&bridge):nullptr;
   if(!content)content=new RawView(view,&bridge,surface);
+  const auto generation=++nextGeneration;
   active.insert(id,content);
-  QObject::connect(content,&QObject::destroyed,&shell,[&,id]{active.remove(id);});
+  openGenerations.insert(id,generation);
+  QObject::connect(content,&QObject::destroyed,&shell,[&,id,generation]{
+   // A previously closed widget must never erase its replacement's mapping.
+   if(openGenerations.value(id)==generation){
+    active.remove(id);
+    openGenerations.remove(id);
+   }
+  });
   const auto title=view.value("title").toString(id);
   if(extensions.manager)extensions.manager->openWindow(id,title,content);
   else static_cast<QTabWidget*>(surface)->addTab(content,title);
@@ -82,9 +93,11 @@ int main(int argc,char** argv) {
    for(const auto& item:revoked) {
     const auto id=item.toString();
     if(!active.contains(id))continue;
+    const auto closing=active.take(id);
+    openGenerations.remove(id);
     if(extensions.manager)extensions.manager->closeWindow(id);
     else if(auto* tabs=qobject_cast<QTabWidget*>(surface)) {
-     auto* widget=active.value(id).data();
+     auto* widget=closing.data();
      if(widget) {
       const auto index=tabs->indexOf(widget);
       if(index>=0)tabs->removeTab(index);
