@@ -8,7 +8,7 @@ import {validateManifest,validateGraph} from '../core/contract.mjs';
 import {fileURLToPath} from 'node:url';
 const id='instance.test',evt='a'.repeat(64);
 test('atomic checkpoint, expected revision, immutable commits, crash/reopen',async()=>{
- const dir=await mkdtemp(join(tmpdir(),'dante-r2-')),path=join(dir,'state.json');
+ const dir=await mkdtemp(join(tmpdir(),'dante-r2-')),path=join(dir,'nested','state','state.json');
  try{
   let manager=await new CheckpointManager(path).open();assert.equal(manager.read(),null);
   const s={world:{tick:4,position:2}};
