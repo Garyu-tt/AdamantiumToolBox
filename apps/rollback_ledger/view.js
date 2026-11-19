@@ -9,6 +9,7 @@ export async function mount(host,api){
  output.style.overflowWrap='anywhere';
  const controls=[
   ['rollback_ledger.audit','Проверить состояние после перезапуска',()=>({})],
+  ['rollback_ledger.checkpoint','Вычислить отпечаток хранилища',()=>({})],
   ['rollback_ledger.inspect','Найти аренду по leaseId',()=>({
    leaseId:JSON.parse(data.value).leaseId})],
   ['rollback_ledger.reserve','Зарезервировать подписанное разрешение',()=>
