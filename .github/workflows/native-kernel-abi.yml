@@ -1,0 +1,33 @@
+name: Native C ABI R01
+on:
+  pull_request:
+    paths:
+      - 'standards/native/**'
+      - 'native/kernel-abi/**'
+      - '.github/workflows/native-kernel-abi.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'standards/native/**'
+      - 'native/kernel-abi/**'
+      - '.github/workflows/native-kernel-abi.yml'
+permissions:
+  contents: read
+jobs:
+  abi:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake -S native/kernel-abi -B native/kernel-abi/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build native/kernel-abi/build --config Release --parallel 2
+      - name: Test
+        run: ctest --test-dir native/kernel-abi/build -C Release --output-on-failure
