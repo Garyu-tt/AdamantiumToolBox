@@ -6,7 +6,8 @@ const m=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'ut
 const secret=process.env.ADA_INTERNAL_KEY||'';if(secret.length<24)throw Error('missing_internal_key');
 const caps=new Set((process.env.ADA_CAPS||'').split(',').filter(Boolean));
 const actions={'network_witness.status':'network_witness.read',
- 'network_witness.receipts':'network_witness.read','network_witness.inspect':'network_witness.read',
+ 'network_witness.receipts':'network_witness.read','network_witness.latest':'network_witness.read',
+ 'network_witness.inspect':'network_witness.read',
  'network_witness.anchor':'network_witness.write'};
 const equal=x=>typeof x==='string'&&Buffer.byteLength(x)===Buffer.byteLength(secret)&&
  timingSafeEqual(Buffer.from(x),Buffer.from(secret));
@@ -32,6 +33,7 @@ async function invoke(action,p,ready){
  if(action==='network_witness.status')return ready?witness.status():{configured:false,error:bootError,enforcement:false};
  if(!ready)throw Error('not_configured');
  if(action==='network_witness.receipts')return witness.list(p.limit);
+ if(action==='network_witness.latest')return witness.headForJournal(p.journalId);
  if(action==='network_witness.inspect')return witness.inspect(p.checkpoint,p.signature);
  if(action==='network_witness.anchor')return witness.anchor(p);
  throw Error('capability_unavailable');

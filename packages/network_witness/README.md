@@ -1,4 +1,4 @@
-# Network Audit Witness 0.1.0 — independently installable MAS plugin
+# Network Audit Witness 0.1.1 — independently installable MAS plugin
 
 ## Boundary
 
@@ -26,6 +26,7 @@ Only publicly verifiable keys appear in that file. Never place secrets, private 
 
 - `network_witness.status` — readiness, revision, count, replication=false and enforcement=false.
 - `network_witness.receipts` — bounded public receipts with witness and source signatures; there are no original Approval event bodies.
+- `network_witness.latest` — one operator-trusted `journalId` to its newest **signed** receipt (or confirmed empty history), plus the global witness revision. Reads are independent of the 50-item list window; unknown/untrusted journal IDs are rejected, never treated as genesis.
 - `network_witness.inspect` — compare a signed observed checkpoint against a previously witnessed high-water mark (`matches_witness`, `rollback_detected`, `fork_detected`, `ahead_of_witness`, `unwitnessed`, `invalid_proof`). None represents firewall authorization.
 - `network_witness.anchor` — CAS against the witness revision plus a source-signed `network-approval-checkpoint-v1` containing `journalId`, `seq`, `head`, `keyId`, `at` and base64 Ed25519 signature. Also requires `segment`: **1–32 contiguous raw source journal rows**, starting at the last witnessed source sequence (or genesis); each row must match the Approval Ledger hash-chain format.
 
@@ -43,4 +44,4 @@ Witness verifies chain continuation and the independent source signature; stores
 
 `node --test packages/network_witness/tests/*.test.mjs` on the full Toolbox repository checkout, where the Approval Ledger's source is available for a **test-only** interoperability check. The standalone runtime has no import from `network_approval`. CI also tests an actual Core + Witness alone with temporary loopback services and hot capability revocation.
 
-Source is in a draft stacked PR. No production installation, DNS, MCP external ingress, replication or network mutation is implied.
+Version 0.1.1 adds exact per-journal lookup without changing the bounded receipt-list API. Each query still verifies and replays the local Witness journal, so read CPU cost is not constant-time; this fixes the history-window correctness issue, not long-history performance. Source is in a draft stacked PR. No production installation, DNS, MCP external ingress, replication or network mutation is implied.

@@ -1,5 +1,5 @@
 {
-  "mas":"1.0", "id":"network_checkpoint", "name":"Network Checkpoint Transport", "version":"0.1.0",
+  "mas":"1.0", "id":"network_checkpoint", "name":"Network Checkpoint Transport", "version":"0.1.1",
   "icon":"network_checkpoint", "lifecycle":"independent",
   "service":{"protocol":"mas-http-1","port":8933,"invokeTimeoutMs":15000},
   "ui":{"standard":"mas-ui-1","mode":"embedded-and-standalone"},

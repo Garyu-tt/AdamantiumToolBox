@@ -13,15 +13,17 @@ export async function upstream(url,secret,action,params={}){
  return result.result;
 }
 export async function stateFor(cfg,secret){const r=cfg.receiver;
- const status=await upstream(r.localWitnessUrl,secret,'network_witness.status');
- if(!status.configured||!Number.isSafeInteger(status.count)||status.count<0)throw Error('witness_not_ready');
- const batch=await upstream(r.localWitnessUrl,secret,'network_witness.receipts',{limit:50});
- if(!Array.isArray(batch.receipts)||batch.revision!==status.revision)throw Error('witness_revision_race');
- const mine=batch.receipts.filter(x=>x?.receipt?.journalId===r.journalId).at(-1);
- if(!mine&&status.count>batch.receipts.length)throw Error('journal_state_not_discoverable');
+ const head=await upstream(r.localWitnessUrl,secret,'network_witness.latest',{journalId:r.journalId});
+ if(head?.schema!=='network-witness-journal-head-v1'||head.witnessId!==r.witnessId||
+  head.journalId!==r.journalId||!Number.isSafeInteger(head.count)||head.count<0||
+  !/^[0-9a-f]{64}$/.test(head.revision)||head.latest===undefined)throw Error('invalid_witness_journal_head');
+ const mine=head.latest;
+ if(mine!==null&&(!mine?.receipt||mine.receipt.journalId!==r.journalId||
+  !Number.isSafeInteger(mine.receipt.ledgerSeq)||mine.receipt.ledgerSeq<1||
+  !/^[0-9a-f]{64}$/.test(mine.witnessRevision)||!mine.signature))throw Error('invalid_witness_journal_head');
  return {schema:'network-checkpoint-state-v1',witnessId:r.witnessId,journalId:r.journalId,
-  witnessRevision:status.revision,ledgerSeq:mine?.receipt?.ledgerSeq||0,
-  ledgerHead:mine?.receipt?.ledgerHead||ORIGIN,latest:mine||null};
+  witnessRevision:head.revision,ledgerSeq:mine?.receipt?.ledgerSeq||0,
+  ledgerHead:mine?.receipt?.ledgerHead||ORIGIN,latest:mine};
 }
 function body(req){return new Promise((done,fail)=>{let size=0;const chunks=[];
  req.on('data',d=>{size+=d.length;if(size>MAX){fail(Error('packet_too_large'));req.destroy();}else chunks.push(d);});

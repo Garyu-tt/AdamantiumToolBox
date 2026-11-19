@@ -40,7 +40,7 @@ export class Witness{
      rec.checkpoint.head!==rec.ledgerHead||!verifySource(rec.checkpoint,rec.sourceSignature,this.trust)||
      sourceProofHash(rec.checkpoint,rec.sourceSignature)!==rec.sourceProofHash||
      (last&&rec.ledgerSeq<=last.ledgerSeq))fatal('witness_sequence_invalid');
-   latest.set(rec.journalId,{ledgerSeq:rec.ledgerSeq,ledgerHead:rec.ledgerHead,receipt:r.record,signature:r.signature});
+   latest.set(rec.journalId,{ledgerSeq:rec.ledgerSeq,ledgerHead:rec.ledgerHead,receipt:r.record,signature:r.signature,witnessRevision:r.hash});
    receipts.push({receipt:r.record,signature:r.signature,witnessRevision:r.hash});prev=r.hash;seq++;
   }
   this.count=seq;this.head=prev;this.latest=latest;this.receipts=receipts;
@@ -48,6 +48,13 @@ export class Witness{
  status(){return {configured:true,count:this.count,revision:this.head,mode:'witness_only',enforcement:false,replicated:false};}
  list(limit=20){const n=Number.isInteger(limit)?Math.min(50,Math.max(1,limit)):20;
   return {revision:this.head,receipts:this.receipts.slice(-n),enforcement:false};}
+ headForJournal(journalId){
+  if(typeof journalId!=='string'||!Object.hasOwn(this.trust.sources,journalId))fatal('untrusted_journal');
+  const last=this.latest.get(journalId);
+  return {schema:'network-witness-journal-head-v1',witnessId:this.trust.witness.id,journalId,
+   revision:this.head,count:this.count,latest:last?{receipt:last.receipt,
+    signature:last.signature,witnessRevision:last.witnessRevision}:null,enforcement:false};
+ }
  inspect(checkpoint,signature){
   const c=canonicalCheckpoint(checkpoint);
   if(!verifySource(c,signature,this.trust))return {state:'invalid_proof',matches:false,enforcement:false};
