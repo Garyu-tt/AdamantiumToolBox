@@ -34,3 +34,23 @@ The normal safe read-copy API allocates an output copy; the direct byte accessor
 5. Run independent QA and architecture tests before any staging/deployment. Private configs and privileged implementation belong in the authorized private boundary.
 
 No simulated saving figure can be presented as a live machine measurement.
+
+## R02 — Linux KSM opt-in physical-memory probe
+
+New: `experiments/dram/ksm-benchmark.c` + `tests/linux_ksm_probe.test.mjs`.
+
+- Runs only when invoked with `--execute`; default prints an opt-in requirement and does no allocation.
+- Bounds: 1–2048 pages per region, 2–4 copies, 0–30 seconds observation. On a 4-KiB-page machine, <=32 MiB of benchmark regions.
+- Each copy starts independently allocated, byte-identical, deterministic nonzero pages. Reads `/sys/kernel/mm/ksm/run` (never writes it). Only calls `madvise(MADV_MERGEABLE)` when `run == 1`.
+- Parses selected mapping `Pss/Rss/KSM` fields from `/proc/self/smaps` before and after. Reports observed PSS delta, KSM page evidence, host policy flag, and explicit status such as `disabled_by_host` or `no_merge_observed`. A failed/unavailable probe is NOT a measured saving; process-private PSS alone is not a global system-wide memory saving.
+- Performs an isolated copy-on-write check and frees all mappings. Requires no root; no change to sysfs or global KSM policy.
+
+```bash
+node tests/linux_ksm_probe.test.mjs
+cc -std=c11 -O2 -Wall -Wextra -Werror experiments/dram/ksm-benchmark.c -o /tmp/dram-ksm-benchmark
+/tmp/dram-ksm-benchmark --execute --pages 256 --copies 3 --wait-ms 3000
+```
+
+Initial local isolated-container result: `unavailable_no_sysfs`, `verified_ksm_merging: false`, baseline and after `pss_kb:3080` on 3×256 pages; therefore **no physical savings demonstrated yet**. This result does not characterize the user's servers.
+
+Next independent QA: prove KSM-backed page sharing with enabled host policy on a disposable isolated test VM, stress page changes and migration, measure per-page overhead, verify stable latency and no cross-tenant sharing. The provider itself is not installed.
