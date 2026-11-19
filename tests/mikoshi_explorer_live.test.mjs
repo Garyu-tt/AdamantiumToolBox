@@ -12,17 +12,20 @@ const specs=[
  ['mikoshi_phonetics','phonetics.inspect,phonetics.render'],
  ['mikoshi_motifs','motifs.inspect,motifs.learn'],
  ['mikoshi_motorlinks','motor.inspect,motor.learn'],
- ['mikoshi_explorer','exploration.inspect,exploration.learn']
+ ['mikoshi_explorer','exploration.inspect,exploration.learn'],
+ ['mikoshi_worldmodel','prediction.inspect,prediction.learn']
 ];
 const domains={articulation:['articulation',['preview','observe']],
  memory:['auditory-memory',['remember']],
  motor:['motor-learning',['propose','feedback','status']],
- explorer:['exploration',['begin','choose','feedback','stop','status']]};
+ explorer:['exploration',['begin','choose','feedback','stop','status']],
+ world:['world-prediction',['forecast','observe','abort','status']]};
 const key=randomBytes(32).toString('hex'),children=[];
 const directory=await mkdtemp(join(tmpdir(),'mikoshi-explore-live-'));
 const state={MIKOSHI_MOTIFS_STATE:join(directory,'motifs.json'),
  MIKOSHI_MOTOR_STATE:join(directory,'motor.json'),
- MIKOSHI_EXPLORER_STATE:join(directory,'explorer.json')};
+ MIKOSHI_EXPLORER_STATE:join(directory,'explorer.json'),
+ MIKOSHI_WORLD_STATE:join(directory,'world.json')};
 const port=()=>new Promise((ok,bad)=>{
  const s=createServer().once('error',bad);
  s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>ok(p));});
@@ -87,14 +90,22 @@ try{
  assert.deepEqual(result.decisions.slice(0,2).map(x=>x.action),
   ['inspect','inspect']);
  assert(result.decisions.some(x=>x.action==='practice'));
+ assert.equal(result.decisions[0].predicted,false);
+ assert(result.decisions.slice(1).some(x=>x.predicted));
+ assert(result.decisions.every(x=>typeof x.surprise==='boolean'));
  const explored=JSON.parse(await readFile(state.MIKOSHI_EXPLORER_STATE,'utf8'));
  const motor=JSON.parse(await readFile(state.MIKOSHI_MOTOR_STATE,'utf8'));
+ const world=JSON.parse(await readFile(state.MIKOSHI_WORLD_STATE,'utf8'));
  assert.equal(explored.session.step,6);
  assert(motor.records.length>=1);
+ assert.equal(world.observations,6);
+ assert(world.examples.length>=2);
+ assert.equal(world.pending,null);
  assert(!JSON.stringify(explored).includes('samples'));
  assert(!JSON.stringify(motor).includes('samples'));
+ assert(!JSON.stringify(world).includes('samples'));
  assert(logs.length===6);
  assert.equal((await call(skills.explorer.choose)).ready,false);
- console.log('MIKOSHI_EXPLORER_LIVE_OK four MAS services, adaptive practice, persistence');
+ console.log('MIKOSHI_EXPLORER_LIVE_OK five MAS services, pre-action forecasts, feedback');
 }finally{for(const child of children)child.kill();
  await rm(directory,{recursive:true,force:true});}
