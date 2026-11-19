@@ -14,8 +14,10 @@ export function simulateRollbackTrial(input){
  for(const event of input.events){
   if(!event||!types.has(event.kind)||!integers(event.atMs)||event.atMs<at||
    event.atMs>input.advanceToMs)throw Error('invalid_event');
-  if(event.atMs>=input.deadlineMs&&['committed','verified'].includes(state)){
-   rollback(input.deadlineMs);break;
+  if(event.atMs>=input.deadlineMs&&state!=='confirmed'){
+   if(['committed','verified'].includes(state))rollback(input.deadlineMs);
+   else {reason='deadline_before_commit';record(event.kind,input.deadlineMs,'blocked',reason);}
+   break;
   }
   at=event.atMs;
   if(['confirmed','rolled_back','blocked'].includes(state))break;
