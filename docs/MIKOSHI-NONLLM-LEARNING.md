@@ -1,7 +1,7 @@
-# Mikoshi non-LLM skill ecosystem — R12
+# Mikoshi non-LLM skill ecosystem — R13
 
-**Seventeen independent MAS providers plus Mikoshi Classroom**
-(18 MAS apps). All are CPU-first, capability-driven and usable with
+**Nineteen independent MAS providers plus Mikoshi Classroom**
+(20 MAS apps). All are CPU-first, capability-driven and usable with
 Core alone. No conversational language models or prompt-generated
 dialogues are required. The composite UI is a separate user-facing app,
 not a replacement monolith or a dependency of any provider.
@@ -11,6 +11,8 @@ not a replacement monolith or a dependency of any provider.
 | Skill domain | App | Function |
 |---|---|---|
 | hearing | `mikoshi_hearing` | PCM energy and pitch features |
+| visual-events | `mikoshi_vision` | Unlabeled 8×8 RGB change detection |
+| audiovisual-association | `mikoshi_grounding` | Temporal motif/event correlations with abstention |
 | auditory-events | `mikoshi_segments` | 2–4 second PCM stream acoustic event candidates |
 | speech | `mikoshi_voice` | Optional eSpeak NG parametric voice |
 | general | `mikoshi_learning` | Supervised feature prototypes |
@@ -44,6 +46,7 @@ or practice based on numeric error and uncertainty. The optional
 and updates its prediction from the resulting acoustic observation.
 `hypotheses_panel.js` lets the operator approve one untried vocal action,
 forecast it, hear the result and update prediction error.
+`av_panel.js` adds an opt-in synthetic audiovisual pairing exercise.
 No background tasks.
 
 ## Immutable owner-chosen vocal identity
@@ -67,7 +70,7 @@ Current prototypes are single-instance, not isolated multi-tenant hosting.
 No background microphone recording, Noosphere migration or active
 deployment was performed in this change.
 
-**R12 is not speech understanding, speech recognition, a learned phoneme
+**R13 is not speech understanding, speech recognition, a learned phoneme
 inventory, independent reasoning or proven autonomy.** The final sound
 is a synthetic learning demonstration. The target is a complete
 architecture able to acquire skills later, not a ready-made conversation.
@@ -83,9 +86,11 @@ architecture able to acquire skills later, not a ready-made conversation.
 - `docs/MIKOSHI-EXPLORER-R10.md` — bounded self-directed sensory experiments
 - `docs/MIKOSHI-WORLDMODEL-R11.md` — sensory forecasts before actions
 - `docs/MIKOSHI-HYPOTHESES-R12.md` — test a new action
+- `docs/MIKOSHI-AV-GROUNDING-R13.md` — visual/audio associations
 
-Run `node tests/mikoshi_hypotheses.test.mjs` and
-`node tests/mikoshi_hypotheses_live.test.mjs` for R12.
+Run `node tests/mikoshi_vision.test.mjs`,
+`node tests/mikoshi_grounding.test.mjs`, and
+`node tests/mikoshi_av_live.test.mjs` for R13.
 Full Mikoshi acoustic, isolated MAS and core regression coverage is
 listed in `.github/workflows/ci.yml`, alongside
 `node tools/mas-check.mjs` and `python tools/check-size.py`.
