@@ -1,0 +1,24 @@
+{
+  "schema": "mas.composite.v1",
+  "id": "genpolicy",
+  "version": "0.1.0",
+  "exports": [
+    "genesis.policy.decide.v1"
+  ],
+  "requires": [
+    {
+      "slot": "proposals",
+      "contract": "genesis.policy.propose.v1"
+    },
+    {
+      "slot": "selection",
+      "contract": "genesis.policy.select.v1"
+    }
+  ],
+  "optional": [
+    {
+      "slot": "simulation",
+      "contract": "genesis.policy.simulate.v1"
+    }
+  ]
+}
