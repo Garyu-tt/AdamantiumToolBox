@@ -1,6 +1,6 @@
 # Mikoshi — non-LLM speech and learning (experimental v0.1)
 
-The four independently installable MAS apps use the same Core capability graph.
+Five independently installable MAS apps use the same Core capability graph.
 The classroom UI discovers resources with \`skill.schema=mikoshi.skill.v1\`,
 not app names or fixed infrastructure addresses. Each remains operational alone.
 
@@ -8,7 +8,11 @@ not app names or fixed infrastructure addresses. Each remains operational alone.
 - \`mikoshi_hearing\`: bounded PCM acoustic features, not word recognition.
 - \`mikoshi_voice\`: optional local \`espeak-ng\` formant synthesizer with a
   private owner-selected \`MIKOSHI_VOICE_PROFILE_JSON\` (language/pitch/speed/amplitude).
-  The initial timbre/profile is fixed; phonetic adaptation is not yet implemented.
+  The initial timbre/profile is fixed; the default is a brighter, higher register
+  (pitch=74, speed=164, amplitude=95). This formant engine cannot reproduce the
+  natural breathiness or expressivity of a trained human vocalist. The suggested
+  high, soft, clear singing-like aesthetic is a broad design target, not a clone
+  of any identifiable singer. Phonetic adaptation is not implemented.
 - \`mikoshi_learning\`: online feature-to-label prototypes with correctness feedback.
   Explicitly set a private \`MIKOSHI_LEARNING_STATE\` path to enable durable updates.
   No semantic understanding, autonomous thought or consciousness is asserted.
