@@ -1,3 +1,4 @@
+import {GRAPH_SCHEMA} from '../apps/adamantium_genome/genome.mjs';
 export const clone=x=>JSON.parse(JSON.stringify(x));
 const port=(id,dataType,direction,semantics='data')=>
  ({id,dataType,direction,semantics});
