@@ -1,0 +1,5 @@
+{
+  "schema":"xr-provider-1","id":"alvr","name":"ALVR Server API Probe",
+  "category":"pcvr","readOnly":true,
+  "evidence":"GET /api/version on operator-configured loopback endpoint"
+}

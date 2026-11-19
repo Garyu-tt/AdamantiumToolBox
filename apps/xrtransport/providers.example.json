@@ -1,0 +1,4 @@
+[
+  {"id":"alvr_laptop","adapter":"alvr","label":"ALVR local","endpoint":"http://127.0.0.1:8082/"},
+  {"id":"wivrn_laptop","adapter":"wivrn","label":"WiVRn local process"}
+]
