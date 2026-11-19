@@ -1,6 +1,6 @@
 # Mikoshi — non-LLM speech and learning (experimental v0.1)
 
-Five independently installable MAS apps use the same Core capability graph.
+Six independently installable MAS apps use the same Core capability graph.
 The classroom UI discovers resources with \`skill.schema=mikoshi.skill.v1\`,
 not app names or fixed infrastructure addresses. Each remains operational alone.
 
@@ -48,5 +48,5 @@ implicit permission to record or train on third-party audio.
 ## Validation and limitations
 Run \`node tests/mikoshi_speech.test.mjs\`, \`node tools/mas-check.mjs\`
 and \`python tools/check-size.py\`, then Core + App isolation and supervised
-audio smoke tests on a host with eSpeak NG installed. No runtime deployment
-or learned child-level cognition is claimed by the initial source proposal.
+audio smoke tests on a host with eSpeak NG installed. No runtime deployment, realistic singer-level timbre, streaming latency,
+or learned child-level cognition is claimed by this source prototype.
