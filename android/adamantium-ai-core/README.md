@@ -29,3 +29,14 @@ Open `android/adamantium-ai-core` in Android Studio with Android SDK 35 and JDK 
 
 ## Acceptance (not yet claimed)
 Android debug build; install on Pixel 4 XL and Pixel 9; foreground + boot/restart behavior; offline/timeout/reconnect; key enrollment and TLS pin mismatch; denied lease; battery/thermal release; `ml.dense.f32` numerical test; signed result idempotency; independent source QA, and existing repository test suite.
+
+## R02 Android runtime: WireGuard mesh + model artifacts
+- Mobile runtime only. No server provisioning, new chat/orchestrator implementation, or remote device administration.
+- Operator imports a standard WireGuard .conf into Android; the profile is parsed, restricted to non-default split-tunnel routes and encrypted at rest with an Android Keystore AES-GCM key. Operator explicitly grants Android VPN consent. Uses official com.wireguard.android:tunnel userspace GoBackend.
+- Opt-in watchdog attempts tunnel reconnection. The compute lease/pulse client refuses to send if the tunnel is down, or if any resolved HTTPS gateway address lies outside the configured mesh AllowedIPs; HTTPS hostname verification, SPKI pinning and signed device requests remain required.
+- Virtual LAN subnet, tunnel endpoint, peer keys and server roles come entirely from the operator-provisioned WireGuard file. No private keys or site addresses committed.
+- Via Android SAF the operator may register GGUF, safetensors, ONNX, GENESIS/genome and binary weight artifacts without loading entire model files into Java heap. Content URI is persisted. ModelRegistry.open() returns a read-only file descriptor for a future verified inference provider.
+- **Do not confuse artifact import with LLM execution:** R02 does not contain llama.cpp/ONNX/GENESIS decoders, GPT-OSS-120B inference, GPU/NPU kernels or live model compatibility tests. Only the prior bounded dense f32 executor is active.
+- Android allows one VpnService at a time; other VPN apps may conflict. Always-on VPN must be opted into in Android settings. No continuous operation guarantee.
+- Model file grants depend on backing document provider. Do not import third-party WireGuard configuration unless the operator has verified its peers/AllowedIPs. Import and model permissions do not authorize uploading weights into the pool.
+- Requires acceptance on a physical phone and independently checked build. No fabricated VPN connection, server-side virtual LAN or hardware performance results.

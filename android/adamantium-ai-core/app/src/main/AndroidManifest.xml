@@ -18,6 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- WireGuard library merges its VpnService declaration automatically. -->
         <service android:name=".WatchdogService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
