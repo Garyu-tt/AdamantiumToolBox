@@ -1,7 +1,8 @@
+import {explorePanel} from './explore_panel.js';
 import {streamMotorPanel} from './stream_motor_panel.js';
 import {captureStream} from './stream_capture.js';
 // Composite discovery only; no fixed sibling MAS imports or endpoints.
-export function streamPanel(host,api,events,memory,sequence,articulation,allowed,motor,gesture,wave){
+export function streamPanel(host,api,events,memory,sequence,articulation,allowed,motor,gesture,wave,explorer){
  const ev=events?.skill?.actions,mem=memory?.skill?.actions;
  if(!ev?.analyze||!allowed.has(ev.analyze))return;
  const add=(tag,text,parent=host)=>{const e=document.createElement(tag);
@@ -10,6 +11,7 @@ export function streamPanel(host,api,events,memory,sequence,articulation,allowed
  const info=add('pre','Запись и обучение запускаются только вручную');
  let source=null,detected=null,learned=null,busy=false;
  streamMotorPanel(host,api,{articulation,motor,gesture,wave},allowed,()=>learned);
+ explorePanel(host,api,{explorer,articulation,motor},allowed,()=>learned);
  const capture=add('button','Записать 2 секунды с микрофона');
  capture.onclick=async()=>{
   if(busy)return;busy=true;capture.disabled=true;detected=null;learned=null;
