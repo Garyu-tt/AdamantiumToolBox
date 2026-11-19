@@ -51,3 +51,26 @@ add_test(NAME native_dispatch_guarded_invoke COMMAND mas_native_dispatch_test)
 add_executable(mas_native_policy_postcheck_test tests/native_policy_postcheck_test.cpp)
 target_link_libraries(mas_native_policy_postcheck_test PRIVATE mas_native_dispatch Threads::Threads)
 add_test(NAME native_policy_posthandler_revocation COMMAND mas_native_policy_postcheck_test)
+
+# N3a optional, read-only legacy MAS IPC discovery sidecar; native-only build
+# remains entirely C++17 and needs no Node.js. No invoke or authority bridge.
+add_library(mas_native_legacy_frame STATIC src/legacy_frame.cpp)
+target_include_directories(mas_native_legacy_frame PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+if(MSVC)
+  target_compile_options(mas_native_legacy_frame PRIVATE /W4 /WX)
+else()
+  target_compile_options(mas_native_legacy_frame PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+add_executable(mas_native_legacy_frame_test tests/legacy_frame_test.cpp)
+target_link_libraries(mas_native_legacy_frame_test PRIVATE mas_native_legacy_frame)
+add_test(NAME native_legacy_frame_codec COMMAND mas_native_legacy_frame_test)
+add_executable(mas_native_legacy_frame_cli tests/legacy_frame_cli.cpp)
+target_link_libraries(mas_native_legacy_frame_cli PRIVATE mas_native_legacy_frame)
+find_program(MAS_LEGACY_NODE_EXECUTABLE NAMES node node.exe)
+if(MAS_LEGACY_NODE_EXECUTABLE)
+  add_test(NAME native_legacy_graph_ipc_interop
+    COMMAND "${MAS_LEGACY_NODE_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/../legacy-mas-bridge/legacy_stdio.integration.test.mjs"
+      "$<TARGET_FILE:mas_native_legacy_frame_cli>")
+  set_tests_properties(native_legacy_graph_ipc_interop PROPERTIES TIMEOUT 20)
+endif()
