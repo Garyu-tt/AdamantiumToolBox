@@ -20,7 +20,7 @@ Node cap(std::string id, std::string type, std::vector<Port> ports,
   return {std::move(id), kind, std::move(type), "", std::move(ports)};
 }
 Node module(std::string id, std::string ref, std::vector<Port> ports = {}) {
-  return {std::move(id), NodeKind::Composite, "", std::move(ref), std::move(ports)};
+  return {std::move(id), NodeKind::Composite, "", std::move(ref), std::move(ports), 1};
 }
 Edge edge(std::string id, std::string from, std::string fp,
           std::string to, std::string tp,
@@ -55,6 +55,9 @@ int main() {
   auto wrong_interface=mas;
   wrong_interface["mas.program"].nodes[1].ports[1].data_type="mas.bad@1";
   CHECK(fails(wrong_interface,"mas.program",ErrorCode::CompositeInterface));
+  auto stale_module=mas;
+  stale_module["mas.transform"].revision=2;
+  CHECK(fails(stale_module,"mas.program",ErrorCode::CompositeRevision));
   auto recursive=mas;
   recursive["mas.transform"].nodes.push_back(module("self","mas.program"));
   CHECK(fails(recursive,"mas.program",ErrorCode::CompositeCycle));
