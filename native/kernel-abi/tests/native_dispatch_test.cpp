@@ -33,7 +33,7 @@ int main() {
     written = request.size();
     return true;
   };
-  REQUIRE(dispatcher.bind("echo", "host.echo", echo));
+  REQUIRE(dispatcher.bind("echo", "host.echo", "mas.echo.v1", echo));
   REQUIRE(!dispatcher.bind("echo", "host.echo", echo)); // duplicate binding
   char output[32] = {};
   auto call = [&](std::string_view who, std::uint64_t revision,
@@ -71,7 +71,7 @@ int main() {
 
   // Denied and failed calls do not publish partial provider output.
   NativeDispatcher throwing(graph, [](auto, auto, auto) { return true; });
-  REQUIRE(throwing.bind("echo", "host.echo", [](auto, char* dest,
+  REQUIRE(throwing.bind("echo", "host.echo", "mas.echo.v1", [](auto, char* dest,
                    std::size_t, std::size_t&, const auto&) -> bool {
     dest[0] = 'X';
     throw std::runtime_error("plugin_failure");
@@ -94,7 +94,7 @@ int main() {
 
   // A host owner mismatch fails even if graph/policy visibility is granted.
   NativeDispatcher wrong_owner(graph, [](auto, auto, auto) { return true; });
-  REQUIRE(wrong_owner.bind("echo", "forged.owner", echo));
+  REQUIRE(wrong_owner.bind("echo", "forged.owner", "mas.echo.v1", echo));
   REQUIRE(wrong_owner.invoke("alice", "echo", 1, "x", output, sizeof(output),
                              cancelled).status == InvokeStatus::Denied);
 
