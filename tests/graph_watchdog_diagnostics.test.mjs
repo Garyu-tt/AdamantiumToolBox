@@ -36,6 +36,24 @@ assert.equal(approved.approval.signatureValid,true);
 assert(approved.observations.includes('signature_check_passed_not_authorization'));
 assert.equal(approved.readyToCommit,false);
 assert.equal(approved.summary.blockedStages,8);
+const mismatch=diagnoseTransaction({transaction,
+ expectedBaseRevision:'b'.repeat(64),readback:{
+  schema:'nftables-readback-1',status:'observed',revision:'c'.repeat(64)}});
+assert(mismatch.alerts.some(x=>x.code==='kernel_base_revision_mismatch'));
+assert(mismatch.graph.nodes.some(x=>x.id==='blocker:kernel'&&
+ x.cause==='kernel_revision_mismatch'));
+const matching=diagnoseTransaction({transaction,
+ expectedBaseRevision:'b'.repeat(64),readback:{
+  schema:'nftables-readback-1',status:'observed',revision:'b'.repeat(64)}});
+assert(matching.observations.includes('kernel_snapshot_observed_but_unattested'));
+assert.equal(matching.readyToCommit,false);
+const ledger=diagnoseTransaction({transaction,expectedLeaseId:'lease-1',
+ ledger:{schema:'rollback-ledger-audit-1',status:'scanned',
+  entries:[{leaseId:'lease-1',state:'expired_needs_review'}],issues:[]}});
+assert(ledger.alerts.some(x=>x.code==='ledger_requires_review'));
+assert(ledger.graph.nodes.some(x=>x.id==='blocker:rollback'&&
+ x.cause==='rollback_ledger_requires_reconciliation'));
+assert.equal(ledger.applied,false);
 const context={leaseId:'lease-1',planDigest:transaction.revision};
 const armed=makeJournalEvent({...context,seq:1,state:'draft'},null,'armed',issuedAt);
 const staged=makeJournalEvent({...context,seq:2,state:'armed'},armed.hash,
