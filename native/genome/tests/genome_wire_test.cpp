@@ -110,9 +110,13 @@ int selftest() {
   CHECK(decode(nullptr,bytes.size(),decoded)==Status::Truncated);
   std::vector<std::uint8_t> untouched{'S'};
   Genome bad=genome;
-  bad.chromosomes[0].graph_id="broken.name";
+  bad.chromosomes[0].graph_id="INVALID.name";
   CHECK(encode(bad,untouched)==Status::InvalidGenome);
   CHECK(untouched.size()==1 && untouched[0]=='S');
+  bad=genome;
+  std::swap(bad.chromosomes[0],bad.chromosomes[1]);
+  CHECK(encode(bad,untouched)==Status::InvalidGenome);
+  CHECK(untouched.size()==1);
   bad=genome;bad.lane=static_cast<Lane>(255);
   CHECK(encode(bad,untouched)==Status::InvalidGenome);
   CHECK(untouched.size()==1);
