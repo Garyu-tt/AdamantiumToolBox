@@ -41,8 +41,10 @@ export function learn(state,events){
  const next=structuredClone(state);let updates=0,novel=0;
  for(const phrase of phrases(events)){
   for(let i=1;i<phrase.length;i++)for(let size=2;size<=4&&size<=i+1;size++){
+   // Persist timing categories, never source-specific millisecond stamps.
+   const representative={quick:90,medium:300,slow:650};
    const seq=phrase.slice(i-size+1,i+1).map((e,j)=>({
-    id:e.id,gapMs:j?e.gapMs:0}));
+    id:e.id,gapMs:j?representative[gapBand(e.gapMs)]:0}));
    const signature=key(seq);
    let item=next.patterns.find(p=>p.key===signature);
    if(!item){
