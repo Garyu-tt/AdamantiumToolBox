@@ -61,6 +61,16 @@ try{
   ticket,vector:spectrum(synth(a)),sourceApproved:true})).status,400);
  const estimated=await live.call('mikoshi_worldmodel.estimate',{motor:b});
  assert.equal(estimated.data.result.ready,true);
+ const interrupted=await live.call('mikoshi_worldmodel.forecast',{
+  motor:b,sourceApproved:true});
+ assert.equal(interrupted.status,200);
+ const abandoned=interrupted.data.result.ticket;
+ const recover=await live.call('mikoshi_worldmodel.abort',{
+  ticket:abandoned,sourceApproved:true});
+ assert.equal(recover.status,200);
+ assert.equal(recover.data.result.pendingTicket,null);
+ assert.equal((await live.call('mikoshi_worldmodel.observe',{
+  ticket:abandoned,vector:spectrum(synth(b)),sourceApproved:true})).status,400);
  const state=JSON.parse(await readFile(file,'utf8'));
  assert.equal(state.observations,1);assert.equal(state.pending,null);
  assert(!JSON.stringify(state).includes('audioBase64'));
