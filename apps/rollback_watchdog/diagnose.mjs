@@ -52,14 +52,15 @@ export function diagnoseTransaction(input,options={}){
  if(input.ledger!==undefined){
   const x=input.ledger;
   if(x?.schema!=='rollback-ledger-audit-1'||x.status!=='scanned'||
-     !Array.isArray(x.entries)||!Array.isArray(x.issues)){
+     !Array.isArray(x.entries)||x.entries.length>1024||
+     !Array.isArray(x.issues)||x.issues.length>1024){
    ledgerIncomplete=true;alerts.push({code:'ledger_inventory_unavailable'});
   }else{
    ledgerIncomplete=x.issues.length>0||x.entries.some(e=>
-    e.state==='incomplete_or_untrusted'||e.state==='expired_needs_review');
+    e?.state==='incomplete_or_untrusted'||e?.state==='expired_needs_review');
    if(ledgerIncomplete)alerts.push({code:'ledger_requires_review',
     reason:'local replay store includes incomplete or expired claims'});
-   const found=x.entries.some(e=>e.leaseId===input.expectedLeaseId);
+   const found=x.entries.some(e=>e?.leaseId===input.expectedLeaseId);
    if(found)observations.push('local_lease_seen_not_distributed_attestation');
    else alerts.push({code:'requested_lease_not_found_in_local_audit'});
   }
