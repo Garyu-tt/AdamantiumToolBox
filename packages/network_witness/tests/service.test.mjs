@@ -6,11 +6,19 @@ import {ORIGIN} from '../lib/contract.mjs';
 test('authenticated HTTP graph, checkpoint, inspect and no apply action',async()=>{
  const f=await launch();try{
   assert.equal((await f.request('/graph',null,'wrong')).status,401);
-  assert.equal((await f.request('/graph')).body.nodes.filter(x=>x.type==='action').length,4);
+  const graph=await f.request('/graph');
+  assert.equal(graph.body.nodes.filter(x=>x.type==='action').length,5);
+  assert(graph.body.nodes.some(x=>x.id==='network_witness.latest'));
+  const genesis=await f.request('/invoke',{action:'network_witness.latest',params:{journalId:'approval'}});
+  assert.equal(genesis.body.result.latest,null);
   const a=f.segment();const x=await f.request('/invoke',{action:'network_witness.anchor',params:{...a,expectedRevision:ORIGIN}});
   assert.equal(x.status,200,JSON.stringify(x.body));
   const i=await f.request('/invoke',{action:'network_witness.inspect',params:a});
   assert.equal(i.body.result.state,'matches_witness');
+  const latest=await f.request('/invoke',{action:'network_witness.latest',params:{journalId:'approval'}});
+  assert.equal(latest.body.result.latest.receipt.ledgerSeq,1);
+  const untrusted=await f.request('/invoke',{action:'network_witness.latest',params:{journalId:'untrusted'}});
+  assert.equal(untrusted.status,400);
   const unknown=await f.request('/invoke',{action:'network_witness.apply',params:{}});
   assert.equal(unknown.status,403);
  }finally{await f.shutdown();}
