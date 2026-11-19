@@ -1,0 +1,26 @@
+name: CodeMap relation contract
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  relations:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: SHA-pinned CodeGraph compatibility
+        run: node tests/codegraph.test.mjs
+      - name: MAS and Frank relations
+        run: node tests/codemap_relations.test.mjs

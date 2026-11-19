@@ -51,6 +51,7 @@ def main():
     return {"schema":"mas-codemap-1","level":level,**result}
 if __name__ == "__main__":
     try:
+        sys.stdout.reconfigure(encoding="utf-8")
         print(json.dumps(main(),ensure_ascii=False))
     except (ValueError,OSError,UnicodeError) as e:
         print(json.dumps({"error":str(e)[:120]}));sys.exit(2)
