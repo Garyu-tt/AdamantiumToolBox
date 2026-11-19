@@ -5,9 +5,11 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace mas::native {
 
@@ -44,10 +46,16 @@ class NativeDispatcher final {
                       const std::atomic_bool& cancelled) noexcept;
 
  private:
-  struct Binding { std::string owner; Handler handler; };
+  struct Binding {
+    std::string owner;
+    Handler handler;
+    std::atomic_bool enabled{true};
+    Binding(std::string p, Handler h)
+        : owner(std::move(p)), handler(std::move(h)) {}
+  };
   CapabilityGraph& graph_;
   Authorize host_authorize_;
   std::mutex mutex_;
-  std::map<std::string, Binding> bindings_;
+  std::map<std::string, std::shared_ptr<Binding>> bindings_;
 };
 }  // namespace mas::native
