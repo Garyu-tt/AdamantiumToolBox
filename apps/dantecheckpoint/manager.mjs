@@ -1,4 +1,6 @@
 import {loadCheckpoint,saveCheckpoint} from './atomic_checkpoint.mjs';
+import {mkdir} from 'node:fs/promises';
+import {dirname} from 'node:path';
 export const STATE_SCHEMA='dante.state.session.v1';
 const ident=s=>typeof s==='string'&&/^[a-z][a-z0-9_.-]{0,95}$/.test(s);
 const hash=s=>s===null||(typeof s==='string'&&/^[a-f0-9]{64}$/.test(s));
@@ -44,6 +46,8 @@ export class CheckpointManager{
   if(!Number.isSafeInteger(revision))throw Error('revision_overflow');
   const candidate={schema:STATE_SCHEMA,instanceId:params.instanceId,revision,
    lastEventId:params.lastEventId,state:copy(params.state)};
+  // Storage is private to this instance; initialize a missing state directory.
+  await mkdir(dirname(this.path),{recursive:true,mode:0o700});
   // durable commit precedes publish of in-memory revision
   await saveCheckpoint(this.path,candidate,{maxBytes:this.maxBytes});
   this.#current=JSON.parse(JSON.stringify(candidate));
