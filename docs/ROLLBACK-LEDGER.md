@@ -25,12 +25,19 @@ The reservation validates a 10-minute-maximum signed approval (same
 canonical receipt contract as Rollback Watchdog), binds the exact
 leaseId, node, plan digest, base ruleset revision and expiration, and
 creates `<root>/SHA256(leaseId)` using exclusive directory creation.
-It writes `claim.json` via exclusive 0600 creation, flushes the file
+It persists the original signature with `claim.json` via exclusive 0600 creation, flushes the file
 and both relevant directory entries with `fsync`, and **never deletes**
 a consumed lease. Another process cannot claim the same lease ID through
 the same filesystem store. A timeout, failed fsync or crash that leaves
 a partial directory consumes the lease conservatively: the entry becomes
 an **indeterminate tombstone**, not a reusable permit.
+
+Every read independently re-verifies the persisted Ed25519 signature using
+only the pinned operator trust root, including the original target node,
+plan digest, base revision and issuance/expiry. It refuses symlinked record
+files, wrong ownership and non-private permissions. A missing trust root,
+modified signed field, missing signature, unreadable record or partial
+write is **indeterminate**, never a confirmed reservation.
 
 `audit({})` scans a bounded number of lease entries, identifies
 unreadable/partial records and expired reservations, and marks all
@@ -44,6 +51,10 @@ operator-provisioned directory.
   prevention. Two disconnected replicas with different directories
   could each accept the same signed lease. Multi-node operation requires
   a consensus-backed unique claim authority.
+- The persisted signature authenticates the **signed approval**, not the
+  ledger writer or the file's creation time. An attacker able to delete
+  or replace the entire store can still re-enable lease reuse. Storage
+  needs an independent monotonic checkpoint/append-only authority.
 - Readable on-disk metadata is **not an authenticated audit journal**;
   offline administrators, root or a compromised host can rewrite it.
   A private directory and SHA-256 filenames are not cryptographic
@@ -70,6 +81,9 @@ status, unsafe permissions, and audit after a process-style restart.
 `node tests/graph_ledger_http.test.mjs` starts/stops the standalone
 service, verifies read/write capability separation, then verifies that
 a lease cannot be re-reserved after the service restarts.
+
+`node tests/graph_ledger_integrity.test.mjs` mutates the saved record,
+removes its trust root, changes file permissions and tests symlink rejection.
 
 Future executor and autonomous watchdog remain separate providers and
 must bind against a truly authoritative replay store before production.
