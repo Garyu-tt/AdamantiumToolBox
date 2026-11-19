@@ -26,3 +26,20 @@ The model explicitly publishes gpuDevicePresent:false and hardwareAliasing:false
 6. Follow-on compute-on-dedup must be explicitly marked as specialized kernels and measured separately from transparent ordinary GPU alias reads.
 
 This is a narrow R01 API/algorithm experiment, not a production security boundary, multi-GPU VRAM pool, working driver hook or a 17x memory-savings claim. Keep all host secrets and privileged code in approved private sources.
+
+## R02 — read-only NVIDIA CUDA VMM capability query
+
+New: `experiments/dvram-cuda-probe.c` + `tests/dvram_cuda_probe.test.mjs`.
+
+- No CUDA SDK/header required for this *read-only feature query*; uses `dlopen("libcuda.so.1")` and CUDA Driver API function pointers.
+- Default prints `opt_in_required` without opening the driver. On explicit `--probe`, queries `cuInit`, driver API version, device count, compute capability and `cuDeviceGetAttribute(..., 102, ...)` for VMM availability. Attribute ID 102 is `CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED` in official NVIDIA `cuda.h`.
+- It does **not** reserve virtual addresses, allocate physical GPU memory, launch a kernel, change driver settings or assume support on older GPUs.
+- On unsupported/no-driver platforms, status is explicit; result never pretends GPU memory savings. Linux-only test skips on other platforms.
+
+```bash
+node tests/dvram_cuda_probe.test.mjs
+cc -std=c11 -Wall -Wextra -Werror experiments/dvram-cuda-probe.c -ldl -o /tmp/dvram-probe
+/tmp/dvram-probe --probe
+```
+
+Initial local isolated-container result: `cuda_driver_not_found`, zero actual devices probed. This does NOT imply that P106-100 or any user GPU lacks driver/VMM; probe each authorized physical node separately. Actual `cuMemCreate/AddressReserve/Map` and a readonly kernel alias test are a **later** hardware gate.
