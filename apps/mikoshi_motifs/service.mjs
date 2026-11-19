@@ -1,4 +1,4 @@
-import {checkPair,signReceipt,replay,journal} from '../../contracts/mikoshi-av-permit.mjs';
+import {checkPair,checkTicket,signReceipt,replay,journal} from '../../contracts/mikoshi-av-permit.mjs';
 import http from 'node:http';
 import {encode} from './encoder.mjs';
 import {recognize,learn,catalog} from './cluster.mjs';
@@ -11,7 +11,7 @@ if(key.length<24)throw Error('internal_key_missing');
 const can=s=>new Set((process.env.ADA_CAPS||'').split(',')).has(s);
 const r='motifs.inspect',w='motifs.learn';
 const ids={status:'mikoshi_motifs.status',recognize:'mikoshi_motifs.recognize',
- remember:'mikoshi_motifs.remember'};
+ remember:'mikoshi_motifs.remember',receipt:'mikoshi_motifs.receipt'};
 function graph(){
  const nodes=[{id:'mikoshi_motifs.view',type:'view',icon:'studio',
   title:'Mikoshi Auditory Memory',requires:[r]},
@@ -20,10 +20,16 @@ function graph(){
  {id:'mikoshi_motifs.provider',type:'resource',requires:[r],
   skill:{schema:'mikoshi.skill.v1',domain:'auditory-memory',actions:{
    status:ids.status,recognize:ids.recognize,
+   ...(secure?{receipt:ids.receipt}:{}),
    ...(can(w)&&configured()?{remember:ids.remember}:{})}}}];
  const edges=[{from:'mikoshi_motifs.view',to:'mikoshi_motifs.provider',type:'uses'},
   {from:'mikoshi_motifs.provider',to:ids.recognize,type:'provides'},
   {from:'mikoshi_motifs.view',to:ids.status,type:'uses'}];
+ if(secure){
+  nodes.push({id:ids.receipt,type:'action',
+   title:'Read signed motif receipt',requires:[r]});
+  edges.push({from:'mikoshi_motifs.provider',to:ids.receipt,type:'provides'});
+ }
  if(can(w)&&configured()){
   nodes.push({id:ids.remember,type:'action',title:'Learn acoustic motif',requires:[w]});
   edges.push({from:'mikoshi_motifs.provider',to:ids.remember,type:'provides'});
@@ -36,6 +42,11 @@ let serial=Promise.resolve();
 async function invoke(body){
  if(!can(r))throw Error('capability_denied');
  if(body.action===ids.status){const state=await load();return {...catalog(state),configured:configured(),secureSourceWrites:secure,sourceReceipts:(state.sourceWrites||[]).length};}
+ if(body.action===ids.receipt&&secure){
+  const proof=checkTicket(sourceKey,body.params,Date.now());
+  const result=replay(await load(),proof);
+  return {applied:result!==null,result};
+ }
  if(body.action!==ids.recognize&&body.action!==ids.remember)
   throw Error('action_unavailable');
  const feature=encode(body.params?.samples,body.params?.sampleRate);
