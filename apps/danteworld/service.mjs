@@ -1,6 +1,6 @@
 // Isolated deterministic CPU fixture, never a live Genesis or persistent world.
 import http from 'node:http';
-import {MockWorld} from '../../sdk/dante/mock_world.mjs';
+import {MockWorld} from './engine.mjs';
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('missing_internal_key');
 const config={start:0,target:4,limit:256};
