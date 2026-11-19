@@ -35,12 +35,25 @@ int main(int argc,char** argv) {
  auto* list=desktop->findChild<QListWidget*>();
  if(!list||list->count()!=1||list->item(0)->text()!="First")return 3;
  const auto first=list->item(0);
+ // Two independent desktop panels must receive the same graph deltas.
+ auto* mirrored=workspace->createWorkspace(&parent,&host);
+ auto* secondList=mirrored->findChild<QListWidget*>();
+ if(!secondList||secondList->count()!=1)return 11;
+ const auto mirroredFirst=secondList->item(0);
  emit host.viewsDelta(QJsonArray{QJsonObject{{"id","first.view"},{"title","First"},{"type","view"}}},{});
  if(list->item(0)!=first)return 4;
+ if(secondList->item(0)!=mirroredFirst)return 12;
  emit host.viewsDelta(QJsonArray{QJsonObject{{"id","second.view"},{"title","Second"},{"type","view"}}},{});
  if(list->count()!=2)return 5;
+ if(secondList->count()!=2)return 13;
  emit host.viewsDelta({},QJsonArray{"first.view"});
  if(list->count()!=1||list->item(0)->data(Qt::UserRole).toString()!="second.view")return 6;
+ if(secondList->count()!=1||secondList->item(0)->data(Qt::UserRole).toString()!="second.view")return 14;
+ delete mirrored;
+ emit host.viewsDelta(QJsonArray{QJsonObject{{"id","third.view"},{"title","Third"},{"type","view"}}},{});
+ if(list->count()!=2||!list->findItems("Third",Qt::MatchExactly).size())return 15;
+ emit host.viewsDelta({},QJsonArray{"third.view"});
+ if(list->count()!=1)return 16;
  list->itemDoubleClicked(list->item(0));
  QCoreApplication::processEvents();
  if(host.opened!="second.view")return 7;
@@ -53,7 +66,7 @@ int main(int argc,char** argv) {
  QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);
  if(!area->subWindowList().isEmpty())return 10;
  delete desktop;delete area;
- std::cout<<"NATIVE_PLUGINS_OK workspace delta, open and window close\n";
+ std::cout<<"NATIVE_PLUGINS_OK two panels, revoked panel cleanup, window close\n";
  return 0;
 }
 #include "plugins_test.moc"

@@ -6,6 +6,18 @@
 #include <QMetaObject>
 #include <QPointer>
 #include <QVBoxLayout>
+// A subscription belongs to its panel, not to the shared plugin instance.
+class WorkspaceDeltaSink final:public QObject {
+ Q_OBJECT
+public:
+ WorkspaceDeltaSink(QListWidget* list,QObject* parent):QObject(parent),list_(list){}
+public slots:
+ void apply(const QJsonArray& changed,const QJsonArray& revoked) {
+  if(list_)patchWorkspaceRows(list_,changed,revoked);
+ }
+private:
+ QPointer<QListWidget> list_;
+};
 class DesktopWorkspace final:public QObject,public INativeWorkspace {
  Q_OBJECT
  Q_PLUGIN_METADATA(IID "org.mechanicus.native.workspace/1.0")
@@ -16,29 +28,21 @@ public:
   auto* layout=new QVBoxLayout(panel);
   layout->addWidget(new QLabel("Desktop Workspace",panel));
   auto* list=new QListWidget(panel);layout->addWidget(list);
-  QPointer<QListWidget> guard(list);
   if(host) {
    QJsonArray initial;
    if(QMetaObject::invokeMethod(host,"views",Qt::DirectConnection,Q_RETURN_ARG(QJsonArray,initial)))
     patchWorkspaceRows(list,initial,{});
+   QPointer<QObject> guard(host);
    QObject::connect(list,&QListWidget::itemDoubleClicked,panel,
-    [host](QListWidgetItem* item){
-     QMetaObject::invokeMethod(host,"openView",Qt::QueuedConnection,
+    [guard](QListWidgetItem* item){
+     if(guard)QMetaObject::invokeMethod(guard.data(),"openView",Qt::QueuedConnection,
       Q_ARG(QString,item->data(Qt::UserRole).toString()));
     });
-   // Signature-independent delta adapter, disconnected when panel is destroyed.
-   QObject::connect(host,SIGNAL(viewsDelta(QJsonArray,QJsonArray)),this,
-    SLOT(onDelta(QJsonArray,QJsonArray)));
+   auto* sink=new WorkspaceDeltaSink(list,panel);
+   QObject::connect(host,SIGNAL(viewsDelta(QJsonArray,QJsonArray)),sink,
+    SLOT(apply(QJsonArray,QJsonArray)));
   }
-  list_=guard;
-  QObject::connect(panel,&QObject::destroyed,this,[this]{list_.clear();});
   return panel;
  }
-private slots:
- void onDelta(const QJsonArray& updated,const QJsonArray& removed) {
-  if(list_)patchWorkspaceRows(list_,updated,removed);
- }
-private:
- QPointer<QListWidget> list_;
 };
 #include "desktop_workspace.moc"
