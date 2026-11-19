@@ -1,0 +1,33 @@
+name: Adamantium Genome GA0
+on:
+  pull_request:
+    paths:
+      - 'native/genome/**'
+      - 'native/universal-graph/**'
+      - '.github/workflows/adamantium-genome-ga0.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'native/genome/**'
+      - 'native/universal-graph/**'
+      - '.github/workflows/adamantium-genome-ga0.yml'
+permissions:
+  contents: read
+jobs:
+  genome-cpp17:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure pure CPU C++17
+        run: cmake -S native/genome -B native/genome/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build native/genome/build --config Release --parallel 2
+      - name: Test reversible genotype/phenotype fixture
+        run: ctest --test-dir native/genome/build -C Release --output-on-failure
