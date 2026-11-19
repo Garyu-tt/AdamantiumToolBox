@@ -49,6 +49,7 @@ jobs:
           node tests/graph_watchdog_diagnostics.test.mjs
           node tests/graph_rollback_ledger.test.mjs
           node tests/graph_ledger_integrity.test.mjs
+          node tests/graph_ledger_checkpoint.test.mjs
           node tests/graph_ledger_http.test.mjs
           node tests/graph_nftables_readback.test.mjs
           node tests/graph_network_inventory.test.mjs
