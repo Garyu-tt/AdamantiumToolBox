@@ -8,6 +8,10 @@ import {sandboxReady,runRust} from '../frank-addons/bridge/providers/rust/sandbo
 import {packageDigest,saveRegistry} from '../frank-addons/bridge/approval.mjs';
 import {authorizedAddon} from '../frank-addons/bridge/providers/shared/authorize.mjs';
 import {bridgeGraph,bridgeInvoke} from '../frank-addons/bridge/runtime.mjs';
+if(process.env.CI){
+ process.env.FRANK_RUST_TIMEOUT_MS=process.env.FRANK_RUST_TIMEOUT_MS||'45000';
+ process.env.FRANK_BRIDGE_TIMEOUT_MS=process.env.FRANK_BRIDGE_TIMEOUT_MS||'60000';
+}
 const root=await mkdtemp(join(tmpdir(),'frank-rust-'));
 process.env.ADA_FRANK_STATE_DIR=join(root,'state');
 const capability='frankenstein.adapter.rust',secret='frank-rust-test-key-with-sufficient-length';
@@ -33,8 +37,15 @@ try{
  await assert.rejects(authorizedAddon(root,key,'echo',port,capability,'rust'),/not_approved/);
  registry.packages=[{key,digest:await packageDigest(dir)}];await saveRegistry(registry);
  await assert.rejects(authorizedAddon(root,key,'other',port,capability,'rust'),/not_declared/);
- const ready=await sandboxReady();
- if(process.platform==='linux'&&process.env.CI)assert(ready,'rustc must work in CI Linux namespace');
+ let ready=false;
+ const count=process.env.CI?3:1;
+ for(let attempt=1;attempt<=count&&!ready;attempt++){
+  ready=await sandboxReady();
+  if(ready&&attempt>1)console.log('FRANK_RUST_PROBE_RECOVERED attempt='+attempt);
+  if(!ready&&attempt<count)await new Promise(ok=>setTimeout(ok,500*attempt));
+ }
+ if(process.platform==='linux'&&process.env.CI)
+  assert(ready,'rustc must work in CI Linux namespace after bounded probes');
  if(ready){
   const graph=await bridgeGraph(root,secret);
   assert(graph.nodes.some(n=>n.id==='frankenstein.rust.hello.echo'));

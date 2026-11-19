@@ -2,13 +2,24 @@ import {frankCatalog} from './catalog.mjs';
 import {loadRegistry,packageDigest} from './approval.mjs';
 import {assertFrankValue} from './values.mjs';
 const base='frankenstein';
+const callTimeout=body=>{
+ if(!body)return 500;
+ const value=Number(process.env.FRANK_BRIDGE_TIMEOUT_MS||18000);
+ if(!Number.isInteger(value)||value<1000||value>90000)throw Error('invalid_bridge_timeout');
+ return value;
+};
 async function call(port,route,secret,body){
  const res=await fetch('http://127.0.0.1:'+port+route,{
-  method:body?'POST':'GET',signal:AbortSignal.timeout(body?18000:500),
+  method:body?'POST':'GET',signal:AbortSignal.timeout(callTimeout(body)),
   headers:{'X-Internal-Key':secret,'Content-Type':'application/json'},
   body:body?JSON.stringify(body):undefined
  });
- if(!res.ok)throw Error('adapter_http_'+res.status);
+ if(!res.ok){
+  const body=await res.json().catch(()=>({}));
+  const safe=typeof body.error==='string'&&/^[a-z_]{1,60}$/.test(body.error)?
+   '_'+body.error:'';
+  throw Error('adapter_http_'+res.status+safe);
+ }
  const size=Number(res.headers.get('content-length')||0);
  if(size>1048576)throw Error('adapter_response_limit');
  const raw=await res.text();

@@ -1,0 +1,37 @@
+# Gauntlet R03 — Signed delivery preflight (no activation)
+
+The Gauntlet app is independent of the Mesh, signer and Lifecycle runtime.
+`gauntlet.preflight` compares the active task's current source SHA-256,
+candidate and delivery content-addressed files, signed QA evidence, and
+canonical MAS payload bytes. Old queued candidates are explicitly rejected
+after a newer task revision. It returns `READY_FOR_AUTHORIZED_SIGNER`, not
+`RELEASED`. The permission requirement is `approval: REQUIRED`.
+
+A hermetic CI integration test exercises a temporary, newly generated
+Ed25519 signer identity, real `seal`/`trustEnvelope`, content-addressed
+Mesh `receive`, and `planActivation`. It asserts the absence of an owner
+policy blocks planning and that `activate(..., false)` rejects execution.
+No production identity, approval, installation or activation is created.
+
+The R03 CI proof is for contract compatibility, NOT actual delivery.
+A production signer and authorized delivery transport remain unprovisioned.
+A delivery worker must read the current queue, call preflight just before
+signing, verify the payload SHA-256, use the owner-approved signed Lifecycle
+route, and confirm selected hash + target identity after activation.
+Never trust old outbox rows, task descriptions or a successful model reply.
+
+## Evidence integrity ratchet
+Signed QA reports must contain command, exit_code, signal, duration_ms,
+stdout/stderr log, SHA-256 and status for every required test (including
+dependency impact tests). PASS requires exit_code 0 and no termination
+signal. A signed PASS with a nonzero code or forged log is rejected.
+This verifies internal report consistency, not truthful CI execution;
+the signer must still be provisioned as a separate trusted runner.
+
+## Anti-replay challenge
+Every new submitted source revision receives a random case challenge. A
+duplicate submission with the same task and source hash is idempotent.
+Every signed QA report must carry that exact challenge, in addition to
+task ID, source hash and CI run. A signed report for a former revision
+cannot be replayed if the user returns to the same source bytes later.
+The challenge is public freshness metadata, not a secret or permission.
