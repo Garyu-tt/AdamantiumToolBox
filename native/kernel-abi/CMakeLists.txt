@@ -46,3 +46,19 @@ endif()
 add_executable(mas_native_dispatch_test tests/native_dispatch_test.cpp)
 target_link_libraries(mas_native_dispatch_test PRIVATE mas_native_dispatch)
 add_test(NAME native_dispatch_guarded_invoke COMMAND mas_native_dispatch_test)
+
+# N2b thin C ABI adaptation of N2a host-only dispatcher (PR #136).
+add_library(mas_native_c_provider STATIC src/native_c_provider.cpp)
+target_include_directories(mas_native_c_provider PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../standards/native")
+target_link_libraries(mas_native_c_provider PUBLIC mas_native_dispatch)
+if(MSVC)
+  target_compile_options(mas_native_c_provider PRIVATE /W4 /WX)
+else()
+  target_compile_options(mas_native_c_provider PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+add_executable(mas_native_c_provider_test
+  tests/native_c_provider_test.cpp tests/native_c_probe.c)
+target_link_libraries(mas_native_c_provider_test PRIVATE mas_native_c_provider)
+add_test(NAME native_c_provider_contract COMMAND mas_native_c_provider_test)
