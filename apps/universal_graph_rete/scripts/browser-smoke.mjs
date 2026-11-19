@@ -8,7 +8,7 @@ const server=await preview({
 });
 const address=server.httpServer.address();
 if (!address || typeof address==='string') throw Error('invalid_preview_address');
-const base='http://127.0.0.1:'+address.port;
+const base=new URL('http://'+address.address+':'+address.port).origin;
 let browser;
 try {
   browser=await chromium.launch({
