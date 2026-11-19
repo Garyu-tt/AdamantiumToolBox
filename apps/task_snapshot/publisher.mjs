@@ -18,7 +18,7 @@ function checkId(value,name){
 }
 const positive=value=>Number.isSafeInteger(value)&&value>=1;
 export class TaskSnapshotPublisher{
- #key;#keyId;#streamId;#taskOwner;#reserveSequence;#ttl;
+ #key;#keyId;#streamId;#taskOwner;#reserveSequence;#ttl;#lastReserved=0;
  constructor({signingKey,keyId,streamId,expectedTaskOwner,reserveSequence,ttlMs=TTL_MS}={}){
   if(!(signingKey instanceof KeyObject)||signingKey.type!=='private'||
    signingKey.asymmetricKeyType!=='ed25519')throw new TypeError('Explicit approved Ed25519 signer required');
@@ -49,6 +49,8 @@ export class TaskSnapshotPublisher{
    streamId:this.#streamId,issuerProviderId:this.#taskOwner
   });
   if(!positive(sequence))throw new TypeError('Invalid reserved sequence');
+  if(sequence<=this.#lastReserved)throw new TypeError('Replayed allocator sequence');
+  this.#lastReserved=sequence;
   const snapshot={...preview.snapshot,revision:sequence};
   const payload={
    schema:SIGNED_SNAPSHOT_SCHEMA,streamId:this.#streamId,
