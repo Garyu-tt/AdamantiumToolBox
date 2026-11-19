@@ -1,7 +1,7 @@
 import {mkdir,open,readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {homedir} from 'node:os';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 const home=process.env.ADA_APP_DATA_DIR||join(process.env.LOCALAPPDATA||homedir(),'Adamantium Toolbox','data','chat_store');
 const file=join(home,'events.jsonl');
 let pending=Promise.resolve();
@@ -41,11 +41,12 @@ export async function invoke(action,p={}){
  }
  if(!['chat_store.create','chat_store.append'].includes(action))throw Error('unknown_action');
  if(!validOp(p.opId))throw Error('invalid_op_id');
+ const digest=createHash('sha256').update(JSON.stringify({action,params:p})).digest('hex');
  return serialize(async()=>{
   const xs=await events(),prior=xs.find(x=>x.opId===p.opId);
-  if(prior){if(prior.action!==action)throw Error('op_conflict');return {id:prior.id,thread:prior.thread,seq:prior.seq,replayed:true};}
+  if(prior){if(prior.digest!==digest)throw Error('op_conflict');return {id:prior.id,thread:prior.thread,seq:prior.seq,replayed:true};}
   const state=project(xs),seq=(xs.at(-1)?.seq||0)+1,at=new Date().toISOString();
-  const e={seq,id:randomUUID(),opId:p.opId,action,at};
+  const e={seq,id:randomUUID(),opId:p.opId,digest,action,at};
   if(action==='chat_store.create'){
    if(p.title!==undefined&&!validText(p.title,160))throw Error('invalid_title');
    Object.assign(e,{kind:'thread.created',thread:randomUUID(),title:p.title||'Новый чат'});
