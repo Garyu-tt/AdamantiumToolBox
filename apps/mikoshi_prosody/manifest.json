@@ -7,7 +7,7 @@
   "lifecycle": "independent",
   "service": {
     "protocol": "mas-http-1",
-    "port": 8925,
+    "port": 8951,
     "invokeTimeoutMs": 18000
   },
   "ui": {
