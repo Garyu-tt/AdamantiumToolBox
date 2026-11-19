@@ -101,7 +101,8 @@ int main() {
   // Revoke between the initial graph lookup and point-of-use policy check.
   NativeDispatcher races(graph, [&](auto, auto, auto) {
     AuthoritySnapshot revoked{2, first.capabilities, {{"bob", "echo"}}};
-    REQUIRE(graph.reconcile(1, revoked).status == ApplyStatus::Applied);
+    if (graph.reconcile(1, revoked).status != ApplyStatus::Applied)
+      throw std::runtime_error("revocation_reconcile_failed");
     return true;
   });
   REQUIRE(races.bind("echo", "host.echo", echo));
@@ -115,7 +116,8 @@ int main() {
   // Unbind while policy is consulting the authority must deny that copy.
   NativeDispatcher* current = nullptr;
   NativeDispatcher self_unbind(graph, [&](auto, auto, auto) {
-    REQUIRE(current->unbind("echo"));
+    if (!current->unbind("echo"))
+      throw std::runtime_error("unbind_failed");
     return true;
   });
   current = &self_unbind;
