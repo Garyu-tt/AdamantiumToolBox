@@ -5,11 +5,15 @@ import { parseLocalGraph } from './local_import';
 import type { Graph } from './types';
 import './style.css';
 
-const viewport = document.querySelector<HTMLElement>('#graph');
-const status = document.querySelector<HTMLElement>('#status');
-const chooser = document.querySelector<HTMLSelectElement>('#scenario');
-const uploader = document.querySelector<HTMLInputElement>('#load-graph');
-if (!viewport || !status || !chooser || !uploader) throw Error('missing_editor_mount');
+function required<T extends HTMLElement>(selector:string):T {
+ const element=document.querySelector<T>(selector);
+ if(!element)throw Error('missing_editor_mount');
+ return element;
+}
+const viewport=required<HTMLElement>('#graph');
+const status=required<HTMLElement>('#status');
+const chooser=required<HTMLSelectElement>('#scenario');
+const uploader=required<HTMLInputElement>('#load-graph');
 
 // A loaded JSON file is a local visualization candidate, never a runtime action.
 // The editor can be closed, refreshed or replaced without affecting the IR host.
