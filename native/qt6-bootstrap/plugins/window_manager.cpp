@@ -6,7 +6,7 @@
 #include <QPointer>
 class WindowManager final:public QObject,public INativeWindowManager {
  Q_OBJECT
- Q_PLUGIN_METADATA(IID "org.mechanicus.native.windows/1.0")
+ Q_PLUGIN_METADATA(IID "org.mechanicus.native.windows/1.1")
  Q_INTERFACES(INativeWindowManager)
 public:
  QWidget* createWindowLayer(QWidget* parent) override {
@@ -34,6 +34,11 @@ public:
     windows_.erase(current);
   });
   sub->resize(560,420);sub->show();area_->setActiveSubWindow(sub);
+ }
+ void updateWindowTitle(const QString& id,const QString& title) override {
+  if(auto* sub=windows_.value(id).data()){
+   if(sub->windowTitle()!=title)sub->setWindowTitle(title);
+  }
  }
  void closeWindow(const QString& id) override {
   auto current=windows_.find(id);

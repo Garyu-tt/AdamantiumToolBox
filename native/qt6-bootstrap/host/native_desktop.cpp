@@ -89,7 +89,19 @@ int main(int argc,char** argv) {
   else static_cast<QTabWidget*>(surface)->addTab(content,title);
  });
  QObject::connect(&bridge,&HostBridge::viewsDelta,&shell,
-  [&](const QJsonArray&,const QJsonArray& revoked) {
+  [&](const QJsonArray& updated,const QJsonArray& revoked) {
+   // Retitle without destroying the active window or its transient state.
+   for(const auto& entry:updated){
+    const auto view=entry.toObject();
+    const auto id=view.value("id").toString();
+    if(id.isEmpty()||!active.value(id))continue;
+    const auto title=view.value("title").toString(id);
+    if(extensions.manager)extensions.manager->updateWindowTitle(id,title);
+    else if(auto* tabs=qobject_cast<QTabWidget*>(surface)){
+     const auto index=tabs->indexOf(active.value(id));
+     if(index>=0&&tabs->tabText(index)!=title)tabs->setTabText(index,title);
+    }
+   }
    for(const auto& item:revoked) {
     const auto id=item.toString();
     if(!active.contains(id))continue;

@@ -64,6 +64,12 @@ int main(int argc,char** argv) {
  if(!area)return 8;
  manager->openWindow("test.view","Test",new QWidget());
  if(area->subWindowList().size()!=1)return 9;
+ auto* namedWindow=area->subWindowList().front();
+ manager->updateWindowTitle("test.view","Renamed while active");
+ if(namedWindow->windowTitle()!="Renamed while active"||
+    area->subWindowList().front()!=namedWindow)return 20;
+ manager->updateWindowTitle("missing.view","Do not create");
+ if(area->subWindowList().size()!=1)return 21;
  QPointer<QMdiSubWindow> firstWindow=area->subWindowList().front();
  manager->closeWindow("test.view");
  // Re-authorization occurs before the old QMdiSubWindow is destroyed.

@@ -15,6 +15,7 @@ public:
  virtual QWidget* createWindowLayer(QWidget* parent)=0;
  virtual void openWindow(const QString& id,const QString& title,QWidget* content)=0;
  virtual void closeWindow(const QString& id)=0;
+ virtual void updateWindowTitle(const QString& id,const QString& title)=0;
 };
 class INativeView {
 public:
@@ -23,5 +24,5 @@ public:
  virtual QWidget* createView(QWidget* parent,QObject* host)=0;
 };
 Q_DECLARE_INTERFACE(INativeWorkspace,"org.mechanicus.native.workspace/1.0")
-Q_DECLARE_INTERFACE(INativeWindowManager,"org.mechanicus.native.windows/1.0")
+Q_DECLARE_INTERFACE(INativeWindowManager,"org.mechanicus.native.windows/1.1")
 Q_DECLARE_INTERFACE(INativeView,"org.mechanicus.native.view/1.0")
