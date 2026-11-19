@@ -3,7 +3,11 @@
 #include <stdint.h>
 
 #if defined(_WIN32)
+#if defined(MAS_HOST_ABI_BUILD)
 #define MAS_HOST_EXPORT __declspec(dllexport)
+#else
+#define MAS_HOST_EXPORT __declspec(dllimport)
+#endif
 #else
 #define MAS_HOST_EXPORT __attribute__((visibility("default")))
 #endif
@@ -15,20 +19,22 @@ extern "C" {
 #define MAS_HOST_ABI_V1 UINT32_C(0x00010000)
 
 typedef struct mas_host_v1 mas_host_v1;
-typedef enum mas_status_v1 {
+typedef int32_t mas_status_v1;
+enum {
   MAS_OK = 0,
   MAS_ERR_ARGUMENT = 1,
   MAS_ERR_VERSION = 2,
   MAS_ERR_STATE = 3,
   MAS_ERR_RESOURCE = 4,
   MAS_ERR_INTERNAL = 5
-} mas_status_v1;
+};
 
-typedef enum mas_host_state_v1 {
+typedef uint32_t mas_host_state_v1;
+enum {
   MAS_HOST_CREATED = 0,
   MAS_HOST_RUNNING = 1,
   MAS_HOST_STOPPED = 2
-} mas_host_state_v1;
+};
 
 typedef struct mas_host_config_v1 {
   uint32_t struct_size;
