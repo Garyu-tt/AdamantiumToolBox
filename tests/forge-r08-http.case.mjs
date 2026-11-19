@@ -6,8 +6,8 @@ export async function testHttp({request}){
   assert(graph.nodes.some(x=>x.id==='forge.projection.plan'));
   assert(graph.nodes.some(x=>x.id==='forge.projection.reconnect'));
   const desc=await (await query('/invoke',{action:'forge.describe'})).json();
-  assert.equal(desc.result.schema,'mechanicus.forge.adapter.v8');
-  assert.equal(desc.result.adapter_actions.length,19);
+  assert.equal(desc.result.schema,'mechanicus.forge.adapter.v9');
+  assert.equal(desc.result.adapter_actions.length,21);
   assert.equal(desc.result.stores_state,false);
   const p=await (await query('/invoke',{action:'forge.projection.plan',params:request})).json();
   assert.equal(p.result.ok,true);assert.equal(p.result.can_execute,false);

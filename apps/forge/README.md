@@ -87,3 +87,12 @@ allow/deny/revocation claims. `forge.projection.reconnect` classifies replay
 versus full resnapshot after disconnect. Both return unexecuted recipes.
 They DO NOT authenticate principals, authorize calls, mutate UI or store cursors.
 See `docs/FORGE-PROJECTION-R08.md`.
+
+## R09: bounded access leases and revocation evidence
+
+`forge.access.lease.plan` classifies externally scoped, timestamped entitlements
+and UI mount invalidations; `forge.access.revocation.assess` requires agreement
+of policy, graph scope, runtime denial, UI CAS, readback and event cursor
+receipts. All are host claims, never authorization. No clock, sessions,
+state, graph, background scheduler or revocation worker exists in Forge.
+See `docs/FORGE-ACCESS-R09.md`.
