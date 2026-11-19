@@ -1,4 +1,4 @@
-import {checkPair,verifyReceipt,replay,journal} from '../../contracts/mikoshi-av-permit.mjs';
+import {checkPair,checkTicket,verifyReceipt,replay,journal} from '../../contracts/mikoshi-av-permit.mjs';
 import http from 'node:http';
 import {learn,associate,recall,catalog} from './model.mjs';
 import {configured,load,save} from './store.mjs';
@@ -10,7 +10,8 @@ if(key.length<24)throw Error('internal_key_missing');
 const can=s=>new Set((process.env.ADA_CAPS||'').split(',')).has(s);
 const r='grounding.inspect',w='grounding.learn';
 const ids={status:'mikoshi_grounding.status',associate:'mikoshi_grounding.associate',
- recall:'mikoshi_grounding.recall',teach:'mikoshi_grounding.teach'};
+ recall:'mikoshi_grounding.recall',teach:'mikoshi_grounding.teach',
+ receipt:'mikoshi_grounding.receipt'};
 function graph(){
  const nodes=[{id:'mikoshi_grounding.view',type:'view',icon:'studio',
   title:'Mikoshi Audiovisual Associations',requires:[r]},
@@ -20,10 +21,17 @@ function graph(){
  {id:'mikoshi_grounding.provider',type:'resource',requires:[r],
   skill:{schema:'mikoshi.skill.v1',domain:'audiovisual-association',actions:{
    status:ids.status,associate:ids.associate,recall:ids.recall,
+   ...(secure?{receipt:ids.receipt}:{}),
    ...(can(w)&&configured()?{teach:ids.teach}:{})}}}];
  const edges=[{from:'mikoshi_grounding.view',to:'mikoshi_grounding.provider',type:'uses'},
   ...[ids.status,ids.associate,ids.recall].map(id=>({
    from:'mikoshi_grounding.provider',to:id,type:'provides'}))];
+ if(secure){
+  nodes.push({id:ids.receipt,type:'action',
+   title:'Read stored pairing result',requires:[r]});
+  edges.push({from:'mikoshi_grounding.provider',
+   to:ids.receipt,type:'provides'});
+ }
  if(can(w)&&configured()){
   nodes.push({id:ids.teach,type:'action',title:'Remember paired events',requires:[w]});
   edges.push({from:'mikoshi_grounding.provider',to:ids.teach,type:'provides'});
@@ -39,6 +47,11 @@ async function invoke(body){
  if(body.action===ids.associate)
   return associate(await load(),body.params?.visualVector);
  if(body.action===ids.recall)return recall(await load(),body.params?.soundId);
+ if(body.action===ids.receipt&&secure){
+  const proof=checkTicket(sourceKey,body.params,Date.now());
+  const result=replay(await load(),proof);
+  return {applied:result!==null,result};
+ }
  if(body.action!==ids.teach||!can(w)||!configured())throw Error('capability_denied');
  const task=serial.then(async()=>{
   const current=await load(),params=body.params||{};
