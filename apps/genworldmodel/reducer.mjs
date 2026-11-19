@@ -1,4 +1,4 @@
-import {emptyModel,validateModel,validateObservation,entityId,eventId,UPDATE_SCHEMA} from './schema.mjs';
+import {emptyModel,validateModel,validateObservation,entityId,eventId,signalsDigest,UPDATE_SCHEMA} from './schema.mjs';
 const clone=v=>JSON.parse(JSON.stringify(v));
 const finiteOrNull=n=>Number.isFinite(n)?n:null;
 export function updateWorldModel({model=null,observation,maxEntities=32}={}){
@@ -7,11 +7,14 @@ export function updateWorldModel({model=null,observation,maxEntities=32}={}){
  const current=model===null?emptyModel():model;
  validateModel(current,{maxEntities});
  const id=entityId(observation),eid=eventId(observation);
+ const signalHash=signalsDigest(observation.signals);
  const previous=current.entities.find(e=>e.id===id);
  if(previous){
   if(observation.sequence<previous.sequence)throw Error('sequence_regression');
   if(observation.sequence===previous.sequence){
-   if(previous.payloadSha256!==observation.payloadSha256)throw Error('sequence_conflict');
+   if(previous.payloadSha256!==observation.payloadSha256||
+      previous.signalsSha256!==signalHash||previous.observedAtMs!==observation.observedAtMs)
+    throw Error('sequence_conflict');
    return {schema:UPDATE_SCHEMA,status:'duplicate',eventId:eid,
     model:clone(current),changes:[]};
   }
@@ -28,7 +31,7 @@ export function updateWorldModel({model=null,observation,maxEntities=32}={}){
  });
  const next={id,source:observation.source,kind:observation.kind,
   sequence:observation.sequence,observedAtMs:observation.observedAtMs,
-  payloadSha256:observation.payloadSha256,eventId:eid,
+  payloadSha256:observation.payloadSha256,signalsSha256:signalHash,eventId:eid,
   samples:(previous?.samples??0)+1,features:Object.fromEntries(changes.map(c=>[c.feature,c.value]))};
  const entities=[...current.entities.filter(e=>e.id!==id),next].sort((a,b)=>a.id.localeCompare(b.id));
  const candidate={schema:current.schema,revision:current.revision+1,lastEventId:eid,entities};

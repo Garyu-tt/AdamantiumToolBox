@@ -7,6 +7,9 @@ const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x)&&
  [Object.prototype,null].includes(Object.getPrototypeOf(x));
 const safeSignal=s=>typeof s==='string'&&s.length>0&&s.length<=96&&
  !['__proto__','constructor','prototype'].includes(s);
+// Digest of normalized feature values, independent of caller-supplied raw payload hash.
+export const signalsDigest=signals=>createHash('sha256').update(JSON.stringify(
+ Object.entries(signals).sort(([a],[b])=>a<b?-1:a>b?1:0))).digest('hex');
 export const entityId=x=>JSON.stringify([x.source,x.kind]);
 export const eventId=e=>createHash('sha256').update(entityId(e)+'\0'+e.sequence).digest('hex');
 export const emptyModel=()=>({schema:MODEL_SCHEMA,revision:0,lastEventId:null,entities:[]});
@@ -29,7 +32,8 @@ export function validateModel(model,{maxEntities=32}={}){
   if(!plain(e)||!name(e.source)||!name(e.kind)||!Number.isSafeInteger(e.sequence)||e.sequence<0||
      !Number.isFinite(e.observedAtMs)||e.observedAtMs<0||!hash(e.payloadSha256)||
      !Number.isSafeInteger(e.samples)||e.samples<1||e.samples>model.revision||
-     e.id!==entityId(e)||e.eventId!==eventId(e)||!plain(e.features))throw Error('invalid_entity');
+     e.id!==entityId(e)||e.eventId!==eventId(e)||!plain(e.features)||!hash(e.signalsSha256)||
+     e.signalsSha256!==signalsDigest(e.features))throw Error('invalid_entity');
   const keys=Object.keys(e.features);
   if(seen.has(e.id)||keys.length>16||keys.some(k=>!safeSignal(k)||!Number.isFinite(e.features[k])))
    throw Error('invalid_entity_features');
