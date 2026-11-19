@@ -10,8 +10,9 @@ without Graph DNS, Graph Firewall, Noosphere, WireGuard or nftables Preview.
 
 - `nftables_lab.check({preview})`: validates a typed
   `nftables-intent-preview-1` candidate document, then optionally runs
-  `nft --check --file -` only inside an existing **separate** Linux network
-  namespace. No mutations, no file writes, no `nft -f` without `--check`.
+  `nft --check --file <private-scratch-file>` only inside an existing
+  **separate** Linux network namespace. No kernel rule changes and no
+  `nft -f` without `--check`. The private temporary file is erased.
 - `nftables_lab.rollback_trial({deadlineMs,advanceToMs,events})`: pure,
   deterministic **simulation** of state transitions and watchdog timeout.
   A simulated confirmation is NOT proof of successful production access.
@@ -24,14 +25,20 @@ operator must configure the environment of the local MAS process:
 - `ADA_NFT_LAB_IP`: approved absolute path to the ip executable
 - `ADA_NFT_LAB_NAMESPACE_ROOT`: approved absolute directory containing the
   kernel namespace handles that the selected iproute2 provider resolves
+- `ADA_NFT_LAB_TEMP_ROOT` (optional): approved scratch directory; defaults
+  to the OS temporary directory
 
 The provider verifies `/proc/self/ns/net` and the configured
 namespace-root plus selected namespace name have different device/inode identities
 before executing an exact argument vector, without a shell:
-`ip netns exec <name> nft --check --file -`.
+`ip netns exec <name> nft --check --file <temporary-file>`.
 Missing tool paths, namespace, or privilege returns `unavailable` or
 `failed`; it never falls back to the default network namespace.
-The namespace name is strictly validated. CLI output is not returned.
+The namespace name is strictly validated. A random private 0700 directory
+and 0600 script file are created after namespace verification. This is
+necessary because nft rejects piped stdin as a non-regular file on
+supported Linux runners. The scratch directory is removed in `finally`.
+CLI output is not returned.
 Kernel namespace identity could change between stat and exec; because
 this provider uses `--check` exclusively and cannot apply rules, it is
 not a production authorization or enforcement mechanism.
@@ -68,8 +75,11 @@ production apply operation on the strength of this simulation alone.
 `node tests/graph_nftables_lab.test.mjs`
 `node tests/graph_nftables_rollback.test.mjs`
 
-Tests use a mock executor and fake namespace stat. They exercise the
-safety contract without requiring root, nft, WireGuard or the host netns.
+Unit tests use a mock executor and fake namespace stat, without root.
+The `nftables-kernel-lab` GitHub Actions job also provisions a disposable
+namespace on a temporary Linux runner, performs real `nft --check` for
+IPv4 and IPv6, and compares the namespace ruleset before/after. This
+job is required to pass before claiming a validated native syntax path.
 
 The no-live-change boundary follows nftables' documented distinction
 between atomic ruleset loads and check mode:
