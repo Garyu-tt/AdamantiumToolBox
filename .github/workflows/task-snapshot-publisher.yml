@@ -1,0 +1,35 @@
+name: Task Snapshot Publisher R07 (server-only read path)
+on:
+  push:
+    branches:
+      - feature/task-snapshot-publisher-r07
+    paths:
+      - 'apps/task_snapshot/**'
+      - 'tests/task_snapshot_publisher.test.mjs'
+      - '.github/workflows/task-snapshot-publisher.yml'
+  pull_request:
+    paths:
+      - 'apps/task_snapshot/**'
+      - 'tests/task_snapshot_publisher.test.mjs'
+      - 'docs/TASK-SNAPSHOT-PUBLISHER-R07.md'
+      - '.github/workflows/task-snapshot-publisher.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  detached-signed-readonly-publisher:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify syntax
+        run: |
+          node --check apps/task_snapshot/read_source.mjs
+          node --check apps/task_snapshot/publisher.mjs
+      - name: Verify authenticated-read dependency and signed R05 wire contract
+        run: node --test tests/task_snapshot_publisher.test.mjs
+      - name: Regression Task Pool state machine
+        run: node --test tests/task_pool.test.mjs tests/task_pool_graph_readonly.test.mjs
