@@ -13,6 +13,12 @@ The `rollback_watchdog` app boots with minimum Core and only
   expectedTargetNode,expectedPlanDigest,expectedBaseRevision})`
 - `rollback_watchdog.journal({schema,leaseId,planDigest,
   deadlineSeconds,events})`
+- `rollback_watchdog.diagnose({transaction,receipt?,journal?,
+  expectedLeaseId?,expectedTargetNode?,expectedBaseRevision?})`
+  builds eight blocked stage nodes plus one diagnostic node per stage,
+  with explicit causes, impact, proposed remedies and prerequisite edges.
+  It verifies any supplied receipt/journal locally rather than trusting a
+  caller-provided success flag; it cannot attest a live node or apply rules.
 
 Other apps (nftables Preview, nftables Lab) link to these capabilities only
 when available and authorized, with no mandatory import or runtime dependency.
