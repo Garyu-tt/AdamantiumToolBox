@@ -1,6 +1,7 @@
 {
   "schema": "mas.composite.v1",
   "id": "genesis",
+  "version": "0.1.0",
   "exports": [
     "dante.genesis.apply.v1"
   ],
