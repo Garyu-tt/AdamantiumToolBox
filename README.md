@@ -102,3 +102,14 @@ maximize/restore/minimize, edge and corner snap, live snap preview and
 configurable layouts for up to eight windows. Use the "Окна" toolbar menu
 for grid, asymmetric primary-pane layouts and split-size adjustment.
 See docs/WINDOW-MANAGEMENT.md. Test with node tests/window_ui.test.mjs.
+
+
+## Adamantez private source boundary (R01 proposal)
+Public code stays in this repository; nonpublic plugin/server source belongs to the
+separately access-controlled private `AdamantezTolls` repository. Neither repository
+holds production secrets. Optional private capabilities are discovered and authorized
+through independent MAS providers, not imported by Core.
+Git branches/worktrees may organize virtual subrepositories but do not isolate read
+permissions. See [source boundary](docs/ADAMANTEZ-SOURCE-BOUNDARY-R01.md) and
+`standards/repository-sources/registry.example.json` for the versioned,
+metadata-only source descriptor. No runtime gateway or source fetcher is deployed yet.
