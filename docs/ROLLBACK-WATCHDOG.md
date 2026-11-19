@@ -60,6 +60,22 @@ Even `rollback_verified` in this caller-supplied log is only a **claim**:
 `kernelReadbackVerified:false`. A real receipt must come from an
 authenticated trusted node after rereading actual kernel state.
 
+## Optional independent evidence providers
+
+- `rollback_ledger` reserves Ed25519-signed lease IDs once per private
+  local store and can recover pending/expired entries after restart.
+  Its `audit` is an untrusted local observation; it does not prove
+  global replay protection, writer attestation or completed recovery.
+- `nftables_readback` reads a configured separate namespace using only
+  `nft -j list ruleset` and returns a best-effort kernel JSON digest.
+  Caller-supplied readback may flag a digest mismatch but cannot
+  attest a particular target-node identity.
+
+The `rollback_watchdog.diagnose` API accepts these optional snapshots
+and always keeps its eight transaction gates blocked. It does not
+invoke or require either plugin. Separate MAS manifest links are
+visible only when the provider exists and the caller has permission.
+
 ## Minimum separate privileged watchdog requirements
 
 Before enabling any production write capability in a **different plugin**:
