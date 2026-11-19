@@ -18,15 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- GoBackend supplies the userspace WireGuard tunnel; user grants VPN consent. -->
-        <service
-            android:name="com.wireguard.android.backend.GoBackend$VpnService"
-            android:permission="android.permission.BIND_VPN_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.net.VpnService"/>
-            </intent-filter>
-        </service>
+        <!-- WireGuard library merges its VpnService declaration automatically. -->
         <service android:name=".WatchdogService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
