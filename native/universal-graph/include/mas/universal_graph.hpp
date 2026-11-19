@@ -36,6 +36,8 @@ struct Node {
   std::string type_ref;
   std::string graph_ref;
   std::vector<Port> ports;
+  // 0 for ordinary nodes; composite pins a specific child graph revision.
+  std::uint64_t graph_ref_revision = 0;
 };
 struct Edge {
   std::string id;
@@ -55,6 +57,7 @@ struct Graph {
   std::vector<Port> interface_ports;
   std::vector<Node> nodes;
   std::vector<Edge> edges;
+  std::uint64_t revision = 1;  // content revision, not an auth token
 };
 using Catalog = std::map<std::string, Graph>;
 
@@ -62,7 +65,7 @@ enum class ErrorCode {
   MissingGraph, Version, InvalidId, DuplicateId,
   TypeRef, PortMismatch, Endpoint, TypeMismatch,
   IllegalDelay, InstantCycle, CompositeCycle,
-  CompositeInterface, DepthLimit, ResourceLimit
+  CompositeInterface, CompositeRevision, DepthLimit, ResourceLimit
 };
 struct Diagnostic {
   ErrorCode code;
