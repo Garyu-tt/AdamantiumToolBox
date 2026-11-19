@@ -15,8 +15,11 @@ const validNode=n=>n&&n.type==='action'&&typeof n.id==='string'&&
 export function inspectComposition(graph){
  const nodes=Array.isArray(graph?.nodes)?graph.nodes.filter(validNode):[];
  const stages=STAGES.map(stage=>{
-  const ids=[...new Set(nodes.filter(n=>n.contract===stage.contract).map(n=>n.id))].sort();
-  return {...stage,providers:ids,status:ids.length===1?'discovered':ids.length?'ambiguous':'missing'};
+  const matching=nodes.filter(n=>n.contract===stage.contract);
+  const ids=[...new Set(matching.map(n=>n.id))].sort();
+  const status=ids.length>1?'ambiguous':!ids.length?'missing':
+    matching.some(n=>n.fixture===true)?'fixture':'discovered';
+  return {...stage,providers:ids,status};
  });
  const discovered=stages.every(stage=>stage.status==='discovered');
  return Object.freeze({schema:COMPOSITION_SCHEMA,stages,discovered,
