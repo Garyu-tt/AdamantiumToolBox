@@ -1,7 +1,11 @@
+import {checkPair,verifyReceipt,replay,journal} from '../../contracts/mikoshi-av-permit.mjs';
 import http from 'node:http';
 import {learn,associate,recall,catalog} from './model.mjs';
 import {configured,load,save} from './store.mjs';
 const key=process.env.ADA_INTERNAL_KEY||'';
+const sourceKey=process.env.MIKOSHI_SOURCE_SIGNING_KEY||'';
+const secure=Boolean(sourceKey)||process.env.MIKOSHI_REQUIRE_SOURCE_PERMIT==='1';
+if(secure&&Buffer.byteLength(sourceKey)<32)throw Error('source_signing_key_missing');
 if(key.length<24)throw Error('internal_key_missing');
 const can=s=>new Set((process.env.ADA_CAPS||'').split(',')).has(s);
 const r='grounding.inspect',w='grounding.learn';
@@ -31,13 +35,20 @@ const send=(res,status,doc)=>{res.writeHead(status,{'Content-Type':'application/
 let serial=Promise.resolve();
 async function invoke(body){
  if(!can(r))throw Error('capability_denied');
- if(body.action===ids.status)return {...catalog(await load()),configured:configured()};
+ if(body.action===ids.status){const s=await load();return {...catalog(s),configured:configured(),secureSourceWrites:secure,sourceReceipts:(s.sourceWrites||[]).length};}
  if(body.action===ids.associate)
   return associate(await load(),body.params?.visualVector);
  if(body.action===ids.recall)return recall(await load(),body.params?.soundId);
  if(body.action!==ids.teach||!can(w)||!configured())throw Error('capability_denied');
  const task=serial.then(async()=>{
-  const {state,result}=learn(await load(),body.params||{});
+  const current=await load(),params=body.params||{};
+  const proof=secure?checkPair(sourceKey,params,'visual',Date.now()):null;
+  if(proof){
+   verifyReceipt(sourceKey,params.motifReceipt,proof,params.soundId);
+   const seen=replay(current,proof);if(seen)return seen;
+  }
+  const {state,result}=learn(current,params);
+  if(proof)journal(state,proof,result);
   await save(state);return result;
  });
  serial=task.catch(()=>{});return task;
