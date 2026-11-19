@@ -50,5 +50,5 @@ assert.equal(Buffer.from(result.audioBase64,'base64').toString('ascii',0,4),'RIF
 assert.equal(writes,12);
 assert.equal(catalog(motor).records.length,2);
 assert.equal(progress.length,12);
-assert.throws(()=>lesson[0].samples.some(x=>!Number.isFinite(x)),undefined);
+assert(lesson.every(event=>event.samples.every(v=>Number.isFinite(v))));
 console.log('MIKOSHI_STREAM_IMITATION_OK audio events -> learned motor -> continuous vocal WAV');
