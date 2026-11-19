@@ -1,0 +1,32 @@
+import {strict as assert} from 'node:assert';
+import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {DurableJobs} from '../core/durable_jobs.mjs';
+const dir=await mkdtemp(join(tmpdir(),'adamantium-jobs-'));
+try{
+ const store=new DurableJobs(join(dir,'private')),id=randomUUID(),done=randomUUID();
+ const queued={jobId:id,status:'queued',request:{prompt:'unfinished'},createdAt:new Date().toISOString()};
+ await store.save(queued);
+ assert.equal((await store.read(id)).request.prompt,'unfinished');
+ await store.save({jobId:done,status:'completed',result:{ok:1},createdAt:new Date().toISOString()});
+ assert.equal((await store.list()).length,2);
+ const rehydrated=new DurableJobs(join(dir,'private'));
+ const records=await rehydrated.recover();
+ assert.equal(records.find(x=>x.jobId===id).status,'needs_review');
+ assert.equal((await rehydrated.read(id)).error,'execution_state_unknown_after_restart');
+ assert.equal((await rehydrated.read(done)).status,'completed');
+ await assert.rejects(store.read('../escape'),/invalid_job_id/);
+ const corrupt=randomUUID();
+ await writeFile(join(dir,'private',corrupt+'.json'),'{bad json');
+ await assert.rejects(rehydrated.list(),/JSON/);
+ await rm(join(dir,'private',corrupt+'.json'));
+ const huge={jobId:randomUUID(),status:'queued',request:'x'.repeat(300000)};
+ await assert.rejects(async()=>store.save(huge),/job_record_too_large/);
+ const updated=await store.save({...queued,status:'failed',error:'expected'});
+ assert.equal(updated.status,'failed');
+ const raw=await readFile(join(dir,'private',id+'.json'),'utf8');
+ assert.equal(JSON.parse(raw).status,'failed');
+ console.log('DURABLE_JOBS_OK private atomic store, restart uncertainty, corruption, bounds');
+}finally{await rm(dir,{recursive:true,force:true});}
