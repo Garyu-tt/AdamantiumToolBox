@@ -37,6 +37,18 @@ for(const [name,port,action,permission,params] of suites){
    body:JSON.stringify({action,params})});
   assert.equal(r.status,200,name+':invoke');
   const data=await r.json();assert(data.result);
+  if(name==='nftables_lab'){
+   assert(doc.nodes.some(x=>x.id==='nftables_lab.rollback_trial'));
+   const res=await fetch(origin+'/invoke',{method:'POST',headers:auth,
+    body:JSON.stringify({action:'nftables_lab.rollback_trial',params:{
+     deadlineMs:100,advanceToMs:150,events:[
+      {kind:'syntax_validated',atMs:0},{kind:'arm_rollback',atMs:10},
+      {kind:'commit_simulated',atMs:20}]}})});
+   assert.equal(res.status,200);
+   const trial=(await res.json()).result;
+   assert.equal(trial.state,'rolled_back');
+   assert.equal(trial.kernelChanged,false);
+  }
   if(name==='nftables_preview'){
    assert(doc.nodes.some(x=>x.id==='nftables_preview.transaction'));
    const plan=await fetch(origin+'/invoke',{method:'POST',headers:auth,
