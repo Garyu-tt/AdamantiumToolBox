@@ -31,3 +31,19 @@ endif()
 add_executable(mas_native_graph_test tests/native_graph_test.cpp)
 target_link_libraries(mas_native_graph_test PRIVATE mas_native_graph Threads::Threads)
 add_test(NAME native_graph_authorized_projection COMMAND mas_native_graph_test)
+
+# Optional, host-internal read-only dispatcher; pure C callback ABI.
+add_library(mas_native_dispatch STATIC src/native_dispatch.cpp)
+target_include_directories(mas_native_dispatch PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../standards/native")
+target_link_libraries(mas_native_dispatch PUBLIC mas_native_graph Threads::Threads)
+if(MSVC)
+  target_compile_options(mas_native_dispatch PRIVATE /W4 /WX)
+else()
+  target_compile_options(mas_native_dispatch PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+add_executable(mas_native_dispatch_test
+  tests/native_dispatch_test.cpp tests/native_provider_probe.c)
+target_link_libraries(mas_native_dispatch_test PRIVATE mas_native_dispatch)
+add_test(NAME native_dispatch_readonly COMMAND mas_native_dispatch_test)
