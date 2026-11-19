@@ -26,9 +26,10 @@ References:
 ## Canonical shape
 
 The JSON contract is `standards/universal-graph/graph-ir-v1.schema.json`:
-- Graph: `schema, id, schemaVersion, domain, interfacePorts, nodes, edges`.
+- Graph: `schema, id, schemaVersion, revision, domain, interfacePorts, nodes, edges`.
 - Node: `id, kind, typeRef, graphRef, ports`; exactly one kind of implementation
-  reference. `typeRef` may describe a compute function, service, device, UI,
+  reference. A composite additionally pins `graphRefRevision`; the parent
+  Graph pins `revision` for deterministic nested composition. `typeRef` may describe a compute function, service, device, UI,
   resource, sensor/effector, region or policy; it is not code or private state.
 - Port: `id, dataType, direction, semantics`. Ports use explicit versioned
   type contracts, rather than permissive implicit type coercion.
