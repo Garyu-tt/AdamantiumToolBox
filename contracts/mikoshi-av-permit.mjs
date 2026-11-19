@@ -76,6 +76,8 @@ export function journal(state,proof,result){
   x=>x.expiresAt>=now);
  if(entries.length>=256)throw Error('source_journal_full');
  state.sourceWrites=[...entries,{key:proof.key,
+  lessonDigest:proof.permit.digest,pairIndex:proof.index,
+  sourceKind:proof.permit.sourceKind,recordedAt:now,
   expiresAt:proof.permit.expiresAt,result}];
 }
 export function replay(state,proof){
