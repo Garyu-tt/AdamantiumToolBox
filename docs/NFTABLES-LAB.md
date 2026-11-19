@@ -1,7 +1,8 @@
 # nftables Lab R01 — isolated, non-applying syntax check
 
 Status: **source prototype only**. Not deployed on VM 121, VM 122 or any
-other host. No firewall rule or network namespace has been created or changed.
+production host. GitHub Actions creates a disposable Linux namespace;
+only its **unhooked test table** is briefly created and deleted.
 
 ## Capabilities
 
@@ -78,8 +79,16 @@ production apply operation on the strength of this simulation alone.
 Unit tests use a mock executor and fake namespace stat, without root.
 The `nftables-kernel-lab` GitHub Actions job also provisions a disposable
 namespace on a temporary Linux runner, performs real `nft --check` for
-IPv4 and IPv6, and compares the namespace ruleset before/after. This
-job is required to pass before claiming a validated native syntax path.
+IPv4 and IPv6, and compares the namespace ruleset before/after. This job also launches a detached CI-only watchdog worker, exits its
+controller process, and verifies real deletion of an unhooked test table
+without any surviving kernel rules. See
+`tests/native/nftables_watchdog_real.test.mjs` and
+`tests/native/nft_lab_watchdog_worker.mjs`.
+
+These worker scripts are **test-only** and require a designated disposable
+namespace and an explicit CI environment gate. They are **not installed
+with the MAS plugin**, not proof of production out-of-band reachability,
+and not a production rollback daemon.
 
 The no-live-change boundary follows nftables' documented distinction
 between atomic ruleset loads and check mode:
