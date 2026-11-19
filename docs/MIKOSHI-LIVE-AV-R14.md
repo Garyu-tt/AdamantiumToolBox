@@ -67,6 +67,8 @@ before persistent learning. R14 does not install that capability.
 - `node tests/mikoshi_avsync_live.test.mjs`: five independent live MAS
   HTTP services (visual detector, audio segmenter, sync, motif memory,
   cross-modal associations), synthetic test scene and strict auth.
+- `node tests/mikoshi_av_capture.test.mjs`: mocked browser device permissions,
+  bounded PCM extraction, and cleanup of all tracks after normal/error paths.
 - `node tools/mas-check.mjs`, `python tools/check-size.py`,
   architecture tests and full CI.
 - Real browser-camera/microphone operation and actual lip/sound sync,
