@@ -6,7 +6,7 @@ const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const registry=await catalog(root);
 for(const app of registry){
  if(!/^[a-z0-9_-]+$/.test(app.id))continue;
- const entry=resolve(root,'apps',app.id,'service.mjs');
+ const entry=resolve(app.directory,'service.mjs');
  try{
   const res=await fetch('http://127.0.0.1:'+app.service.port+'/health',{signal:AbortSignal.timeout(500)});
   if((await res.json()).app===app.id)continue;

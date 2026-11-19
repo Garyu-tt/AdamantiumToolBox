@@ -1,0 +1,33 @@
+{
+  "mas": "1.0",
+  "id": "mcp_bridge",
+  "name": "Adamantium MCP Mesh Bridge",
+  "version": "0.3.0",
+  "icon": "mcp_bridge",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8896,
+    "invokeTimeoutMs": 12000
+  },
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "mcp_bridge.read"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  }
+}

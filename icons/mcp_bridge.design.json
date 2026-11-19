@@ -1,0 +1,30 @@
+{
+  "schema": "mas-icon-design-1",
+  "id": "mcp_bridge",
+  "accent": "#76b9ed",
+  "svg": "<path d=\"M32 17L17 46h30Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"/><circle cx=\"32\" cy=\"17\" r=\"5\"/><circle cx=\"17\" cy=\"46\" r=\"5\"/><circle cx=\"47\" cy=\"46\" r=\"5\"/>",
+  "lines": [
+    [
+      32,
+      17,
+      17,
+      46,
+      3
+    ],
+    [
+      17,
+      46,
+      47,
+      46,
+      3
+    ],
+    [
+      47,
+      46,
+      32,
+      17,
+      3
+    ]
+  ],
+  "rings": []
+}
