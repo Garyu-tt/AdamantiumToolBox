@@ -26,7 +26,7 @@ This supersedes the *editor selection* in Universal Graph issue #141 (which prev
 
 1. **Do not make Node.js or Node-RED mandatory for headless MAS Core, Graph IR, GENESIS expression or native runtime.** CPU-only Core+one-plugin is still a required smoke test.
 2. Node-RED `flows.json` is an editor/compatibility projection, not canonical Graph IR. Lossless, versioned transformation (including unmappable opaque typed metadata) must be measured before any write enablement; lossy views are read-only.
-3. A drawn `permission` edge is not an RBAC grant. A `network` edge is not a successfully established tunnel. A `dependency` edge is not an executable flow. Neural feedback must declare delay and bounded scheduling.
+3. A drawn `permission` edge is not an RBAC grant. A `route` edge is not a successfully established tunnel. A `dependency` edge is not an executable flow. Neural feedback is a delayed `event`/`signal` edge and requires bounded scheduling.
 4. GENESIS genotype → expression plan → measured phenotype remains distinct. Learned/experimental gene overlays and compressed weight/residual artifacts are external, immutable or versioned, content-addressed and independently verified.
 5. No hardcoded IP, WireGuard endpoints, host names, keys, paths or model/hardware requirements. No production secrets in a public repository or UI flow.
 6. All host-affecting writes go through current authorized MAS capabilities, explicit target and signed Lifecycle/canary; no direct Node-RED `exec`/shell/deploy escape hatch.
@@ -36,7 +36,7 @@ This supersedes the *editor selection* in Universal Graph issue #141 (which prev
 ## Execution packets
 
 - **AN-C01 / NOW**: build Adamantium-node fork R01 docs and inert typed editor-projection tests (separate repository/branch). Preserve upstream Node-RED license and source history.
-- **AN-C02**: narrow native Graph IR adapter. Verify G0+G1 typed round-trip with edges `data/control/event/signal/network/permission/dependency/feedback`, composite references and schema/version provenance. Make failures visible; never silently flatten semantics.
+- **AN-C02**: narrow native Graph IR adapter. Verify G0+G1 typed round-trip with Graph IR v1 edge semantics `data/control/event/signal/route/permission/dependency` (feedback is event/signal with nonzero `delayTicks`), composite references and schema/version provenance. Make failures visible; never silently flatten semantics.
 - **AN-C03**: render graph in Node-RED fork as inert editable/collapsible groups; editor changes emit a proposed signed/diffed plan to Graph Manager, no direct runtime mutations.
 - **AN-C04**: independent Graph Manager/Registry/Task Pool/Conductor/Fixiki QA bridge with bounded leases, recovery branches, permission fencing and attestation.
 - **AN-C05**: GENESIS graph adapter (structural genes, learned overlays, expression planner); ALT weight reconstruction plugin uses content-addressed matrices/shards outside editor JSON. Verify exact or explicitly bounded-loss restoration and streaming RAM budget.
