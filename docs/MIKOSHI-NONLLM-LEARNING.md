@@ -1,7 +1,7 @@
-# Mikoshi non-LLM skill ecosystem — R13
+# Mikoshi non-LLM skill ecosystem — R14
 
-**Nineteen independent MAS providers plus Mikoshi Classroom**
-(20 MAS apps). All are CPU-first, capability-driven and usable with
+**Twenty independent MAS providers plus Mikoshi Classroom**
+(21 MAS apps). All are CPU-first, capability-driven and usable with
 Core alone. No conversational language models or prompt-generated
 dialogues are required. The composite UI is a separate user-facing app,
 not a replacement monolith or a dependency of any provider.
@@ -13,6 +13,7 @@ not a replacement monolith or a dependency of any provider.
 | hearing | `mikoshi_hearing` | PCM energy and pitch features |
 | visual-events | `mikoshi_vision` | Unlabeled 8×8 RGB change detection |
 | audiovisual-association | `mikoshi_grounding` | Temporal motif/event correlations with abstention |
+| av-alignment | `mikoshi_avsync` | Conservative event timestamps; no raw media |
 | auditory-events | `mikoshi_segments` | 2–4 second PCM stream acoustic event candidates |
 | speech | `mikoshi_voice` | Optional eSpeak NG parametric voice |
 | general | `mikoshi_learning` | Supervised feature prototypes |
@@ -30,12 +31,10 @@ not a replacement monolith or a dependency of any provider.
 | world-prediction | `mikoshi_worldmodel` | Predict acoustic outcome of a motor action before execution, then learn the error |
 | hypothesis-search | `mikoshi_hypotheses` | Pick untried vocal actions using model uncertainty |
 
-`mikoshi_classroom` discovers `mikoshi.skill.v1` resource contracts
-from the authorized capability graph. It can mount isolated panels for
-voice, hearing, motor rehearsal, sequence memory and timing practice.
-`loop_panel.js` exposes one explicit opt-in complete synthetic lesson
-covering hearing → acoustic memory → motor action → audible result →
-scalar reward → motor/transition memory. Missing permissions hide it.
+`mikoshi_classroom` discovers `mikoshi.skill.v1` resources from the
+capability graph. It mounts optional independent training panels.
+`loop_panel.js`: opt-in hearing → memory → motor → sound → feedback
+lesson, hidden when permissions are absent.
 `stream_panel.js` additionally connects explicitly recorded short clips
 or synthetic diagnostic signals to transient event segmentation, approved
 memory updates and separate voluntary sensorimotor reproduction.
@@ -46,7 +45,8 @@ or practice based on numeric error and uncertainty. The optional
 and updates its prediction from the resulting acoustic observation.
 `hypotheses_panel.js` lets the operator approve one untried vocal action,
 forecast it, hear the result and update prediction error.
-`av_panel.js` adds an opt-in synthetic audiovisual pairing exercise.
+`av_panel.js` provides synthetic pairing; `av_live_panel.js` adds
+explicit capture, read-only alignment and separately approved learning.
 No background tasks.
 
 ## Immutable owner-chosen vocal identity
@@ -70,10 +70,9 @@ Current prototypes are single-instance, not isolated multi-tenant hosting.
 No background microphone recording, Noosphere migration or active
 deployment was performed in this change.
 
-**R13 is not speech understanding, speech recognition, a learned phoneme
-inventory, independent reasoning or proven autonomy.** The final sound
-is a synthetic learning demonstration. The target is a complete
-architecture able to acquire skills later, not a ready-made conversation.
+**R14 is not speech understanding, speech recognition, a learned phoneme
+inventory, independent reasoning or proven autonomy.** Synthetic demonstrations validate integration, not real speech,
+semantic learning or a ready-made conversation.
 
 ## Implementation and validation records
 - `docs/MIKOSHI-PHONETICS-R03.md` — short vowel imitation
@@ -87,10 +86,10 @@ architecture able to acquire skills later, not a ready-made conversation.
 - `docs/MIKOSHI-WORLDMODEL-R11.md` — sensory forecasts before actions
 - `docs/MIKOSHI-HYPOTHESES-R12.md` — test a new action
 - `docs/MIKOSHI-AV-GROUNDING-R13.md` — visual/audio associations
+- `docs/MIKOSHI-LIVE-AV-R14.md` — explicit capture, clock limits
 
-Run `node tests/mikoshi_vision.test.mjs`,
-`node tests/mikoshi_grounding.test.mjs`, and
-`node tests/mikoshi_av_live.test.mjs` for R13.
+Run `node tests/mikoshi_avsync.test.mjs` and
+`node tests/mikoshi_avsync_live.test.mjs` for R14.
 Full Mikoshi acoustic, isolated MAS and core regression coverage is
 listed in `.github/workflows/ci.yml`, alongside
 `node tools/mas-check.mjs` and `python tools/check-size.py`.
