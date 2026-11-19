@@ -46,6 +46,9 @@ jobs:
           node tests/mikoshi_gestures.test.mjs
           node tests/mikoshi_vocalstream.test.mjs
           node tests/mikoshi_gesture_runtime.test.mjs
+          node tests/mikoshi_transition_feedback.test.mjs
+          node tests/mikoshi_transition_service.test.mjs
+          node tests/mikoshi_complete_loop.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
