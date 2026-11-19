@@ -56,6 +56,8 @@ jobs:
           node tests/mikoshi_explorer.test.mjs
           node tests/mikoshi_explorer_service.test.mjs
           node tests/mikoshi_explorer_live.test.mjs
+          node tests/mikoshi_worldmodel.test.mjs
+          node tests/mikoshi_worldmodel_service.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
