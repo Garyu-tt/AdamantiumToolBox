@@ -1,6 +1,6 @@
 import {spawnSync} from 'node:child_process';
 export function profile(){
- let p={language:'ru',pitch:48,speed:155,amplitude:100};
+ let p={language:'ru',pitch:74,speed:164,amplitude:95};
  if(process.env.MIKOSHI_VOICE_PROFILE_JSON){
   try{p=JSON.parse(process.env.MIKOSHI_VOICE_PROFILE_JSON);}
   catch{throw Error('invalid_voice_profile_json');}
@@ -17,15 +17,26 @@ export function available(){
  const r=spawnSync(executable(),['--version'],{timeout:1500,windowsHide:true});
  return r.status===0&&!r.error;
 }
-export function speak(text){
+// Prosody may change with experience; initial timbre identity remains immutable.
+export function voiceControls(base,prosody={}){
+ if(!prosody||typeof prosody!=='object'||Array.isArray(prosody))throw Error('invalid_prosody');
+ const pitchDelta=prosody.pitchDelta??0,speedDelta=prosody.speedDelta??0;
+ if(!Number.isInteger(pitchDelta)||Math.abs(pitchDelta)>8||
+  !Number.isInteger(speedDelta)||Math.abs(speedDelta)>20)
+  throw Error('prosody_out_of_bounds');
+ return {pitch:Math.max(0,Math.min(99,base.pitch+pitchDelta)),
+  speed:Math.max(80,Math.min(300,base.speed+speedDelta)),
+  pitchDelta,speedDelta};
+}
+export function speak(text,prosody={}){
  if(typeof text!=='string'||!text.trim()||text.length>80||/[\x00-\x08]/.test(text))
   throw Error('invalid_utterance');
  if(!available())throw Error('tts_provider_offline');
- const p=profile();
- const r=spawnSync(executable(),['--stdout','-v',p.language,'-p',String(p.pitch),
-  '-s',String(p.speed),'-a',String(p.amplitude),text],{
+ const p=profile(),controls=voiceControls(p,prosody);
+ const r=spawnSync(executable(),['--stdout','-v',p.language,'-p',String(controls.pitch),
+  '-s',String(controls.speed),'-a',String(p.amplitude),text],{
   encoding:'buffer',windowsHide:true,timeout:8000,maxBuffer:1024*1024});
  if(r.error||r.status!==0||!r.stdout?.length)throw Error('tts_failed');
  return {mime:'audio/wav',audioBase64:r.stdout.toString('base64'),
-  voiceProfile:{...p},provider:'espeak-ng',model:'none'};
+  voiceProfile:{...p},appliedProsody:controls,provider:'espeak-ng',model:'none'};
 }
