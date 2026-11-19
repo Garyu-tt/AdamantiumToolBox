@@ -1,3 +1,4 @@
+import {captureLesson} from './mic_capture.js';
 // Optional classroom widget: one live skill resource, zero provider imports.
 export function phoneticPanel(host,api,resource,allowed){
  const a=resource?.skill?.actions;
@@ -30,6 +31,20 @@ export function phoneticPanel(host,api,resource,allowed){
    result.textContent='Моторика: '+JSON.stringify(r.motor);
   }catch(e){result.textContent=String(e.message);}
  };
+ if(a.imitate&&allowed.has(a.imitate)&&
+  globalThis.navigator?.mediaDevices?.getUserMedia){
+  const record=add('button','Записать короткий звук с микрофона');
+  record.onclick=async()=>{
+   record.disabled=true;
+   result.textContent='Запись включается только по запросу. 1 секунда…';
+   try{
+    const r=await captureLesson();teacher=r.samples;
+    result.textContent='Короткий образец готов. Аудиофайл не сохранялся. '+
+     'Для обучения нажмите отдельную кнопку.';
+   }catch(e){result.textContent=String(e.message);}
+   finally{record.disabled=false;}
+  };
+ }
  if(a.imitate&&allowed.has(a.imitate)){
   const train=add('button','Сравнить и обучить');
   train.onclick=async()=>{
