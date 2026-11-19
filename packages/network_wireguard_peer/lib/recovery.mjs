@@ -41,7 +41,7 @@ export function planRestore(managed,live,{interfaceName,serverIP,maxChanges=32}=
   liveState:digest(peers),desiredState:digest(managed)};
 }
 export async function applyRestore({backend,plan,recheck,runner}){
- if(!plan||plan.schema!=='network-wireguard-restore-plan-v1'||typeof recheck!=='function'||typeof runner!=='function')throw Error('invalid_restore');
+ if(!plan||plan.schema!=='network-wireguard-restore-plan-v1'||!recheck||!Array.isArray(recheck.managed)||!recheck.options||typeof runner!=='function')throw Error('invalid_restore');
  const current=await backend.state(plan.interface);
  const verified=planRestore(recheck.managed,current,recheck.options);
  if(verified.liveState!==plan.liveState||verified.desiredState!==plan.desiredState)throw Error('recovery_state_changed');
