@@ -8,6 +8,8 @@ any VM. Does NOT run a watchdog, apply firewall rules or move network routes.
 The `rollback_ledger` plugin declares separate scoped capabilities:
 - `rollback_ledger.read` exposes `inspect({leaseId})` and `audit({})`.
 - `rollback_ledger.reserve` exposes `reserve({receipt,context})`.
+- `rollback_ledger.read` also exposes `checkpoint({expectedDigest?})`
+  to fingerprint the complete bounded reservation inventory.
 
 A client with read permission **cannot reserve**. Core's graph includes
 only actions allowed by the current capability set. No imports of
@@ -44,6 +46,19 @@ unreadable/partial records and expired reservations, and marks all
 recovered claims as needing independent status verification. The scan
 survives application restarts because the state lives in the
 operator-provisioned directory.
+
+## Optional external checkpoint comparison
+
+`checkpoint({expectedDigest?})` hashes a sorted list of lease hashes and
+SHA-256 hashes of individually verified signed claim files. It labels any
+partial/unreadable entry `degraded`. Supplying a previously recorded digest
+allows callers to detect deletion, addition, corruption or rollback of the
+*current local set*. The supplied digest is **not authenticated by this
+plugin**: `callerAnchorMatches` is a comparison only,
+`remoteAnchorVerified:false` and `externallyAnchored:false`. A trusted
+independent append-only authority must capture and validate these digests
+across every reservation for this to prevent snapshot rollback. The
+checkpoint never grants execution authority.
 
 ## Hard limits and non-guarantees
 
@@ -84,6 +99,9 @@ a lease cannot be re-reserved after the service restarts.
 
 `node tests/graph_ledger_integrity.test.mjs` mutates the saved record,
 removes its trust root, changes file permissions and tests symlink rejection.
+
+`node tests/graph_ledger_checkpoint.test.mjs` tests deterministic digests,
+added/deleted leases, tampering, partial tombstones and missing trust roots.
 
 Future executor and autonomous watchdog remain separate providers and
 must bind against a truly authoritative replay store before production.
