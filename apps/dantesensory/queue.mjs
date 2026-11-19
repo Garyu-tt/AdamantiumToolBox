@@ -62,6 +62,22 @@ export class DurableQueue{
   await this.#commit([...this.#entries,{id:item.id,event:item.event}],cursors,this.#acked);
   return {ok:true,id:item.id,duplicate:false};
  });}
+ // Explicit fresh-read barrier; synchronous peek/status remain cached snapshots.
+ // Wait for this instance's pending writes before observing a durable commit.
+ async refresh(){
+  const task=this.#tail.then(async()=>{
+   const state=await this.store.load();
+   if(state)validateState(state,this.config);
+   this.#entries=state?.entries??[];
+   this.#cursors=new Map(state?.cursors??[]);
+   this.#acked=state?.acked??[];
+   return this;
+  });
+  this.#tail=task.then(()=>{},()=>{});
+  return task;
+ }
+ async peekFresh(limit=8){await this.refresh();return this.peek(limit);}
+ async statusFresh(){await this.refresh();return this.status();}
  peek(limit=8){
   if(!Number.isSafeInteger(limit)||limit<1||limit>16)throw Error('invalid_peek_limit');
   return this.#entries.slice(0,limit).map(x=>structuredClone(x));
