@@ -28,11 +28,13 @@ try{
  assert.equal((await reserveLease(input,options)).status,'already_consumed');
  const rotated=make('lease-1',hex('c'));
  assert.equal((await reserveLease(rotated,options)).status,'already_consumed');
- const retained=await inspectLease('lease-1',{root,nowSeconds:nowSeconds+200});
+ const retained=await inspectLease('lease-1',{...options,nowSeconds:nowSeconds+200});
  assert.equal(retained.status,'reserved');
+ assert.equal(retained.signatureVerified,true);
+ assert.equal(retained.filesystemIntegrityAttested,false);
  assert.equal(retained.expired,true);
  assert.equal(retained.requiresReview,true);
- const scan=await auditReservations({root,nowSeconds:nowSeconds+200});
+ const scan=await auditReservations({...options,nowSeconds:nowSeconds+200});
  assert.equal(scan.status,'scanned');
  assert.equal(scan.entries[0].state,'expired_needs_review');
  assert.equal(scan.allLeasesRecovered,true);
