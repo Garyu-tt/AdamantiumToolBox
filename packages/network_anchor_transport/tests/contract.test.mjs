@@ -41,3 +41,27 @@ test('signed cache blocks remote rollback and conflicting equal-sequence history
   await writeFile(path,'{bad', {mode:0o600});await assert.rejects(loadCache(path,f.trust),/corrupt_cache/);
  }finally{await f.remove();}
 });
+
+test('commit attestation is bound to the exact requested batch and previous anchor head',async()=>{
+ const f=await anchorFixture();
+ try{
+  const {signAttestation}=await import('../lib/anchor-contract.mjs');
+  const entry=f.next(),batch=[entry],previous={revision:ORIGIN,count:0,witnessSeq:0,witnessHead:ORIGIN};
+  const at=new Date().toISOString();
+  function signed(candidate,prevHead=previous.revision){
+   const head=sha(JSON.stringify({seq:1,previous:prevHead,batch:candidate,at}));
+   const attestation={schema:'network-anchor-attestation-v1',anchorId:f.trust.anchor.id,
+    witnessId:f.trust.witness.id,anchorSeq:1,anchorHead:head,
+    witnessSeq:entry.receipt.anchorSeq,witnessHead:entry.witnessRevision,at};
+   return {revision:head,attestation,
+    signature:signAttestation(attestation,f.keys.anchor.privateKey),enforcement:false};
+  }
+  const valid=signed(batch);
+  assert.equal(verifyCommit(valid,f.trust,entry,previous,batch).revision,valid.revision);
+  const substituted=signed([{...entry,unrequestedPayload:true}]);
+  assert.throws(()=>verifyCommit(substituted,f.trust,entry,previous,batch),/untrusted_anchor_commit/);
+  const wrongPredecessor=signed(batch,sha('unrelated-anchor-predecessor'));
+  assert.throws(()=>verifyCommit(wrongPredecessor,f.trust,entry,previous,batch),/untrusted_anchor_commit/);
+  assert.throws(()=>verifyCommit(valid,f.trust,entry,previous,[]),/untrusted_anchor_commit/);
+ }finally{await f.remove();}
+});
