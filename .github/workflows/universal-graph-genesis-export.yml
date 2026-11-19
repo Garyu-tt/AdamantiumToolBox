@@ -1,0 +1,32 @@
+name: Universal Graph GENESIS Export G3
+on:
+  push:
+    paths:
+      - 'apps/universal_graph_genesis/**'
+      - 'tests/universal_graph_genesis_export.test.mjs'
+      - '.github/workflows/universal-graph-genesis-export.yml'
+  pull_request:
+    paths:
+      - 'apps/universal_graph_genesis/**'
+      - 'tests/universal_graph_genesis_export.test.mjs'
+      - '.github/workflows/universal-graph-genesis-export.yml'
+permissions:
+  contents: read
+jobs:
+  genesis-bridge:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check apps/universal_graph_genesis/bridge.mjs
+      - run: node --check apps/universal_graph_genesis/convert.mjs
+      - run: node --test tests/universal_graph_genesis_export.test.mjs
