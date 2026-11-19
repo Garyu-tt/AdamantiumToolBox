@@ -66,8 +66,12 @@ target_link_libraries(mas_native_legacy_frame_test PRIVATE mas_native_legacy_fra
 add_test(NAME native_legacy_frame_codec COMMAND mas_native_legacy_frame_test)
 add_executable(mas_native_legacy_frame_cli tests/legacy_frame_cli.cpp)
 target_link_libraries(mas_native_legacy_frame_cli PRIVATE mas_native_legacy_frame)
-find_program(MAS_LEGACY_NODE_EXECUTABLE NAMES node node.exe)
-if(MAS_LEGACY_NODE_EXECUTABLE)
+option(MAS_ENABLE_LEGACY_NODE_TESTS
+  "Enable optional Node.js sidecar IPC interop test when Node is available" ON)
+if(MAS_ENABLE_LEGACY_NODE_TESTS)
+  find_program(MAS_LEGACY_NODE_EXECUTABLE NAMES node node.exe)
+endif()
+if(MAS_ENABLE_LEGACY_NODE_TESTS AND MAS_LEGACY_NODE_EXECUTABLE)
   add_test(NAME native_legacy_graph_ipc_interop
     COMMAND "${MAS_LEGACY_NODE_EXECUTABLE}"
       "${CMAKE_CURRENT_SOURCE_DIR}/../legacy-mas-bridge/legacy_stdio.integration.test.mjs"
