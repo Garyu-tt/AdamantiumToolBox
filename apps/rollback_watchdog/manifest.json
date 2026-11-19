@@ -50,6 +50,11 @@
       "from": "rollback_watchdog.journal",
       "to": "rollback_ledger.audit",
       "type": "related"
+    },
+    {
+      "from": "rollback_watchdog.diagnose",
+      "to": "nftables_readback.observe",
+      "type": "related"
     }
   ]
 }
