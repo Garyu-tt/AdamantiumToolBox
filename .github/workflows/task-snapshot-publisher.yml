@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/task_snapshot/**'
       - 'tests/task_snapshot_publisher.test.mjs'
+      - 'tests/task_snapshot_sequence.test.mjs'
       - '.github/workflows/task-snapshot-publisher.yml'
   pull_request:
     paths:
@@ -29,7 +30,8 @@ jobs:
         run: |
           node --check apps/task_snapshot/read_source.mjs
           node --check apps/task_snapshot/publisher.mjs
+          node --check apps/task_snapshot/sequence_store.mjs
       - name: Verify authenticated-read dependency and signed R05 wire contract
-        run: node --test tests/task_snapshot_publisher.test.mjs
+        run: node --test tests/task_snapshot_publisher.test.mjs tests/task_snapshot_sequence.test.mjs
       - name: Regression Task Pool state machine
         run: node --test tests/task_pool.test.mjs tests/task_pool_graph_readonly.test.mjs
