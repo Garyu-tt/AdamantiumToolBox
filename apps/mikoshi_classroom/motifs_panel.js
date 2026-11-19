@@ -1,5 +1,5 @@
 // Optional auditory memory panel: source audio is never cached by this widget.
-export function motifsPanel(host,api,provider,allowed,getReference){
+export function motifsPanel(host,api,provider,allowed,getReference,onMotif=()=>{}){
  const actions=provider?.skill?.actions;
  if(!actions||!allowed.has(actions.recognize))return;
  const add=(tag,text)=>{const e=document.createElement(tag);
@@ -15,6 +15,7 @@ export function motifsPanel(host,api,provider,allowed,getReference){
  listen.onclick=async()=>{
   try{
    const v=await api.call(actions.recognize,params());
+   if(v.matched)onMotif(v.id);
    info.textContent=v.matched?'Узнал знакомый образ '+v.id:
     'Пока не знаком. Ближайший образ: '+(v.nearestId||'нет');
   }catch(e){info.textContent=String(e.message);}
@@ -24,6 +25,7 @@ export function motifsPanel(host,api,provider,allowed,getReference){
   remember.onclick=async()=>{
    try{
     const v=await api.call(actions.remember,{...params(),sourceApproved:true});
+    onMotif(v.id);
     info.textContent=(v.kind==='discovered'?'Открыт новый звуковой образ: ':
      'Закрепил знакомый звуковой образ: ')+v.id+' · повторений: '+v.observations;
    }catch(e){info.textContent=String(e.message);}
