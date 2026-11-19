@@ -3,11 +3,15 @@ import {promisify} from 'node:util';
 import {readFile,appendFile,open,mkdir,rmdir,stat} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {digest,validateSnapshot,publicKey,checkTransition} from './contract.mjs';
+import {loadManaged,appendManaged} from './managed.mjs';
 const exec=promisify(execFile);
 
 export function createBackend({
  binary=process.env.NETWORK_WG_BIN||'wg',
  journal=process.env.NETWORK_WG_JOURNAL||'',
+ managedFile=process.env.NETWORK_WG_MANAGED_LEDGER||'',
+ interfaceName=process.env.NETWORK_WG_IFACE||'',
+ pool=process.env.NETWORK_WG_POOL||'',
  runner=exec
 }={}){
  const call=async(args)=>{
@@ -23,11 +27,12 @@ export function createBackend({
    const c=line.trim().split(/\s+/);
    if(c.length<2||c.length>258)throw Error('invalid_snapshot');
    publicKey(c[0]);
-   peers.push({publicKey:c[0],allowedIPs:c.slice(1).filter(x=>x!=='(none)')});
+   const allowedIPs=c.slice(1).join(' ').split(',').map(x=>x.trim()).filter(x=>x&&x!=='(none)');
+   peers.push({publicKey:c[0],allowedIPs});
   }
   return validateSnapshot(peers);
  };
- const commit=async(plan)=>{
+ const commit=async(plan,proofs=null,trust=null)=>{
   if(!journal||!journal.startsWith('/')||journal.includes('\0'))throw Error('unconfigured_journal');
   // Journal directory must be pre-provisioned by the operator, never created in request.
   const meta=await stat(dirname(journal));
@@ -42,6 +47,13 @@ export function createBackend({
    if(entries.some(x=>x.id===id))throw Error('operation_replayed');
    // Recheck under the single-writer lock; never trust a stale preflight.
    checkTransition(plan,await state(plan.interface));
+   if(managedFile){
+    if(!trust||!proofs)throw Error('managed_approvals_required');
+    const existing=await loadManaged(managedFile,trust,{interface:interfaceName,pool});
+    const prev=existing.managed.find(p=>p.publicKey===plan.peerPublicKey);
+    if(plan.operation==='remove'&&prev?.allowedIP!==plan.allowedIP)throw Error('unmanaged_peer');
+    if(plan.operation==='add'&&(prev||existing.managed.some(p=>p.allowedIP===plan.allowedIP)))throw Error('managed_peer_conflict');
+   }
    const fh=await open(journal,'a',0o600);
    try{
     const meta=await fh.stat();
@@ -61,11 +73,17 @@ export function createBackend({
     verified=plan.operation==='add'?
       !!peer&&peer.allowedIPs.length===1&&peer.allowedIPs[0]===plan.allowedIP:!peer;
    }catch{failure='readback_failed';}
-   const confirmed=verified&&!failure;
+   let confirmed=verified&&!failure,managed=null;
+   if(confirmed&&managedFile){
+    try{managed=await appendManaged(managedFile,plan,proofs,trust,{interface:interfaceName,pool});}
+    catch{confirmed=false;failure='managed_ledger_write_failed_or_ambiguous';}
+   }
    const fh2=await open(journal,'a',0o600);
    try{await fh2.writeFile(JSON.stringify({id,stage:confirmed?'verified':'unverified',when:Date.now()})+'\n');await fh2.sync();}
    finally{await fh2.close();}
-   return {verified:confirmed,mode:'live_ephemeral',persistent:false,reason:confirmed?null:failure||'readback_mismatch',operationId:id};
+   return {verified:confirmed,mode:managedFile?'live_signed_managed':'live_ephemeral',
+    recoverable:!!managed,persistent:false,managedRevision:managed?.revision||null,
+    reason:confirmed?null:failure||'readback_mismatch',operationId:id};
   }finally{
    await rmdir(lock).catch(()=>{}); // If removal fails, future mutations fail closed.
   }
