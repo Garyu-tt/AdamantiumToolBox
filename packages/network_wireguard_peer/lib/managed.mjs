@@ -38,10 +38,10 @@ const inspect=async(path)=>{
  const parent=await stat(dirname(path));
  if(!parent.isDirectory()||(parent.mode&0o022)!==0)throw Error('unsafe_managed_ledger_dir');
 };
-export async function loadManaged(path,trust,config){
+export async function loadManaged(path,trust,config,{allowMissing=false}={}){
  await inspect(path);
  let file;try{file=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW)}
- catch(e){if(e.code==='ENOENT')return replayLedger('',trust,config);throw e}
+ catch(e){if(e.code==='ENOENT'&&allowMissing)return replayLedger('',trust,config);throw e}
  try{
   const meta=await file.stat();
   if(!meta.isFile()||(meta.mode&0o077)!==0||meta.nlink!==1||meta.size>MAX_BYTES)throw Error('unsafe_managed_ledger');
