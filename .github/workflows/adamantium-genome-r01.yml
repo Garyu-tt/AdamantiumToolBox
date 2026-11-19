@@ -3,12 +3,12 @@ on:
   push:
     paths:
       - 'apps/adamantium_genome/**'
-      - 'tests/adamantium_genome.test.mjs'
+      - 'tests/adamantium_genome*.mjs'
       - '.github/workflows/adamantium-genome-r01.yml'
   pull_request:
     paths:
       - 'apps/adamantium_genome/**'
-      - 'tests/adamantium_genome.test.mjs'
+      - 'tests/adamantium_genome*.mjs'
       - '.github/workflows/adamantium-genome-r01.yml'
 permissions:
   contents: read
@@ -28,4 +28,4 @@ jobs:
         with:
           node-version: '22'
       - run: node --check apps/adamantium_genome/genome.mjs
-      - run: node --test tests/adamantium_genome.test.mjs
+      - run: node --test tests/adamantium_genome.test.mjs tests/adamantium_genome_guards.test.mjs
