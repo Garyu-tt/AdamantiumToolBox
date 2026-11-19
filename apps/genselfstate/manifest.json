@@ -1,0 +1,9 @@
+{
+  "mas": "1.0", "id": "genselfstate", "name": "Genesis Self-State Envelope",
+  "version": "0.1.0", "icon": "graph", "lifecycle": "independent",
+  "service": {"protocol": "mas-http-1", "port": 8908, "invokeTimeoutMs": 4000},
+  "ui": {"standard": "mas-ui-1", "mode": "embedded-and-standalone"},
+  "auth": {"mode": "host-delegated"}, "permissions": ["genselfstate.read"],
+  "events": {"schema": "mas-event-1"}, "data": {"refs": "mas-ref-1"},
+  "updates": {"strategy": "semver", "migrations": []}
+}
