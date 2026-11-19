@@ -78,3 +78,5 @@ for (let i = 0; i < 10000; i++) {
 assert.equal(stress.status().queued, 0);
 assert.equal(stress.status().sources, 1);
 assert.equal(stress.status().acked, 10000);
+assert.throws(() => new ReliableSensoryBus({capacity: 4096, maxBytes: 1048576}),
+  /invalid_memory_budget/);
