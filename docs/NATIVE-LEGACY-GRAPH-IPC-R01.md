@@ -48,8 +48,11 @@ Run `cmake -S native/kernel-abi -B build -DCMAKE_BUILD_TYPE=Release`,
 `cmake --build build --config Release`, then
 `ctest --test-dir build -C Release --output-on-failure`.
 
-N0/N1/N2 tests must still pass. N3a C++ codec test runs with no Node. If Node
-is found at configure time, the optional cross-language integration test
+N0/N1/N2 tests must still pass. N3a C++ codec test runs with no Node.
+For explicit Node-free acceptance, configure with
+`-DMAS_ENABLE_LEGACY_NODE_TESTS=OFF` and verify codec-only CTest passes.
+With this setting ON (default), if Node is found at configure time,
+the optional cross-language integration test
 starts a disposable fake loopback MAS Core, uses the real C++ CLI to encode a
 request, passes it via the sidecar, then decodes its response back in C++.
 It checks graph changes, private-field stripping, denial, malformed requests
