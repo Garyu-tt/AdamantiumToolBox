@@ -41,6 +41,8 @@ jobs:
           node tests/mikoshi_sequences.test.mjs
           node tests/mikoshi_sequences_service.test.mjs
           node tests/mikoshi_hearing_sequence_integration.test.mjs
+          node tests/mikoshi_motorlinks.test.mjs
+          node tests/mikoshi_motorlinks_service.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
