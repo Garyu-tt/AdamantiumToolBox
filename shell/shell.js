@@ -42,7 +42,8 @@ async function openApp(view){
     if(!graph.nodes.some(n=>n.type==='action'&&n.id===action))throw Error('Функция не представлена в API-графе');
     return (await rpc('/api/invoke',{action,params})).result;
    },
-   graph:()=>structuredClone(graph)
+   graph:()=>structuredClone(graph),
+   readCodeGraph:async()=>rpc('/api/codemap/graph')
   });
  }catch(e){content.replaceChildren(el('p',e.message,'error'));}
 }
