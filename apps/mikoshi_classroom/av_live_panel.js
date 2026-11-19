@@ -85,14 +85,16 @@ export function liveAVPanel(host,api,providers,allowed){
    const durationMs=Math.round(capture.samples.length/12);
    const signed=await permitLesson(api,policy,lesson,durationMs);
    const result=[];
-   for(const {visual,audio,pair} of lesson){
+   for(const [pairIndex,{visual,audio,pair}] of lesson.entries()){
     await verifyLesson(api,policy,lesson,signed);
     const heard=await call('memory','remember',{
-     samples:audio.samples,sampleRate:12000,sourceApproved:true});
+     samples:audio.samples,sampleRate:12000,sourceApproved:true,
+     sourcePermit:signed.token,lessonDigest:signed.digest,pairIndex});
     const linked=await call('grounding','teach',{
      visualVector:visual.vector,soundId:heard.id,
      visualAtMs:pair.visualAtMs,soundAtMs:pair.soundAtMs,
-     sourceApproved:true});
+     sourceApproved:true,sourcePermit:signed.token,
+     lessonDigest:signed.digest,pairIndex,motifReceipt:heard.sourceReceipt});
     result.push(linked.visualId+' ↔ '+heard.id);saved++;
    }
    info.textContent='Сохранено совпадений: '+saved+'\n'+result.join('\n')+
