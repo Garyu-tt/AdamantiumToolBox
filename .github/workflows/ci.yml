@@ -33,6 +33,8 @@ jobs:
           node tests/mikoshi_speech.test.mjs
           node tests/mikoshi_prosody.test.mjs
           node tests/mikoshi_piper.test.mjs
+          node tests/mikoshi_phonetics.test.mjs
+          node tests/mikoshi_phonetics_service.test.mjs
       - name: Isolated runtime and contract tests
         run: |
           set -eu
