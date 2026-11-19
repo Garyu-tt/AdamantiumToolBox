@@ -1,5 +1,6 @@
 #include "raw_view.hpp"
 #include "host_bridge.hpp"
+#include "action_discovery.hpp"
 #include <QHash>
 #include <QSignalBlocker>
 #include <QJsonArray>
@@ -31,13 +32,8 @@ RawView::RawView(const QJsonObject& view,HostBridge* host,QWidget* parent):
  updateGraph(host_->graph());online(host_->available());
 }
 void RawView::updateGraph(const QJsonObject& graph) {
- const auto nodes=graph.value("nodes").toArray(),edges=graph.value("edges").toArray();
- QSet<QString> allowed;
- for(const auto& value:edges) {
-  const auto e=value.toObject();
-  if(e.value("from").toString()==viewId_&&e.value("type").toString()=="uses")
-   allowed.insert(e.value("to").toString());
- }
+ const auto nodes=graph.value("nodes").toArray();
+ const QSet<QString> allowed=discoverViewActions(graph,viewId_);
  const auto selected=actions_->currentItem()?
   actions_->currentItem()->data(Qt::UserRole).toString():QString{};
  QSignalBlocker silent(actions_);

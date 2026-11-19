@@ -22,7 +22,7 @@ int main(int argc,char** argv) {
  for(int i=0;i<160;++i)nodes.append(view("item."+QString::number(i),"Title "+QString::number(i)));
  const QJsonObject action{{"id","item.0.run"},{"type","action"},{"title","Run"}};
  nodes.append(action);
- const QJsonArray edges{QJsonObject{{"from","item.0"},{"to","item.0.run"},{"type","uses"}}};
+ QJsonArray edges{QJsonObject{{"from","item.0"},{"to","item.0.run"},{"type","uses"}}};
  QSignalSpy changed(&bridge,&HostBridge::viewsDelta);
  bridge.publish(QJsonObject{{"nodes",nodes},{"edges",edges}});
  if(launcher->count()!=160||changed.count()!=1)return 1;
@@ -35,6 +35,24 @@ int main(int argc,char** argv) {
  auto* button=raw.findChild<QPushButton*>();
  auto* params=raw.findChild<QPlainTextEdit*>();
  if(!actions||actions->count()!=1||!button||!params)return 3;
+ // Composite providers use view -> resource (uses) -> action (provides).
+ nodes.append(QJsonObject{{"id","item.0.provider"},{"type","resource"}});
+ nodes.append(QJsonObject{{"id","item.0.render"},{"type","action"},{"title","Render"}});
+ nodes.append(QJsonObject{{"id","item.1.hidden"},{"type","action"},{"title","Unrelated"}});
+ edges.append(QJsonObject{{"from","item.0"},{"to","item.0.provider"},{"type","uses"}});
+ edges.append(QJsonObject{{"from","item.0.provider"},{"to","item.0.render"},{"type","provides"}});
+ edges.append(QJsonObject{{"from","item.0"},{"to","item.1.hidden"},{"type","related"}});
+ bridge.publish(QJsonObject{{"nodes",nodes},{"edges",edges}});
+ if(actions->count()!=2||actions->findItems("Render",Qt::MatchExactly).size()!=1||
+    !actions->findItems("Unrelated",Qt::MatchExactly).isEmpty())return 12;
+ // A revoked resource edge must immediately remove the indirect action.
+ edges.removeAt(1);
+ bridge.publish(QJsonObject{{"nodes",nodes},{"edges",edges}});
+ if(actions->count()!=1||!actions->findItems("Render",Qt::MatchExactly).isEmpty())return 13;
+ edges.append(QJsonObject{{"from","item.0"},{"to","item.0.provider"},{"type","uses"}});
+ edges.append(QJsonObject{{"from","item.0.provider"},{"to","item.0.render"},{"type","provides"}});
+ bridge.publish(QJsonObject{{"nodes",nodes},{"edges",edges}});
+ if(actions->count()!=2)return 14;
  QSignalSpy calls(&bridge,&HostBridge::invokeRequested);
  bridge.setAvailable(true);
  params->setPlainText("{\"i\":9}");
