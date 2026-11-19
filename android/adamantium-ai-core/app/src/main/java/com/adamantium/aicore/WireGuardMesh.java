@@ -11,6 +11,7 @@ import com.wireguard.config.Config;
 import com.wireguard.config.InetNetwork;
 import com.wireguard.config.Peer;
 import java.io.*;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.SecureRandom;
