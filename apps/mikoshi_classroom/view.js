@@ -1,3 +1,4 @@
+import {gesturesPanel} from './gestures_panel.js';
 import {phoneticPanel} from './phonetic_panel.js';
 // Composition discovers live typed providers; no imports from other apps.
 export async function mount(host,api){
@@ -49,6 +50,8 @@ export async function mount(host,api){
   const sequence=provider('auditory-sequence','predict');
   const motor=provider('motor-learning','propose');
   if(articulation)phoneticPanel(controls,api,articulation,actions(),memory,sequence,motor);
+  await gesturesPanel(controls,api,motor,provider('gesture-planner','plan'),
+   provider('waveform-renderer','render'),actions());
   if(teach){
    const labels=[['higher','Выше'],['lower','Ниже'],['faster','Быстрее'],
     ['slower','Медленнее'],['good','Подходит']];
