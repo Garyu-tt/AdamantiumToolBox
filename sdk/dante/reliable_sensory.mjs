@@ -14,6 +14,7 @@ export class ReliableSensoryBus {
       throw new RangeError('invalid_capacity');
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 1048576)
       throw new RangeError('invalid_max_bytes');
+    if (capacity * maxBytes > 8388608) throw new RangeError('invalid_memory_budget');
     this.capacity = capacity;
     this.maxBytes = maxBytes;
     this.maxSources = maxSources;
