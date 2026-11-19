@@ -35,3 +35,17 @@ test('rejects accessor, sparse arrays and invalid scalar signal names without si
  assert.throws(()=>normalizeSensor({...event,payload:{'1bad':1}}),/invalid_signal_name/);
  assert.equal(normalizeSensor({...event,payload:{nested:{'':2}}}).signals[''],undefined);
 });
+
+test('rejects invalid numeric key after 16 signals, preserves bounded valid output',()=>{
+ const payload={};
+ for(let i=0;i<17;i++)payload['a'+String(i).padStart(2,'0')]=i;
+ const valid=normalizeSensor({...event,payload});
+ assert.equal(Object.keys(valid.signals).length,16);
+ assert.equal(valid.signals.a00,0);
+ assert.equal(valid.signals.a15,15);
+ assert.equal(valid.signals.a16,undefined);
+ payload['z!invalid']=18;
+ assert.throws(()=>normalizeSensor({...event,payload}),/invalid_signal_name/);
+ const before={'!invalid':1,...payload};
+ assert.throws(()=>normalizeSensor({...event,payload:before}),/invalid_signal_name/);
+});
