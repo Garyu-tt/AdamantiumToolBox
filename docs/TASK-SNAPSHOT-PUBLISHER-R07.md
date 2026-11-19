@@ -37,23 +37,23 @@ The Task Pool requires array contains capability requirements, **not task predec
 
 The publisher creates `mechanicus.orchestration-signed-snapshot/1` envelopes compatible with the upstream R05 reader: Ed25519 signature on the exact JSON bytes, issuer bound to the configured Task Pool owner, short maximum 5-minute TTL (default 2 minutes), max 768KiB payload, monotonic publication sequence. R05 expects the view revision to increase for each accepted snapshot, so R07 sets both sequence and *publication-view revision* to the reserved monotonic value. These are **not** claims about Task Pool per-task revisions or a global Task Pool CAS version.
 
-An operator-owned signing KeyObject, trusted Core callbacks and the `reserveSequence({streamId,issuerProviderId})` function are **required injections**. The callback must allocate and durably commit a unique increasing number across process restarts and concurrent publishers before the signature is exposed. An in-memory counter is only suitable for tests; it is NOT an approved live allocator. Skipped numbers after crashes are allowed; reused numbers are not.
+An operator-owned signing KeyObject, trusted Core callbacks and the `reserveSequence({streamId,issuerProviderId})` function are **required injections**. The callback must allocate and durably commit a unique increasing number across restarts before the signature is exposed. The bundled `FileSequenceStore` is a **single-host POSIX reference** using exclusive `wx` lock, atomic rename and fsync. Explicit owner-approved `initialize` is required once; no automatic state reset, corrupt-state recovery or stale-lock breaking. It is not distributed CAS, not suitable for NFS or mesh HA. For multiple publishers/hosts, substitute a separately approved distributed linearizable CAS service. Skipped numbers after crashes are allowed; reused numbers are not.
 
 Signed data has no bearer token, signer secret, endpoint, execution approval, or MAS write capability. The app does not automatically generate keys and never enables a new permission.
 
 ## Reproduction
 
 ```sh
-node --test tests/task_snapshot_publisher.test.mjs
+node --test tests/task_snapshot_publisher.test.mjs tests/task_snapshot_sequence.test.mjs
 node --test tests/task_pool.test.mjs tests/task_pool_graph_readonly.test.mjs
 ```
 
-Unit tests include a **real local TaskPool instance in a disposable temporary directory**, as well as forged descriptors, absent backend, denied read, duplicate rows, signature tampering, privacy filtering, real completed tasks and monotonic sequence handoff. No live process, external network or production secrets are used.
+Unit tests include a **real local TaskPool instance in a disposable temporary directory**, as well as forged descriptors, absent backend, denied read, duplicate rows, signature tampering, privacy filtering and real completed tasks. `FileSequenceStore` tests additionally cover persisted high-water mark after restart, lock contention, crash-held lock detection, corrupt/missing state, owner-only file modes and signer integration. No production state is touched. No live process, external network or production secrets are used.
 
 ## Not yet implemented
 
 1. Validate one live registered MAS Core/Task Pool identity through pinned Mesh and approved capability discovery, not process names, `/health` or manifest ports.
-2. Choose a single canonical operator-approved signer and durable CAS sequence store. **No automatically provisioned keys** and no second live signing authority.
+2. Choose a single canonical operator-approved signer and provision the durable sequence store. The included file store only supports an explicitly bootstrapped **single local writer**; a distributed deployment still needs shared linearizable CAS. **No automatically provisioned keys** and no second live signing authority.
 3. Expose an explicitly permission-gated, loopback-only publisher capability through a separate approved Lifecycle/manifest release.
 4. Bind HTTPS + WireGuard authenticated ingress and persist Android high-water mark and last-known-good snapshots; add failover/clock/revocation tests.
 5. Extend the source with authenticated independent QA receipts and paginated tasks; the current JSON Task Pool is small and cannot prove complete DAG coverage.
