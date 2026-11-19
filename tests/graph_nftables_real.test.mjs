@@ -8,6 +8,10 @@ import {join} from 'node:path';
 import {compilePreview} from '../apps/nftables_preview/compile.mjs';
 const expected=['ADA_NFT_LAB_NAMESPACE','ADA_NFT_LAB_NAMESPACE_ROOT',
  'ADA_NFT_LAB_NFT','ADA_NFT_LAB_IP'];
+if(!process.env.ADA_NFT_LAB_NAMESPACE){
+ console.log('NFTABLES_REAL_SKIPPED requires a disposable named Linux namespace');
+ process.exit(0);
+}
 for(const key of expected)assert(process.env[key],key+' is required');
 assert.equal(process.platform,'linux','Linux-only disposable namespace test');
 const topology={nodes:[
