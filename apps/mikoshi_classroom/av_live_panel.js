@@ -1,3 +1,4 @@
+import {permitLesson,verifyLesson} from './av_policy.js';
 import {captureAV} from './av_capture.js';
 // Optional in-memory composition; only browser owns camera/microphone tracks.
 export function liveAVPanel(host,api,providers,allowed){
@@ -9,17 +10,22 @@ export function liveAVPanel(host,api,providers,allowed){
  }
  const writer={memory:providers.memory?.skill?.actions?.remember,
   grounding:providers.grounding?.skill?.actions?.teach};
+ const policy=providers.policy?.skill?.actions;
  const canTeach=Boolean(writer.memory&&writer.grounding&&
-  allowed.has(writer.memory)&&allowed.has(writer.grounding));
+  policy?.authorize&&policy?.verify&&
+  [writer.memory,writer.grounding,policy.authorize,policy.verify]
+   .every(action=>allowed.has(action)));
  if(canTeach){
   skills.memory={remember:writer.memory};skills.grounding={teach:writer.grounding};
  }
+ const tracking=providers.tracking?.skill?.actions?.track;
+ const canTrack=Boolean(tracking&&allowed.has(tracking));
  const add=(tag,value,parent=host)=>{const el=document.createElement(tag);
   if(value!==undefined)el.textContent=value;parent.append(el);return el;};
  add('h3','Камера + микрофон: один короткий опыт');
  add('p','Захват 2 секунды только по нажатию. Временная привязка приблизительная.');
  const info=add('pre','Ничего не записывается в долговременную память');
- const consent=canTeach?add('label','Подтверждаю разрешение на обучение'):null;
+ const consent=canTeach?add('label','Подтверждаю согласие всех участников и отсутствие сторонних записей'):null;
  const checked=consent?add('input',undefined,consent):null;
  if(checked)checked.type='checkbox';
  const captureButton=add('button','Разрешить камеру и микрофон на 2 секунды');
@@ -55,7 +61,13 @@ export function liveAVPanel(host,api,providers,allowed){
    lesson=pairing.matches.map(pair=>({
     visual:visual.events[pair.visualIndex],audio:audio.events[pair.audioIndex],
     pair}));
-   info.textContent='Зрительных событий: '+visual.detected+
+   let tracks='не подключён';
+   if(canTrack){
+    const tracked=await api.call(tracking,{frames:capture.frames});
+    tracks=String(tracked.tracks.length);
+   }
+   info.textContent='Анонимных визуальных траекторий: '+tracks+
+    '\nЗрительных событий: '+visual.detected+
     '\nЗвуковых событий: '+audio.detected+
     '\nПредварительных совпадений: '+lesson.length+
     '\nНеоднозначных/пропущенных: '+pairing.unpaired.length+
@@ -70,8 +82,11 @@ export function liveAVPanel(host,api,providers,allowed){
   busy=true;teach.disabled=true;checked.checked=false;
   let saved=0;
   try{
+   const durationMs=Math.round(capture.samples.length/12);
+   const signed=await permitLesson(api,policy,lesson,durationMs);
    const result=[];
    for(const {visual,audio,pair} of lesson){
+    await verifyLesson(api,policy,lesson,signed);
     const heard=await call('memory','remember',{
      samples:audio.samples,sampleRate:12000,sourceApproved:true});
     const linked=await call('grounding','teach',{
