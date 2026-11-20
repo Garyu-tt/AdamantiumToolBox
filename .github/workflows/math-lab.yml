@@ -30,4 +30,5 @@ jobs:
           node --check apps/math_lab/root_transform.mjs
           node --check apps/math_lab/experiment.mjs
           node --check apps/math_lab/service.mjs
-          node --test tests/math_lab.test.mjs
+          node --check apps/math_lab/view.js
+          node --test tests/math_lab.test.mjs tests/math_lab_service.test.mjs
