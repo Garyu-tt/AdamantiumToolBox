@@ -18,6 +18,8 @@ async function regular(path,max){
  const st=await lstat(path);
  if(!st.isFile()||st.isSymbolicLink()||st.size>max)
   fail('unsafe_factory_anchor_file');
+ if(path.endsWith('anchor-private.pem')&&process.platform!=='win32'&&
+   (st.mode&0o077)!==0)fail('private_key_permissions_too_broad');
  return readFile(path,'utf8');
 }
 async function atomicJson(root,name,data){
@@ -58,6 +60,13 @@ class FactoryAnchorStore{
  }
  async status(){
   const state=await this.load();
+  if(this.allowSigning){
+   const pem=await regular(join(this.root,'anchor-private.pem'),4096);
+   const key=createPrivateKey(pem);
+   if(key.asymmetricKeyType!=='ed25519'||
+     sha(createPublicKey(key).export({type:'spki',format:'pem'}).toString())!==this.anchorPin)
+    fail('factory_anchor_signing_key_not_ready');
+  }
   return {
    schema:'adamantium.factory_anchor.status/1',
    configured:true,app:'factory_anchor',version:'0.1.0',
