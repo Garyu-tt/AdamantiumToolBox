@@ -1,0 +1,35 @@
+name: Adamantium R08 verified MAS Core read boundary
+on:
+  push:
+    branches:
+      - integration/verified-core-read-r08
+    paths:
+      - 'apps/task_snapshot/**'
+      - 'tests/task_snapshot_core_bridge.test.mjs'
+      - '.github/workflows/task-snapshot-core-read-r08.yml'
+  pull_request:
+    paths:
+      - 'apps/task_snapshot/**'
+      - 'tests/task_snapshot_core_bridge.test.mjs'
+      - 'docs/TASK-SNAPSHOT-CORE-READ-R08.md'
+      - '.github/workflows/task-snapshot-core-read-r08.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  read-only-attested-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify R08 trusted Core bridge syntax
+        run: node --check apps/task_snapshot/core_read_bridge.mjs
+      - name: Verify R08 trust and real Task Pool tests
+        run: node --test tests/task_snapshot_core_bridge.test.mjs
+      - name: Verify R07 issuer and durable sequence regression
+        run: node --test tests/task_snapshot_publisher.test.mjs tests/task_snapshot_sequence.test.mjs
+      - name: Verify Task Pool state-machine regression
+        run: node --test tests/task_pool.test.mjs tests/task_pool_graph_readonly.test.mjs
