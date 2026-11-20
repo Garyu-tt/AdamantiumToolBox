@@ -211,7 +211,7 @@ function operationMigrateRequest(params){
   legacySha256:result.legacySha256,
   migratedSha256:result.migratedSha256,
   operationRegistrySha256:result.plan.registrySha256,
-  graphPair:buildEncodeDecodeGraphs(result.plan),
+  graphPair:buildEncodeDecodeGraphs({schema:result.plan.schema,operationIds:result.plan.operationIds,codecId:result.plan.codecId}),
   frameBytes:result.frame.length,
   frameHex:params.includeEncoded===true?result.frame.toString('hex'):null,
   independentQACompleted:false,authorizedExecution:false
