@@ -1,0 +1,48 @@
+name: Factory Anchor R10 Signed Lifecycle Preflight and Rollback
+on:
+  push:
+    paths:
+      - 'tools/factory-anchor-lifecycle-r10*.mjs'
+      - 'tests/factory_anchor_lifecycle*r10.test.mjs'
+      - '.github/workflows/factory-anchor-lifecycle-r10.yml'
+  pull_request:
+    paths:
+      - 'tools/factory-anchor-lifecycle-r10*.mjs'
+      - 'tests/factory_anchor_lifecycle*r10.test.mjs'
+      - '.github/workflows/factory-anchor-lifecycle-r10.yml'
+permissions:
+  contents: read
+jobs:
+  signed-stage-no-activation:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: ['22', '24']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Signed owner staging, CAS, policy denial and no active mutation
+        run: node --test tests/factory_anchor_lifecycle_r10.test.mjs tests/factory_anchor_lifecycle_studio_r10.test.mjs tests/factory_anchor_lifecycle_sandbox_r10.test.mjs
+  explicit-activation-and-rollback-sandbox:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Real MAS signed plan, reject unapproved activation, run isolated probe and rollback
+        run: node --test tests/factory_anchor_lifecycle_activation_r10.test.mjs
