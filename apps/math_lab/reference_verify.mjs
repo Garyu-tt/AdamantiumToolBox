@@ -47,7 +47,7 @@ function integerToBytes(number,length){
  return output;
 }
 function lengthBits(n){return n===0n?0:n.toString(2).length;}
-function decodeRootReference(packed,maxOutputBytes=MAX_BYTES){
+export function decodeRootReference(packed,maxOutputBytes=MAX_BYTES){
  if(packed.length<5||packed.subarray(0,4).toString('ascii')!=='MLR1')reject('invalid R01 root signature');
  const c={at:4},outputLength=uint(packed,c,maxOutputBytes);
  let nodes=0;
