@@ -1,6 +1,7 @@
 /** Bounded exact MLR1 integer decoder, independent file boundary. */
 import {readVarint,bitLength,integerBytes,naturalBytes,kthRootFloor} from './root_transform.mjs';
 const MAGIC=Buffer.from('MLR1');
+const RAW=0,ROOT=1;
 const MAX_INPUT_BYTES=8192;
 /**
  * Independent bounded decoder. Invalid/corrupt streams reject, never truncate.
