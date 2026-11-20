@@ -12,6 +12,8 @@ import {
 import {createResearchPlan} from './research_plan.mjs';
 import {searchReversibleTransforms} from './transform_graph.mjs';
 import {verifyGraphAgainstOriginal} from './reference_verify.mjs';
+import {GRAPH_PLAN_ABI,getOperationCatalog,buildEncodeDecodeGraphs} from './operation_registry.mjs';
+import {encodeOperationGraphFrame,decodeOperationGraphFrame,migrateLegacyMLG2} from './operation_graph_codec.mjs';
 
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
@@ -22,7 +24,12 @@ const available={
  'math_lab.plan':'math_lab.read',
  'math_lab.experiment':'math_lab.experiment',
  'math_lab.search':'math_lab.experiment',
- 'math_lab.reproduce':'math_lab.verify'
+ 'math_lab.reproduce':'math_lab.verify',
+ 'math_lab.operations':'math_lab.read',
+ 'math_lab.graph':'math_lab.read',
+ 'math_lab.encode':'math_lab.experiment',
+ 'math_lab.decode':'math_lab.verify',
+ 'math_lab.migrate':'math_lab.verify'
 };
 const nodes=[
  ...(caps.has('math_lab.read')?[{
@@ -120,6 +127,96 @@ function reproduceRequest(params){
   {datasetId:params.datasetId??'sample'}
  );
 }
+
+function strictParams(params,fields,name){
+ if(!params||typeof params!=='object'||Array.isArray(params))throw Error('invalid_'+name);
+ for(const field of Object.keys(params))
+  if(!fields.includes(field))throw Error('unexpected_'+name+'_field');
+}
+function strictHex(hex,max=4096){
+ if(typeof hex!=='string'||hex.length>max||hex.length%2!==0||!/^[a-f0-9]*$/.test(hex))
+  throw Error('invalid_bounded_hex');
+ return Buffer.from(hex,'hex');
+}
+function compilePlan(params){
+ strictParams(params,['operationIds','codecId'],'operation_graph');
+ return buildEncodeDecodeGraphs({
+  schema:GRAPH_PLAN_ABI,operationIds:params.operationIds,codecId:params.codecId
+ });
+}
+function operationEncodeRequest(params){
+ strictParams(params,[
+  'inputHex','operationIds','codecId','includeEncoded',
+  'rootDegrees','maxRootEvaluations'
+ ],'operation_encode');
+ if(params.includeEncoded!==undefined&&typeof params.includeEncoded!=='boolean')
+  throw Error('invalid_include_encoded');
+ if(params.rootDegrees!==undefined&&
+   (!Array.isArray(params.rootDegrees)||params.rootDegrees.length>12))
+  throw Error('root_degree_budget');
+ if(params.maxRootEvaluations!==undefined&&
+   (!Number.isInteger(params.maxRootEvaluations)||params.maxRootEvaluations<1||
+    params.maxRootEvaluations>16))throw Error('root_eval_budget');
+ const input=strictHex(params.inputHex);
+ const plan={
+  schema:GRAPH_PLAN_ABI,operationIds:params.operationIds,codecId:params.codecId
+ };
+ const result=encodeOperationGraphFrame(input,plan,{
+  rootDegrees:params.rootDegrees,maxRootEvaluations:params.maxRootEvaluations
+ });
+ return {
+  schema:'mechanicus.math-operation-encoded/1',
+  inputBytes:input.length,encodedBytes:result.bytes,
+  encodedSha256:result.sha256,
+  operationRegistrySha256:result.graphs.registrySha256,
+  graphs:result.graphs,
+  // This is lossless/reversible and can disclose input data: default is no.
+  encodedHex:params.includeEncoded===true?result.frame.toString('hex'):null,
+  independentQACompleted:false,authorizedExecution:false
+ };
+}
+function operationDecodeRequest(params){
+ strictParams(params,['encodedHex','expectedSha256','includeDecoded'],'operation_decode');
+ if(params.includeDecoded!==undefined&&typeof params.includeDecoded!=='boolean')
+  throw Error('invalid_include_decoded');
+ if(params.expectedSha256!==undefined&&
+  (typeof params.expectedSha256!=='string'||!/^[0-9a-f]{64}$/.test(params.expectedSha256)))
+  throw Error('invalid_expected_sha256');
+ const encoded=strictHex(params.encodedHex,4600);
+ const result=decodeOperationGraphFrame(encoded,{maxOutputBytes:2048});
+ if(params.expectedSha256!==undefined&&params.expectedSha256!==result.sourceSha256)
+  throw Error('source_digest_mismatch');
+ return {
+  schema:'mechanicus.math-operation-decoded/1',
+  decodedBytes:result.data.length,
+  sourceSha256:result.sourceSha256,encodedSha256:result.encodedSha256,
+  operationRegistrySha256:result.graphs.registrySha256,
+  graphs:result.graphs,checksumVerified:result.checksumVerified,
+  // Separate permission, explicit opt-in for raw bytes.
+  decodedHex:params.includeDecoded===true?result.data.toString('hex'):null,
+  authenticated:false,independentQACompleted:false,
+  authorizedExecution:false
+ };
+}
+function operationMigrateRequest(params){
+ strictParams(params,['encodedHex','includeEncoded'],'operation_migrate');
+ if(params.includeEncoded!==undefined&&typeof params.includeEncoded!=='boolean')
+  throw Error('invalid_include_encoded');
+ const old=strictHex(params.encodedHex,4600);
+ const result=migrateLegacyMLG2(old,{maxOutputBytes:2048});
+ return {
+  schema:'mechanicus.math-operation-migration/1',
+  preservedExactly:result.preservedExactly,
+  originalSha256:result.originalSha256,
+  legacySha256:result.legacySha256,
+  migratedSha256:result.migratedSha256,
+  operationRegistrySha256:result.plan.registrySha256,
+  graphPair:buildEncodeDecodeGraphs(result.plan),
+  frameBytes:result.frame.length,
+  frameHex:params.includeEncoded===true?result.frame.toString('hex'):null,
+  independentQACompleted:false,authorizedExecution:false
+ };
+}
 async function invoke(action,params){
  if(!Object.hasOwn(available,action)||!caps.has(available[action]))throw Error('capability_denied');
  if(action==='math_lab.catalog')return {
@@ -131,6 +228,8 @@ async function invoke(action,params){
    {id:'transform-graph',type:'bounded-lossless-search',status:'experimental'}],
   reproduction:'separately-coded-reference-verifier; independent agent QA not performed',
   planSchema:'mechanicus.math-research-plan/1',
+  operationRegistry:'mechanicus.math-operation-registry/1',
+  graphFrame:'mechanicus.math-graph-frame/3',
   agentsRunning:0,
   researchOutcomes:'not-an-independent-audit',
   persistence:'none',
@@ -141,6 +240,11 @@ async function invoke(action,params){
  if(action==='math_lab.experiment')return experimentRequest(params);
  if(action==='math_lab.search')return searchRequest(params);
  if(action==='math_lab.reproduce')return reproduceRequest(params);
+ if(action==='math_lab.operations')return getOperationCatalog();
+ if(action==='math_lab.graph')return compilePlan(params);
+ if(action==='math_lab.encode')return operationEncodeRequest(params);
+ if(action==='math_lab.decode')return operationDecodeRequest(params);
+ if(action==='math_lab.migrate')return operationMigrateRequest(params);
  throw Error('action_not_found');
 }
 http.createServer(async(req,res)=>{
