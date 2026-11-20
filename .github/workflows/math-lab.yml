@@ -42,5 +42,5 @@ jobs:
           node --check apps/math_lab/operation_graph_codec.mjs
           node --check tools/math-lab-reproduce.mjs
           node --check tools/math-lab-benchmark.mjs
-          node --test tests/math_lab.test.mjs tests/math_lab_graph.test.mjs tests/math_lab_operations.test.mjs tests/math_lab_benchmark.test.mjs tests/math_lab_service.test.mjs
+          node --test tests/math_lab*.test.mjs
           node tools/math-lab-benchmark.mjs
