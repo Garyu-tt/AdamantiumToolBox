@@ -11,8 +11,9 @@ import {
 } from '../apps/math_lab/reference_verify.mjs';
 
 const magic=Buffer.from('MLG2','ascii');
+const lengthVarint=n=>{const values=[];do{const d=n%128;n=Math.floor(n/128);values.push(d+(n?128:0));}while(n);return Buffer.from(values);};
 const envelope=(source,ops,payload,codec=1)=>
- Buffer.concat([magic,Buffer.from([source.length,ops.length,...ops,codec]),payload]);
+ Buffer.concat([magic,lengthVarint(source.length),Buffer.from([ops.length,...ops,codec]),payload]);
 const digest=x=>createHash('sha256').update(x).digest('hex');
 const toBytes=n=>{
  let hex=n.toString(16);
