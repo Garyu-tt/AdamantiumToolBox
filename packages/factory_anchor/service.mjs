@@ -2,7 +2,7 @@
 // Host-delegated MAS app. No standalone public API, no privileged apply.
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
-import {timingSafeEqual} from 'node:crypto';
+import {matching,respond,readBody} from './lib/http.mjs';
 import {openFactoryAnchor} from './lib/store.mjs';
 
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
@@ -25,34 +25,7 @@ const availableParams={
 let anchor=null,bootError='not_configured';
 try{anchor=openFactoryAnchor(availableParams);await anchor.status();bootError=null;}
 catch(e){bootError=String(e.code||e.message).slice(0,70);}
-const allowedKey=v=>typeof v==='string'&&
- Buffer.byteLength(v)===Buffer.byteLength(secret)&&
- timingSafeEqual(Buffer.from(v),Buffer.from(secret));
-const respond=(res,status,data)=>{
- res.writeHead(status,{
-  'Content-Type':'application/json; charset=utf-8',
-  'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',
-  'Content-Security-Policy':"default-src 'none'",
-  'X-Frame-Options':'DENY'
- });
- res.end(JSON.stringify(data));
-};
-const body=(req)=>new Promise((ok,bad)=>{
- let length=0,done=false;const chunks=[];
- req.on('data',chunk=>{
-  if(done)return;
-  length+=chunk.length;
-  if(length>262144){
-   done=true;bad(Error('body_too_large'));req.destroy();
-  }else chunks.push(chunk);
- });
- req.on('end',()=>{
-  if(done)return;
-  try{ok(JSON.parse(Buffer.concat(chunks).toString('utf8')));}
-  catch{bad(Error('invalid_json'));}
- });
- req.on('error',bad);
-});
+const allowedKey=v=>matching(secret,v);
 async function ready(){
  if(!anchor)return false;
  try{await anchor.status();bootError=null;return true;}
@@ -113,7 +86,7 @@ const server=http.createServer(async(req,res)=>{
  }
  if(req.method==='POST'&&path==='/invoke'){
   try{
-   const data=await body(req);
+   const data=await readBody(req);
    const valid=await ready();
    if(!data||typeof data!=='object'||Array.isArray(data)||
       typeof data.action!=='string'||!Object.hasOwn(actions,data.action)||
