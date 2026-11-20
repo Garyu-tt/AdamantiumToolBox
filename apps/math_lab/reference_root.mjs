@@ -1,4 +1,6 @@
 /** Separate, bounded, integer-only reference decoder of R01 MLR1. */
+const MAX_BYTES=8192,MAX_NODES=256;
+function reject(message){throw new TypeError('Reference verifier rejected: '+message);}
 function uint(buf,cursor,maximum){
  let value=0n,shift=0n;
  const start=cursor.at;
