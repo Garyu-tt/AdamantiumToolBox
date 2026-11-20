@@ -18,7 +18,7 @@ const toBytes=n=>{
 test('MAS app manifest is valid and plugin-independent',async()=>{
  const m=JSON.parse(await readFile(new URL('../apps/math_lab/manifest.json',import.meta.url),'utf8'));
  assert.equal(validateManifest(m),true);
- assert.deepEqual(m.permissions,['math_lab.read','math_lab.experiment']);
+ assert.deepEqual(m.permissions,['math_lab.read','math_lab.experiment','math_lab.verify']);
  assert.equal(m.lifecycle,'independent');
 });
 

@@ -10,10 +10,26 @@
     "port": 8976,
     "invokeTimeoutMs": 15000
   },
-  "ui": {"standard": "mas-ui-1", "mode": "embedded-and-standalone"},
-  "auth": {"mode": "host-delegated"},
-  "permissions": ["math_lab.read", "math_lab.experiment"],
-  "events": {"schema": "mas-event-1"},
-  "data": {"refs": "mas-ref-1"},
-  "updates": {"strategy": "semver", "migrations": []}
+  "ui": {
+    "standard": "mas-ui-1",
+    "mode": "embedded-and-standalone"
+  },
+  "auth": {
+    "mode": "host-delegated"
+  },
+  "permissions": [
+    "math_lab.read",
+    "math_lab.experiment",
+    "math_lab.verify"
+  ],
+  "events": {
+    "schema": "mas-event-1"
+  },
+  "data": {
+    "refs": "mas-ref-1"
+  },
+  "updates": {
+    "strategy": "semver",
+    "migrations": []
+  }
 }
