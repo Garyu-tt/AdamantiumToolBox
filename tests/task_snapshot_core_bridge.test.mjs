@@ -78,7 +78,7 @@ test('binds approved Core read to R07 signature and strips private Task Pool dat
   assert.equal(result.status,'signed-read-only');
   assert.equal(result.nodeId,'core.primary');
   assert.equal(result.sequence,1);
-  assert.deepEqual(f.calls,['attest','graph','attest','task_pool.list','close']);
+  assert.deepEqual(f.calls,['attest','graph','attest','task_pool.list','attest','close']);
   const bytes=Buffer.from(result.envelope.payloadBase64,'base64');
   assert.equal(verify(null,bytes,f.keys.publicKey,
    Buffer.from(result.envelope.signatureBase64,'base64')),true);
@@ -137,6 +137,17 @@ test('peer identity can change between graph read and task invocation',async()=>
   f.session.attest=async()=>count++===0?attested():attested({status:'offline'});
   const result=await f.bridge.publish({now});
   assert.equal(result.status,'source-read-failed');
+  assert.equal((await f.file.inspect()).sequence,0);
+ }finally{await rm(f.dir,{recursive:true,force:true});}
+});
+test('identity revoked after task read but before signing rejects the snapshot',async()=>{
+ const f=await fixture();
+ try{
+  let count=0;
+  f.session.attest=async()=>count++<2?attested():attested({policySha256:'d'.repeat(64)});
+  const result=await f.bridge.publish({now});
+  assert.equal(result.status,'source-read-failed');
+  assert.equal(result.envelope,null);
   assert.equal((await f.file.inspect()).sequence,0);
  }finally{await rm(f.dir,{recursive:true,force:true});}
 });
