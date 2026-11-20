@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {deflateSync} from 'node:zlib';
 import {randomBytes,createHash} from 'node:crypto';
 import {
- OP_REGISTRY_ABI,GRAPH_PLAN_ABI,REGISTRY_SHA256,REGISTRY_FINGERPRINT,
+ OP_REGISTRY_ABI,GRAPH_PLAN_ABI,REGISTRY_SHA256,REGISTRY_FINGERPRINT_HEX,
  getOperationCatalog,resolveOperation,validateOperationPlan,
  buildEncodeDecodeGraphs,LEGACY_R02_TRANSFORMS
 } from '../apps/math_lab/operation_registry.mjs';
@@ -37,7 +37,7 @@ test('operation registry has stable noncolliding IDs and complete inverse pairin
  assert.equal(registry.abi,OP_REGISTRY_ABI);
  assert.equal(registry.operations.length,14);
  assert.match(registry.sha256,/^[a-f0-9]{64}$/);
- assert.equal(REGISTRY_FINGERPRINT.length,8);
+ assert.equal(REGISTRY_FINGERPRINT_HEX.length,16);
  const ids=new Set();
  for(const op of registry.operations){
   assert.ok(!ids.has(op.id));ids.add(op.id);
@@ -92,7 +92,7 @@ test('MLG3 roundtrip of multiple reversible operations stores registry revision,
  const result=encodeOperationGraphFrame(source,plan([0x0101,0x0103,0x0104],0x0201));
  assert.equal(result.frame.subarray(0,4).toString(),MATH_GRAPH_FRAME_MAGIC);
  assert.equal(result.frame[4],1);
- assert.equal(result.frame.subarray(5,13).equals(REGISTRY_FINGERPRINT),true);
+ assert.equal(result.frame.subarray(5,13).toString('hex'),REGISTRY_FINGERPRINT_HEX);
  const restored=decodeOperationGraphFrame(result.frame);
  assert.deepEqual(restored.data,source);
  assert.deepEqual(restored.plan.operationIds,[0x0101,0x0103,0x0104]);
