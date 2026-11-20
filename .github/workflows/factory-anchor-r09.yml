@@ -1,0 +1,46 @@
+name: Factory Anchor MAS R09 isolated Core and Ed25519
+on:
+  push:
+    paths:
+      - 'packages/factory_anchor/**'
+      - '.github/workflows/factory-anchor-r09.yml'
+  pull_request:
+    paths:
+      - 'packages/factory_anchor/**'
+      - '.github/workflows/factory-anchor-r09.yml'
+permissions:
+  contents: read
+jobs:
+  public-proof-and-policy:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: ['22','24']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Ed25519 public proof, fail-closed store and authenticated MAS HTTP
+        run: node --test packages/factory_anchor/tests/store.test.mjs packages/factory_anchor/tests/security.test.mjs packages/factory_anchor/tests/http.test.mjs packages/factory_anchor/tests/preview.test.mjs
+  core-plus-app:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Real Core with only independent factory_anchor package
+        run: node --test packages/factory_anchor/tests/core.integration.test.mjs
