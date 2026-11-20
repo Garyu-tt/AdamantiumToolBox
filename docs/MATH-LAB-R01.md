@@ -60,6 +60,8 @@ The experiment module produces records containing schema, dataset ID, SHA-256 so
 
 Hypothesis records contain scope, discipline, claim, dataset ID and literature references. They do not execute anything by themselves.
 
+A deterministic scientific plan is now available as mechanicus.math-research-plan/1: eight proposed work stages (sources, theory, dataset, experiment, independent reproduction, counterexamples, independent audit and approved archive). When a mathematical method lacks an experiment engine, the plan adds a concrete implement-method recovery branch before execution. Every stage has explicit prerequisites and evidence requirements, but no task or agent is automatically created. The read-only MAS action math_lab.plan returns this plan through host permission scope math_lab.read; only an independently approved Task Pool/Orchestrator workflow can later submit tasks.
+
 ### Academic foundations
 
 MIT Information Theory and Linear Algebra; Stanford EE276; Matt Mahoney's Data Compression Explained; MIT Mathematics for Computer Science; Peter Gruenwald's Minimum Description Length research; Mathematics for Machine Learning; and established LZ/BWT/PPM/wavelet literature. Each future hypothesis needs specific source provenance, licensing and validity assumptions. No automatic scraping or use of unauthorized private corpora is enabled.
@@ -68,7 +70,7 @@ MIT Information Theory and Linear Algebra; Stanford EE276; Matt Mahoney's Data C
 
 The plugin is independent and must be activated through approved MAS lifecycle.
 
-- math_lab.read: catalog and UI.
+- math_lab.read: catalog, UI and inert research DAG planning.
 - math_lab.experiment: CPU-only bounded experiment on explicitly supplied binary data.
 
 The service binds to loopback, requires ADA_INTERNAL_KEY and does not grant itself permissions. Host-delegated UI calls are restricted to capabilities visible in the current Core graph. No credentials, direct server address, arbitrary code execution, filesystem or private API operations exist inside the experiment engine.
