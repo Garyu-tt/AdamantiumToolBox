@@ -9,7 +9,7 @@ import {tryRootTransform} from './root_transform.mjs';
 import {decodeRootReference,referenceDecodeGraph} from './reference_verify.mjs';
 import {runMathByteOperation} from './operation_kernels.mjs';
 import {
- GRAPH_PLAN_ABI,REGISTRY_MAJOR,REGISTRY_FINGERPRINT,REGISTRY_SHA256,
+ GRAPH_PLAN_ABI,REGISTRY_MAJOR,REGISTRY_FINGERPRINT_HEX,REGISTRY_SHA256,
  resolveOperation,validateOperationPlan,buildEncodeDecodeGraphs,
  LEGACY_R02_TRANSFORMS,LEGACY_R02_CODECS
 } from './operation_registry.mjs';
@@ -54,7 +54,7 @@ function formatEnvelope(original,plan,leaf){
  if(!Buffer.isBuffer(leaf)||leaf.length>MAX_FRAME)err('payload budget');
  const ops=plan.operationIds;
  const full=Buffer.concat([
-  MAGIC,Buffer.from([REGISTRY_MAJOR]),REGISTRY_FINGERPRINT,
+  MAGIC,Buffer.from([REGISTRY_MAJOR]),Buffer.from(REGISTRY_FINGERPRINT_HEX,'hex'),
   varint(original.length),Buffer.from([ops.length]),
   ...ops.map(uint16),uint16(plan.codecId),
   varint(leaf.length),sha(original).subarray(0,16),leaf
@@ -71,7 +71,7 @@ function readFrame(bytes,{maxOutputBytes=MAX_INPUT}={}){
  const pos={at:4},major=bytes[pos.at++];
  if(major!==REGISTRY_MAJOR)err('unsupported operation registry major');
  const fingerprint=bytes.subarray(pos.at,pos.at+8);pos.at+=8;
- if(!fingerprint.equals(REGISTRY_FINGERPRINT))err('operation registry mismatch');
+ if(fingerprint.toString('hex')!==REGISTRY_FINGERPRINT_HEX)err('operation registry mismatch');
  const length=readVarint(bytes,pos,maxOutputBytes);
  if(pos.at>=bytes.length)err('truncated graph');
  const count=bytes[pos.at++];
