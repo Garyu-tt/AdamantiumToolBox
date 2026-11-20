@@ -16,6 +16,7 @@ test('SIGKILL during locked mutation leaves durable spool intact and refuses nex
   const dir=await mkdtemp(join(tmpdir(),'dante-crash-lock-'));
   const path=join(dir,'journal.json');
   let child;
+  let childClosed;
   try{
    const initial=await new DurableQueue({path}).open();
    assert.equal((await initial.publish(event(0))).ok,true);
@@ -29,6 +30,8 @@ test('SIGKILL during locked mutation leaves durable spool intact and refuses nex
    `;
    child=spawn(process.execPath,['--input-type=module','-e',script,path],
     {stdio:['ignore','pipe','pipe']});
+   // Subscribe immediately: close may precede cleanup on early failures.
+   childClosed=new Promise(resolve=>child.once('close',resolve));
    let output='';
    await new Promise((resolve,reject)=>{
     const timer=setTimeout(()=>reject(Error('writer_did_not_reach_locked_save')),8000);
@@ -52,7 +55,10 @@ test('SIGKILL during locked mutation leaves durable spool intact and refuses nex
    await assert.rejects(other.publish(event(2)),/journal_writer_locked/);
    assert.deepEqual(await readFile(path),before);
   }finally{
-   if(child&&!child.killed){child.kill('SIGKILL');}
+   if(child){
+    if(child.exitCode===null&&child.signalCode===null) child.kill('SIGKILL');
+    await childClosed;
+   }
    await rm(dir,{recursive:true,force:true});
   }
  });
