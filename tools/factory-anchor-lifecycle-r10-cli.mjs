@@ -29,6 +29,8 @@ const publicView=result=>{
   readPermissionApproved:stage?true:result.permissionReadApproved,
   attestPermissionApproved:stage?true:result.permissionAttestApproved,
   registryRevision:stage?result.registryRevision:result.runtimeRegistryRevision,
+  missingPermissions:stage?[]:result.missingPermissions,
+  operatorPolicyApprovalRequired:stage?false:result.missingPermissions.length>0,
   executionNeverStarted:true,
   activeProductionServiceVerified:false,
   productionInstallationPerformed:false,
