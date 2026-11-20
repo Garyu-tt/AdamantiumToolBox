@@ -61,7 +61,7 @@ async function main(){
   fail('explicit_local_runtime_required');
  const runtime=join(runtimeHome,'Adamantium Toolbox');
  let result;
- if(cmd==='preflight'&&!revisionOrDigest){
+ if(cmd==='preflight'&&(!revisionOrDigest||revisionOrDigest==='-')){
   result=await factoryLifecyclePreflight(project,runtime);
  }else if(cmd==='stage-only'&&revisionOrDigest){
   result=await stageFactoryAnchor(project,runtime,revisionOrDigest);
