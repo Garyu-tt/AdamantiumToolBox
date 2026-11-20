@@ -26,7 +26,10 @@ test('R08 holds the single-session lease until close has settled', async()=>{
  const first=bridge.publish({now});
  await entered;
  try{
-  await assert.rejects(()=>bridge.publish({now}),/concurrent snapshots/);
+  const second=bridge.publish({now});
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(created,1,'must not create second session while first close is pending');
+  releaseClose();
+  await assert.rejects(second,/concurrent snapshots/);
  }finally{releaseClose();await first;}
 });
