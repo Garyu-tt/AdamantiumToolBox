@@ -9,6 +9,7 @@ import {
  runCompressionExperiment,MATH_LAB_DOMAINS,
  MATH_LAB_DISCIPLINES,MATH_LAB_RESEARCH_ROLES
 } from './experiment.mjs';
+import {createResearchPlan} from './research_plan.mjs';
 
 const manifest=JSON.parse(await readFile(new URL('./manifest.json',import.meta.url),'utf8'));
 const secret=process.env.ADA_INTERNAL_KEY||'';
@@ -16,6 +17,7 @@ if(secret.length<24)throw Error('internal_key_missing');
 const caps=new Set((process.env.ADA_CAPS||'').split(','));
 const available={
  'math_lab.catalog':'math_lab.read',
+ 'math_lab.plan':'math_lab.read',
  'math_lab.experiment':'math_lab.experiment'
 };
 const nodes=[
@@ -68,12 +70,14 @@ async function invoke(action,params){
   researchTargets:MATH_LAB_DOMAINS,
   researchRoles:MATH_LAB_RESEARCH_ROLES,
   experiments:[{id:'root-transform',type:'bounded-lossless',status:'experimental'}],
+  planSchema:'mechanicus.math-research-plan/1',
   agentsRunning:0,
   researchOutcomes:'not-an-independent-audit',
   persistence:'none',
   noosphereSync:'not-enabled',
   productionEnabled:false
  };
+ if(action==='math_lab.plan')return createResearchPlan(params);
  if(action==='math_lab.experiment')return experimentRequest(params);
  throw Error('action_not_found');
 }
