@@ -1,4 +1,4 @@
-name: Mechanicus Math Lab R01 — exact research experiments
+name: Mechanicus Math Lab R01/R02 — exact research experiments
 on:
   pull_request:
     paths:
@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - research/mechanicus-math-lab-r01
+      - research/mechanicus-math-lab-r02-graph
     paths:
       - 'apps/math_lab/**'
       - 'tests/math_lab*.test.mjs'
@@ -31,4 +32,6 @@ jobs:
           node --check apps/math_lab/experiment.mjs
           node --check apps/math_lab/service.mjs
           node --check apps/math_lab/view.js
-          node --test tests/math_lab.test.mjs tests/math_lab_service.test.mjs
+          node --check apps/math_lab/transform_graph.mjs
+          node --check apps/math_lab/reference_verify.mjs
+          node --test tests/math_lab.test.mjs tests/math_lab_graph.test.mjs tests/math_lab_service.test.mjs
