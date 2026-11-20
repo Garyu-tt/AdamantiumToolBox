@@ -112,7 +112,7 @@ export function decodeOperationGraphFrame(frame,options={}){
  const read=readFrame(frame,options),original=decodeValidated(read);
  return Object.freeze({
   data:original,plan:read.plan,
-  graphs:buildEncodeDecodeGraphs(read.plan),
+  graphs:buildEncodeDecodeGraphs({schema:read.plan.schema,operationIds:read.plan.operationIds,codecId:read.plan.codecId}),
   sourceSha256:sha(original).toString('hex'),
   encodedSha256:sha(frame).toString('hex'),
   checksumVerified:true,
@@ -138,7 +138,7 @@ export function encodeOperationGraphFrame(original,plan,{rootDegrees,maxRootEval
  const frame=formatEnvelope(original,validated,leaf);
  return Object.freeze({
   frame,bytes:frame.length,plan:validated,
-  graphs:buildEncodeDecodeGraphs(validated),
+  graphs:buildEncodeDecodeGraphs({schema:validated.schema,operationIds:validated.operationIds,codecId:validated.codecId}),
   sha256:sha(frame).toString('hex'),
   executionAuthorized:false,independentQACompleted:false
  });
