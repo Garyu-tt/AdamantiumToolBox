@@ -119,6 +119,9 @@ export class VerifiedTaskSnapshotBridge{
       if(!sameObject(response)||!Array.isArray(response.result)){
         reject('invalid Core read response envelope');
       }
+      // Fail closed if the source was revoked while the read was in flight.
+      // A verified pre-call identity alone is not enough for signing.
+      await validate();
       return response.result;
     };
     const result=await this.#publisher.publish({
