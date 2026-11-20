@@ -4,6 +4,7 @@ on:
     paths:
       - 'apps/math_lab/**'
       - 'tests/math_lab*.test.mjs'
+      - 'tools/math-lab-reproduce.mjs'
       - 'docs/MATH-LAB-R01.md'
       - '.github/workflows/math-lab.yml'
   push:
@@ -34,4 +35,5 @@ jobs:
           node --check apps/math_lab/view.js
           node --check apps/math_lab/transform_graph.mjs
           node --check apps/math_lab/reference_verify.mjs
+          node --check tools/math-lab-reproduce.mjs
           node --test tests/math_lab.test.mjs tests/math_lab_graph.test.mjs tests/math_lab_service.test.mjs
