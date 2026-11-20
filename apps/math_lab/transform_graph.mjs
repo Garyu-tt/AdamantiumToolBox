@@ -5,8 +5,7 @@ import {applyStep,envelope,validOpts} from './transform_graph_utils.mjs';
  *
  * No Node-RED runtime, AI execution, agent authority or archive integration.
  */
-import {createHash} from 'node:crypto';
-import {deflateSync} from 'node:zlib';
+import {createHash} from 'node:crypto'; import {deflateSync} from 'node:zlib';
 import {tryRootTransform} from './root_transform.mjs';
 
 export const TRANSFORM_GRAPH_SCHEMA='mechanicus.math-transform-search/1';
