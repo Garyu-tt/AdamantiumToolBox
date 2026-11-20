@@ -1,3 +1,7 @@
+import {mountResearchPlan} from './view_research_plan.js';
+import {mountRootExperiment} from './view_root_experiment.js';
+import {mountGraphSearch} from './view_graph_search.js';
+import {mountOperationWorkbench} from './view_operation_workbench.js';
 /**
  * Math Lab R01 — host-delegated MAS UI. No direct fetch, no secrets, no raw
  * HTML injection. Existing Core graph controls which actions are available.
@@ -31,141 +35,9 @@ export async function mount(host,api){
    el('p',disciplines,'Роли: '+(catalog.researchRoles||[]).join(' · '));
   }catch{el('p',disciplines,'Каталог исследовательских направлений недоступен.');}
  }else el('p',disciplines,'Нет подтверждённого разрешения math_lab.read.');
- const planning=el('details',root);
- el('summary',planning,'Научный граф исследования');
- const planForm=el('form',planning);
- const researchIdLabel=el('label',planForm,'Идентификатор гипотезы');
- const researchId=el('input',researchIdLabel);researchId.value='roots001';
- const claimLabel=el('label',planForm,'Проверяемая гипотеза');
- const claim=el('input',claimLabel);claim.value='Входные блоки с точными степенями могут иметь короткие обратимые описания';
- const planButton=el('button',planForm,'Сформировать научный DAG');
- planButton.type='submit';
- planButton.disabled=!allowed.has('math_lab.plan');
- const planOutput=el('pre',planning,'Нет предложенного плана');
- planForm.onsubmit=async event=>{
-  event.preventDefault();
-  if(!allowed.has('math_lab.plan'))return;
-  planButton.disabled=true;
-  try{
-   const result=await api.call('math_lab.plan',{
-    schema:'mechanicus.math-hypothesis/1',
-    id:researchId.value.trim().toLowerCase(),
-    title:'Исследование точного сжатия корнями',
-    target:'compression',discipline:'number-theory',
-    method:'root-transform',
-    datasetId:'unassigned.demo',
-    claim:claim.value.trim(),
-    sourceRefs:[]
-   });
-   planOutput.textContent=JSON.stringify({
-    planId:result.planId,sha256:result.digest,
-    status:result.proposedOnly?'proposed':'unknown',
-    independentQACompleted:result.independentQACompleted,
-    nodes:result.nodes.map(n=>({
-     id:n.id,role:n.role,phase:n.phase,
-     predecessors:n.dependsOn,
-     needsEvidence:n.evidenceRequired,
-     requiresApproval:n.requiresOperatorApproval===true
-    }))
-   },null,2);
-  }catch(error){planOutput.textContent='План отклонён: '+String(error.message).slice(0,180);}
-  finally{planButton.disabled=false;}
- };
- const form=el('form',root);
- el('h3',form,'Эксперимент RootTransform');
- el('label',form,'Двоичный блок (hex, максимум 2048 байт)');
- const input=el('textarea',form);input.rows=4;input.placeholder='Введите hex-байты. Входной блок не сохраняется в Lab.';
- const controls=el('div',form);controls.className='math-lab-controls';
- const sample=el('button',controls,'Пример: 10^1000');
- sample.type='button';
- sample.onclick=()=>{
-  let hex=(10n**1000n).toString(16);
-  if(hex.length%2)hex='0'+hex;
-  input.value=hex;
- };
- const degreeLabel=el('label',controls,'Проверяемые степени');
- const degree=el('input',degreeLabel);degree.value='2,3,4,8,16,1000';
- const modelLabel=el('label',controls,'Стоимость модели, байты');
- const modelCost=el('input',modelLabel);modelCost.type='number';modelCost.min='0';modelCost.max='1000000';modelCost.value='0';
- const button=el('button',form,'Запустить точный эксперимент');
- button.type='submit';
- const output=el('pre',root,'Нет результатов');
- const hasRun=allowed.has('math_lab.experiment');
- button.disabled=!hasRun;
- if(!hasRun)status.textContent='math_lab.experiment недоступен по разрешениям. Просмотр каталога не даёт права запуска.';
- else status.textContent='Тестовый режим, ограниченный CPU. Это не приёмка в production.';
- form.onsubmit=async event=>{
-  event.preventDefault();
-  if(!hasRun)return;
-  button.disabled=true;status.textContent='Выполняется ограниченный математический тест…';
-  try{
-   const degrees=degree.value.split(',').map(s=>Number(s.trim()));
-   if(!degrees.length||degrees.length>16||degrees.some(k=>!Number.isSafeInteger(k)||k<2)){
-    throw Error('Укажите до 16 целых степеней, начиная со второй.');
-   }
-   const result=await api.call('math_lab.experiment',{
-    datasetId:'interactive.lab',
-    inputHex:input.value.trim().toLowerCase(),
-    degrees,maxDepth:2,maxEvaluations:40,
-    rootModelBytes:Number(modelCost.value),zlibModelBytes:0
-   });
-   const selected=(result.candidates||[]).find(c=>c.method===result.selected);
-   output.textContent=JSON.stringify({
-    digest:result.experimentDigest,
-    originalBytes:result.originalBytes,
-    entropyBitsPerByte:result.entropyBitsPerByte,
-    method:result.selected,totalBytes:result.selectedTotalBytes,
-    savingsBytes:result.savingsBytes,
-    candidates:result.candidates,
-    evaluations:result.search?.evaluated,
-    exactRoundtrip:result.verification?.exactRootRoundtrip,
-    independentAudit:result.verification?.independentAudit
-   },null,2);
-   status.textContent='Эксперимент завершён. Декодер проверен, независимая QA ещё не проведена.';
-  }catch(error){
-   status.textContent='Исследование не выполнено: '+String(error.message).slice(0,180);
-  }finally{button.disabled=false;}
- };
-
- const graphForm=el('form',root);
- el('h3',graphForm,'Граф обратимых преобразований R02');
- el('p',graphForm,'Сравнение целого закодированного потока с исходными байтами, zlib и корнями. Результат не является независимой приёмкой.');
- const graphLabel=el('label',graphForm,'Байтовый блок (hex)');
- const graphInput=el('textarea',graphLabel);
- graphInput.rows=4;graphInput.maxLength=4096;
- graphInput.placeholder='Hex до 2048 байт';
- const graphActions=el('div',graphForm);graphActions.className='math-lab-controls';
- const useRootSample=el('button',graphActions,'Копировать пример из RootTransform');
- useRootSample.type='button';useRootSample.onclick=()=>{graphInput.value=input.value;};
- const graphButton=el('button',graphActions,'Исследовать цепочки преобразований');
- graphButton.type='submit';graphButton.disabled=!allowed.has('math_lab.search');
- const graphOutput=el('pre',root,'Нет результата поиска графа');
- graphForm.onsubmit=async event=>{
-  event.preventDefault();
-  if(!allowed.has('math_lab.search'))return;
-  graphButton.disabled=true;
-  try{
-   const report=await api.call('math_lab.search',{
-    datasetId:'interactive.graph',
-    inputHex:graphInput.value.trim().toLowerCase(),
-    maxDepth:2,maxStates:16,maxRootCalls:4,maxRootEvaluations:8
-   });
-   graphOutput.textContent=JSON.stringify({
-    baseline:report.report?.candidates,
-    selected:report.report?.selectedMethod,
-    totalBytes:report.report?.selectedTotalBytes,
-    savedBytes:report.report?.savingsBytes,
-    selectedPath:report.report?.chosenSteps,
-    states:report.report?.visitedStates,
-    evaluatedEdges:report.report?.attemptedEdges,
-    exactReferenceReproduction:report.referenceReproduction?.exactByteEquality??null,
-    independentAgentReviewed:report.independentAgentReviewed,
-    independentQACompleted:report.independentQACompleted
-   },null,2);
-   status.textContent='Поиск графа завершён. Отдельная организационная QA ещё не проводилась.';
-  }catch(err){
-   graphOutput.textContent='Ошибка поиска: '+String(err.message).slice(0,180);
-  }finally{graphButton.disabled=false;}
- };
-  return {dispose:()=>{form.onsubmit=null;planForm.onsubmit=null;graphForm.onsubmit=null;sample.onclick=null;useRootSample.onclick=null;}};
+ const planUI=mountResearchPlan({el,root,api,allowed});
+ const rootUI=mountRootExperiment({el,root,api,allowed,status});
+ const graphUI=mountGraphSearch({el,root,api,allowed,status,input:rootUI.input});
+ const operationUI=await mountOperationWorkbench({el,root,api,allowed,graphInput:graphUI.graphInput});
+ return {dispose:()=>{planUI.dispose();rootUI.dispose();graphUI.dispose();operationUI.dispose();}};
 }

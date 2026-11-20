@@ -41,3 +41,44 @@
  .math-lab { padding: .75rem; }
  .math-lab-controls { grid-template-columns: 1fr; }
 }
+
+
+/* R03: operator-ID graphs are an accessible rendering of typed MAS data,
+   not executable nodes. Reuses the host design tokens with no fixed palette. */
+.math-lab select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: .6rem .8rem;
+  border: 1px solid var(--border-default, currentColor);
+  border-radius: var(--radius-sm, .45rem);
+  color: inherit;
+  background: var(--surface-elevated, transparent);
+  font: inherit;
+}
+.math-lab select:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.math-lab-graph-lane {
+  margin-block: var(--space-md, 1rem);
+}
+.math-lab-graph-rail {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  overflow-x: auto;
+  padding-bottom: .5rem;
+}
+.math-lab-graph-node {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  flex: 1 0 auto;
+  min-width: 5.5rem;
+  padding: .6rem;
+  border: 1px solid var(--border-default, currentColor);
+  border-radius: var(--radius-sm, .45rem);
+  background: var(--surface-elevated, transparent);
+}
+.math-lab-graph-node small { overflow-wrap: anywhere; }

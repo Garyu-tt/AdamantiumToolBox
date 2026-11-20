@@ -1,3 +1,4 @@
+import {optionsOf} from './root_options.mjs';
 /**
  * Mechanicus Math Lab R01 — RootTransform, experimental integer-only codec.
  * This is a bounded, exact source transform, NOT a general-purpose compressor.
@@ -6,7 +7,6 @@
 const MAGIC=Buffer.from('MLR1');
 const RAW=0,ROOT=1;
 const MAX_INPUT_BYTES=8192;
-const DEFAULT_DEGREES=Object.freeze([2,3,4,5,6,7,8,10,12,16,24,32,64,128,256,512,1000,1024,2048,4096]);
 
 function varint(value){
  if(!Number.isSafeInteger(value)||value<0)throw new TypeError('nonnegative varint required');
@@ -14,7 +14,7 @@ function varint(value){
  do{const digit=value%128;value=Math.floor(value/128);bytes.push(digit+(value>0?128:0));}while(value>0);
  return Buffer.from(bytes);
 }
-function readVarint(buf,cursor,maximum){
+export function readVarint(buf,cursor,maximum){
  const first=cursor.pos;
  let n=0,pow=1;
  for(let i=0;i<8;i++){
@@ -30,19 +30,19 @@ function readVarint(buf,cursor,maximum){
  }
  throw new TypeError('overlong varint');
 }
-function bitLength(n){return n===0n?0:n.toString(2).length;}
-function integerBytes(n){
+export function bitLength(n){return n===0n?0:n.toString(2).length;}
+export function integerBytes(n){
  if(n<0n)throw new TypeError('negative integer');
  if(n===0n)return Buffer.alloc(0);
  let hex=n.toString(16);
  if(hex.length%2)hex='0'+hex;
  return Buffer.from(hex,'hex');
 }
-function naturalBytes(buf){
+export function naturalBytes(buf){
  if(buf.length>0&&buf[0]===0)throw new TypeError('nonminimal unsigned integer');
  return buf.length?BigInt('0x'+buf.toString('hex')):0n;
 }
-function kthRootFloor(n,k){
+export function kthRootFloor(n,k){
  if(n<0n||!Number.isSafeInteger(k)||k<2)throw new TypeError('bad integer root');
  if(n<2n)return n;
  if(k>=bitLength(n))return 1n;
@@ -57,21 +57,7 @@ function kthRootFloor(n,k){
  while((x+1n)**K<=n)x++;
  return x;
 }
-function normalizedDegrees(degrees){
- if(!Array.isArray(degrees)||degrees.length>64)throw new TypeError('invalid degrees');
- const set=new Set();
- for(const k of degrees){
-  if(!Number.isSafeInteger(k)||k<2||k>32768)throw new TypeError('unsupported root degree');
-  set.add(k);
- }
- return [...set].sort((a,b)=>a-b);
-}
-function optionsOf({degrees=DEFAULT_DEGREES,maxDepth=2,maxEvaluations=80,maxInputBytes=MAX_INPUT_BYTES}={}){
- if(!Number.isInteger(maxDepth)||maxDepth<0||maxDepth>3)throw new TypeError('invalid search depth');
- if(!Number.isInteger(maxEvaluations)||maxEvaluations<1||maxEvaluations>300)throw new TypeError('invalid search budget');
- if(!Number.isInteger(maxInputBytes)||maxInputBytes<1||maxInputBytes>MAX_INPUT_BYTES)throw new TypeError('invalid input limit');
- return {degrees:normalizedDegrees(degrees),maxDepth,maxEvaluations,maxInputBytes};
-}
+
 /**
  * @returns {{compressed: Buffer|null, evaluated: number, rawBytes: number,
  *            encodedBytes: number|null, mode: string}}
@@ -121,49 +107,7 @@ export function tryRootTransform(data,opts={}){
   mode:compressed?'root-transform':'raw-fallback'
  });
 }
-/**
- * Independent bounded decoder. Invalid/corrupt streams reject, never truncate.
- */
-export function decodeRootTransform(packed,{maxOutputBytes=MAX_INPUT_BYTES,maxDepth=4,maxNodes=2048}={}){
- if(!Buffer.isBuffer(packed)||packed.length<5||!packed.subarray(0,4).equals(MAGIC)){
-  throw new TypeError('not a RootTransform stream');
- }
- if(!Number.isInteger(maxOutputBytes)||maxOutputBytes<0||maxOutputBytes>MAX_INPUT_BYTES||
-    !Number.isInteger(maxDepth)||maxDepth<0||maxDepth>8||
-    !Number.isInteger(maxNodes)||maxNodes<1||maxNodes>4096)throw new TypeError('decode budget');
- const cursor={pos:4},outputLength=readVarint(packed,cursor,maxOutputBytes);
- let nodes=0;
- const parse=(depth)=>{
-  if(depth>maxDepth||++nodes>maxNodes)throw new RangeError('decode tree budget exceeded');
-  if(cursor.pos>=packed.length)throw new TypeError('truncated node tag');
-  const tag=packed[cursor.pos++];
-  if(tag===RAW){
-   const count=readVarint(packed,cursor,maxOutputBytes);
-   if(cursor.pos+count>packed.length)throw new TypeError('truncated integer');
-   const n=naturalBytes(packed.subarray(cursor.pos,cursor.pos+count));
-   cursor.pos+=count;
-   return n;
-  }
-  if(tag!==ROOT)throw new TypeError('unknown transform node');
-  const k=readVarint(packed,cursor,32768);
-  if(k<2)throw new TypeError('invalid degree');
-  const a=parse(depth+1),r=parse(depth+1);
-  if(a<1n)throw new TypeError('noncanonical base');
-  const bits=bitLength(a)*k;
-  if(bits>maxOutputBytes*8+k+8)throw new RangeError('root result exceeds budget');
-  const n=a**BigInt(k)+r;
-  if(bitLength(n)>maxOutputBytes*8)throw new RangeError('root result exceeds budget');
-  if(kthRootFloor(n,k)!==a)throw new TypeError('noncanonical root remainder');
-  return n;
- };
- const n=parse(0);
- if(cursor.pos!==packed.length)throw new TypeError('trailing transform bytes');
- if(bitLength(n)>outputLength*8)throw new RangeError('integer exceeds original block');
- const bytes=integerBytes(n);
- const restored=Buffer.alloc(outputLength);
- bytes.copy(restored,outputLength-bytes.length);
- return restored;
-}
+export {decodeRootTransform} from './root_decode.mjs';
 export const ROOT_TRANSFORM_ABI='mechanicus.math-root-transform/1';
 export const ROOT_TRANSFORM_LIMITS=Object.freeze({
  maxInputBytes:MAX_INPUT_BYTES,maxSearchDepth:3,maxEvaluations:300,
