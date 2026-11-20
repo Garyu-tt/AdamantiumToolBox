@@ -12,7 +12,7 @@ export const REFERENCE_VERIFIER_ABI='mechanicus.math-reference-verifier/1';
 const MAX_BYTES=8192,MAX_NODES=256;
 const digest=data=>createHash('sha256').update(data).digest('hex');
 function reject(message){throw new TypeError('Reference verifier rejected: '+message);}
-import {decodeRootReference} from './reference_root.mjs';
+import {decodeRootReference,uint} from './reference_root.mjs';
 export {decodeRootReference} from './reference_root.mjs';
 function reverseStep(block,opcode){
  const out=Buffer.allocUnsafe(block.length),length=block.length;
