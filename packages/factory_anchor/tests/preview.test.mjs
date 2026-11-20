@@ -36,7 +36,7 @@ test('R09 public-only CLI produces bounded real cryptographic status visible in 
   assert.equal(body.status,'verified_current');
   assert.equal(body.appId,'factory_anchor');
   assert.equal(body.readOnlyPreview,true);
-  assert.equal(body.masInstalledInCore,false);
+  assert.equal(body.installedInMasCore,false);
   assert.equal(body.privateKeyRead,false);
   assert.equal(body.verification.anchorSignatureValid,true);
   assert.equal(body.verification.masApprovalGranted,false);
