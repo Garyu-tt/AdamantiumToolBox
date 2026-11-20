@@ -101,7 +101,9 @@ export function tryRootTransform(data,opts={}){
    const minPayload=1+varint(k).length+2+
     varint(integerBytes(a).length).length+integerBytes(a).length+
     varint(integerBytes(r).length).length+integerBytes(r).length;
-   if(minPayload>=best.length)continue;
+   // Nested children may themselves compress: the raw-child estimate is
+   // a valid pruning bound only at the final recursion level.
+   if(depth===1&&minPayload>=best.length)continue;
    const candidate=Buffer.concat([
     Buffer.from([ROOT]),varint(k),encodeNode(a,depth-1),encodeNode(r,depth-1)
    ]);
