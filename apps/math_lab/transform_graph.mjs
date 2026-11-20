@@ -52,8 +52,6 @@ export function searchReversibleTransforms(input,options={}){
  });
  const visited=new Set([sha(input)]),states=[{data:input,steps:[]}];
  let bestGraph=null,edges=0;
- // Count all actual bytes, including graph header, original length, steps,
- // codec discriminant and compressed leaf. Node/edge budget is hard bounded.
  const consider=(state,codec,payload)=>{
   const output=envelope(input.length,state.steps,codec,payload);
   const candidate={
