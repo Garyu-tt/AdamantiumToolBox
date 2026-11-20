@@ -68,6 +68,20 @@ test('MAS graph exposes only permitted read-only catalog and denies compute with
   assert.equal(catalog.status,200);
   assert.ok(catalog.body.result.disciplines.includes('number-theory'));
   assert.equal(catalog.body.result.agentsRunning,0);
+  const plan=await call('math_lab.plan',{
+   schema:'mechanicus.math-hypothesis/1',
+   id:'root001',title:'Exact perfect-power experiments',
+   target:'compression',discipline:'number-theory',
+   method:'root-transform',datasetId:'demo001',
+   claim:'Find and verify reversible compressed representations',
+   sourceRefs:[]
+  });
+  assert.equal(plan.status,200);
+  assert.equal(plan.body.result.nodes.length,8);
+  assert.equal(plan.body.result.proposedOnly,true);
+  assert.equal(plan.body.result.taskPoolSubmissionAuthorized,false);
+  assert.equal(plan.body.result.archiveAuthorized,false);
+
   const forbidden=await call('math_lab.experiment',{inputHex:'01'});
   assert.equal(forbidden.status,400);
   assert.equal(forbidden.body.error,'capability_denied');
