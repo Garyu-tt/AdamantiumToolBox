@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Signed owner staging, CAS, policy denial and no active mutation
-        run: node --test tests/factory_anchor_lifecycle_r10.test.mjs
+        run: node --test tests/factory_anchor_lifecycle_r10.test.mjs tests/factory_anchor_lifecycle_studio_r10.test.mjs
   explicit-activation-and-rollback-sandbox:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
