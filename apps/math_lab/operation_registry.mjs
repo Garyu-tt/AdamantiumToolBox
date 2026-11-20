@@ -47,7 +47,7 @@ for(const row of registry){
 }
 const digest=createHash('sha256').update(JSON.stringify(registry),'utf8').digest();
 export const REGISTRY_SHA256=digest.toString('hex');
-export const REGISTRY_FINGERPRINT=Buffer.from(digest.subarray(0,8));
+export const REGISTRY_FINGERPRINT_HEX=digest.subarray(0,8).toString('hex');
 export const LEGACY_R02_TRANSFORMS=Object.freeze(
  Object.fromEntries(declaration.filter(x=>x.kind==='transform')
   .map(x=>[x.legacyR02,x.id]))
