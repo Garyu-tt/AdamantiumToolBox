@@ -184,3 +184,69 @@ test('R02 reference verifier has a separate permission and produces no original 
   assert.equal(refused.body.error,'capability_denied');
  });
 });
+
+
+test('R03 operation catalog and typed encode/decode DAGs require only read permission',async()=>{
+ await withLab('math_lab.read',async({readGraph,call})=>{
+  const graph=(await readGraph()).body;
+  assert.ok(graph.nodes.some(x=>x.id==='math_lab.operations'));
+  assert.ok(graph.nodes.some(x=>x.id==='math_lab.graph'));
+  assert.ok(!graph.nodes.some(x=>x.id==='math_lab.encode'));
+  const result=await call('math_lab.operations');
+  assert.equal(result.status,200);
+  assert.equal(result.body.result.abi,'mechanicus.math-operation-registry/1');
+  assert.equal(result.body.result.operations.length,14);
+  assert.ok(!result.body.result.dynamicExecutablePluginsAllowed);
+  const pair=await call('math_lab.graph',{operationIds:[0x0101,0x0103],codecId:0x0201});
+  assert.equal(pair.status,200);
+  assert.deepEqual(pair.body.result.encode.nodes.filter(x=>x.operationId!==null).map(x=>x.operationId),
+   [0x0101,0x0103,0x0201]);
+  assert.deepEqual(pair.body.result.decode.nodes.filter(x=>x.operationId!==null).map(x=>x.operationId),
+   [0x8201,0x8103,0x8101]);
+  assert.equal((await call('math_lab.encode',{inputHex:'00',operationIds:[],codecId:0x0201})).body.error,
+   'capability_denied');
+  assert.equal((await call('math_lab.decode',{encodedHex:'deadbeef'})).body.error,
+   'capability_denied');
+ });
+});
+
+test('R03 encode/decode actions are permission separated and export bytes only with explicit opt-in',async()=>{
+ let encoded;
+ await withLab('math_lab.experiment',async({call})=>{
+  const original=Buffer.from('abbaabbabaabb'.repeat(20));
+  const params={
+   inputHex:original.toString('hex'),operationIds:[0x0101,0x0103],codecId:0x0201
+  };
+  const noBytes=await call('math_lab.encode',params);
+  assert.equal(noBytes.status,200,JSON.stringify(noBytes.body));
+  assert.equal(noBytes.body.result.encodedHex,null);
+  assert.equal(noBytes.body.result.graphs.decode.nodes.length,5);
+  const exported=await call('math_lab.encode',{...params,includeEncoded:true});
+  assert.equal(exported.status,200,JSON.stringify(exported.body));
+  encoded=exported.body.result.encodedHex;
+  assert.ok(encoded.startsWith(Buffer.from('MLG3').toString('hex')));
+  assert.equal(exported.body.result.encodedSha256,noBytes.body.result.encodedSha256);
+  assert.equal((await call('math_lab.decode',{encodedHex:encoded})).body.error,'capability_denied');
+  const bad=await call('math_lab.encode',{...params,operationIds:[0xffff]});
+  assert.equal(bad.status,400);
+  const unknown=await call('math_lab.encode',{...params,executable:'require("fs")'});
+  assert.match(unknown.body.error,/unexpected_operation_encode_field/);
+ });
+ await withLab('math_lab.verify',async({call})=>{
+  const withoutBytes=await call('math_lab.decode',{encodedHex:encoded});
+  assert.equal(withoutBytes.status,200,JSON.stringify(withoutBytes.body));
+  assert.equal(withoutBytes.body.result.decodedHex,null);
+  assert.equal(withoutBytes.body.result.checksumVerified,true);
+  const withBytes=await call('math_lab.decode',{
+   encodedHex:encoded,includeDecoded:true
+  });
+  assert.equal(withBytes.status,200);
+  assert.deepEqual(Buffer.from(withBytes.body.result.decodedHex,'hex'),
+   Buffer.from('abbaabbabaabb'.repeat(20)));
+  const corrupted=Buffer.from(encoded,'hex');corrupted[5]^=1;
+  const rejected=await call('math_lab.decode',{encodedHex:corrupted.toString('hex')});
+  assert.equal(rejected.status,400);
+  assert.equal((await call('math_lab.encode',{inputHex:'01',operationIds:[],codecId:0x0201})).body.error,
+   'capability_denied');
+ });
+});
