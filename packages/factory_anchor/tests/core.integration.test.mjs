@@ -87,7 +87,7 @@ test('Core + factory_anchor alone: signed public verification, scope and dynamic
    headers:{...header,'Content-Type':'application/json'},
    body:JSON.stringify({action:'factory_anchor.status'})});
   assert.equal(status.status,200);
-  assert.equal((await status.json()).result.result.configured,true);
+  assert.equal((await status.json()).result.configured,true);
   await stop(app);app=null;
   const after=await graph();
   assert.equal(after.nodes.some(n=>n.id.startsWith('factory_anchor.')),false,
