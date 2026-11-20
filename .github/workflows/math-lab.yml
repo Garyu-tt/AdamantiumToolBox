@@ -1,0 +1,33 @@
+name: Mechanicus Math Lab R01 — exact research experiments
+on:
+  pull_request:
+    paths:
+      - 'apps/math_lab/**'
+      - 'tests/math_lab*.test.mjs'
+      - 'docs/MATH-LAB-R01.md'
+      - '.github/workflows/math-lab.yml'
+  push:
+    branches:
+      - research/mechanicus-math-lab-r01
+    paths:
+      - 'apps/math_lab/**'
+      - 'tests/math_lab*.test.mjs'
+      - '.github/workflows/math-lab.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  math-lab-r01:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and bounded lossless research engine
+        run: |
+          node --check apps/math_lab/root_transform.mjs
+          node --check apps/math_lab/experiment.mjs
+          node --check apps/math_lab/service.mjs
+          node --test tests/math_lab.test.mjs
