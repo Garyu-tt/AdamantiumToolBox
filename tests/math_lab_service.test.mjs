@@ -126,3 +126,61 @@ test('service rejects oversized inputs, arbitrary scripting, and excessive degre
   assert.equal(r.body.error,'capability_denied');
  });
 });
+
+
+test('R02 graph search uses dedicated experiment grant and returns no encoded private payload by default',async()=>{
+ await withLab('math_lab.experiment',async({call,readGraph})=>{
+  const graph=(await readGraph()).body;
+  assert.ok(graph.nodes.some(x=>x.id==='math_lab.search'));
+  assert.equal(graph.nodes.some(x=>x.id==='math_lab.reproduce'),false);
+  const source=Buffer.from('1'+'0'.repeat(650));
+  const reply=await call('math_lab.search',{
+   datasetId:'test.graph',inputHex:source.toString('hex'),
+   maxDepth:1,maxStates:9,maxRootCalls:2,maxRootEvaluations:4
+  });
+  assert.equal(reply.status,200);
+  assert.equal(reply.body.result.report.originalBytes,source.length);
+  assert.equal(reply.body.result.report.archiveApproved,false);
+  assert.equal(reply.body.result.encodedHex,null);
+  assert.equal(reply.body.result.independentAgentReviewed,false);
+  assert.equal(reply.body.result.independentQACompleted,false);
+  const denied=await call('math_lab.reproduce',{originalHex:'010203',encodedHex:'deadbeef'});
+  assert.equal(denied.status,400);
+  assert.equal(denied.body.error,'capability_denied');
+  const malformed=await call('math_lab.search',{inputHex:'abcd',execute:"function(){return process.env;}"});
+  assert.equal(malformed.status,400);
+  assert.match(malformed.body.error,/unexpected_search_field/);
+ });
+});
+
+test('R02 reference verifier has a separate permission and produces no original bytes',async()=>{
+ await withLab('math_lab.verify',async({call,readGraph})=>{
+  const g=(await readGraph()).body;
+  assert.ok(g.nodes.some(x=>x.id==='math_lab.reproduce'));
+  assert.equal(g.nodes.some(x=>x.id==='math_lab.search'),false);
+  const original=Buffer.from([1,2,3,4,5]);
+  const transposed=Buffer.from([1,3,5,2,4]);
+  const {deflateSync}=await import('node:zlib');
+  const frame=Buffer.concat([
+   Buffer.from('MLG2','ascii'),Buffer.from([5,1,3,1]),
+   deflateSync(transposed)
+  ]);
+  const out=await call('math_lab.reproduce',{
+   datasetId:'verified.fixture',
+   originalHex:original.toString('hex'),
+   encodedHex:frame.toString('hex')
+  });
+  assert.equal(out.status,200);
+  assert.equal(out.body.result.exactByteEquality,true);
+  assert.equal(out.body.result.independentAgentReviewed,false);
+  assert.equal(out.body.result.independentQACompleted,false);
+  assert.equal(JSON.stringify(out.body).includes(original.toString('hex')),false);
+  const corrupted=await call('math_lab.reproduce',{
+   originalHex:'010203',encodedHex:frame.toString('hex')
+  });
+  assert.equal(corrupted.status,400);
+  const refused=await call('math_lab.search',{inputHex:'010203'});
+  assert.equal(refused.status,400);
+  assert.equal(refused.body.error,'capability_denied');
+ });
+});
