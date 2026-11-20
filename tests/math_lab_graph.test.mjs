@@ -128,7 +128,7 @@ test('corrupt, truncated or malformed transform graphs fail closed',()=>{
  assert.deepEqual(referenceDecodeGraph(graph),source);
  assert.throws(()=>referenceDecodeGraph(Buffer.from('garbage')),/invalid/);
  assert.throws(()=>referenceDecodeGraph(graph.subarray(0,graph.length-2)));
- assert.throws(()=>referenceDecodeGraph(envelope(source,[255],deflateSync(source))),/opcode/);
+ assert.throws(()=>referenceDecodeGraph(envelope(source,[255],deflateSync(source))),/code/);
  assert.throws(()=>referenceDecodeGraph(envelope(source,[],deflateSync(source))),/depth/);
  assert.throws(()=>referenceDecodeGraph(envelope(source,[3],Buffer.from('fake'))),/invalid/);
  assert.throws(()=>verifyGraphAgainstOriginal(graph,Buffer.from([8,9,10])),/differ/);
