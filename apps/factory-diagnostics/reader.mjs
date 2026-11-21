@@ -54,7 +54,7 @@ export async function readDiagnostics(path,{agent_id,session_id,limit=100}={}){
     events.push(event);
    }catch{invalid++;}
   }
-  return {source:'connected',events:events.slice(-limitSafe).reverse(),invalid_records:invalid,partial:start>0};
+  return {source:'connected',events:events.slice(-limitSafe).reverse(),sessions:summarize(events.slice().reverse()),invalid_records:invalid,partial:start>0};
  }catch(e){return {source:e.code==='ENOENT'?'missing':'unavailable',events:[],invalid_records:0,partial:false};}
  finally{await file?.close().catch(()=>{});}
 }
