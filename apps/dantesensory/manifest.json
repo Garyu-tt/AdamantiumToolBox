@@ -1,0 +1,15 @@
+{
+  "mas": "1.0",
+  "id": "dantesensory",
+  "name": "Dante Durable Sensor Queue",
+  "version": "0.1.0",
+  "icon": "graph",
+  "lifecycle": "independent",
+  "service": {"protocol": "mas-http-1", "port": 8899, "invokeTimeoutMs": 5000},
+  "ui": {"standard": "mas-ui-1", "mode": "embedded-and-standalone"},
+  "auth": {"mode": "host-delegated"},
+  "permissions": ["dantesensory.read", "dantesensory.write"],
+  "events": {"schema": "mas-event-1"},
+  "data": {"refs": "mas-ref-1"},
+  "updates": {"strategy": "semver", "migrations": []}
+}
