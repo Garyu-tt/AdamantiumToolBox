@@ -1,0 +1,30 @@
+import {strict as assert} from 'node:assert';
+import {mkdtemp,writeFile,appendFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {readDiagnostics,normalize,redact,summarize} from '../apps/factory-diagnostics/reader.mjs';
+const root=await mkdtemp(join(tmpdir(),'mas-factory-diag-'));
+const file=join(root,'events.jsonl');
+const e=(n,opts={})=>({schema:'factory-diagnostic-event/1',agent_id:'worker-'+n,session_id:'s-'+n,type:'assistant_message',at:'2026-11-21T10:00:00Z',text:'Actual response',...opts});
+try{
+ assert.equal((await readDiagnostics('')).source,'unconfigured');
+ assert.equal((await readDiagnostics(file)).source,'missing');
+ assert.equal(normalize({schema:'broken'}),null);
+ assert.equal(normalize(e(1,{usage:{}})).usage.cost_usd,null);
+ assert(!redact('Bearer abcdefghijklmno').includes('abcdefghijklmno'));
+ assert(!redact('ghp_abcdefghijklmnopqrstuvwxyz12345').includes('abcdefghijklmnopqrstuvwxyz'));
+ await writeFile(file,JSON.stringify(e(1,{text:'first'}))+'\n'+JSON.stringify(e(2,{text:'password=some-very-secret-value',usage:{cost_usd:0.12,input_tokens:20,output_tokens:10}}))+'\n');
+ await appendFile(file,'invalid-json\n');
+ let r=await readDiagnostics(file);
+ assert.equal(r.source,'connected');assert.equal(r.invalid_records,1);assert.equal(r.events.length,2);
+ assert.equal(r.events[0].usage.cost_usd,0.12);assert(!r.events[0].text.includes('some-very-secret-value'));
+ assert.equal((await readDiagnostics(file,{session_id:'s-1'})).events.length,1);
+ assert.equal(summarize(r.events).length,2);
+ await appendFile(file,JSON.stringify(e(3,{type:'tool_result',text:'unfinished'})));
+ r=await readDiagnostics(file);assert.equal(r.events.length,2,'unfinished tail is not an event');
+ await appendFile(file,'\n');r=await readDiagnostics(file);assert.equal(r.events.length,3);
+ assert.equal(r.events[0].type,'tool_result');
+ assert.equal(normalize(e(4,{github_url:'https://evil.com/secret'})).github_url,null);
+ assert.equal(normalize(e(4,{github_url:'https://github.com/Garyu-tt/mojum/pull/226'})).github_url,'https://github.com/Garyu-tt/mojum/pull/226');
+ console.log('FACTORY_DIAGNOSTICS_OK redaction missing unknown cost filtering unfinished lines sessions');
+}finally{await rm(root,{recursive:true,force:true});}
