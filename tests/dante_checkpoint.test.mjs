@@ -1,0 +1,36 @@
+import {strict as assert} from 'node:assert';
+import {mkdtemp, readFile, writeFile, readdir, rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {saveCheckpoint, loadCheckpoint, CHECKPOINT_SCHEMA} from '../sdk/dante/checkpoint.mjs';
+const dir = await mkdtemp(join(tmpdir(), 'dante-checkpoint-'));
+const path = join(dir, 'genesis.state');
+try {
+  const initial = {tick: 7, weights: [0.1, 0.2], owner: 'genesis-instance'};
+  const receipt = await saveCheckpoint(path, initial);
+  assert.equal(receipt.schema, CHECKPOINT_SCHEMA);
+  assert.deepEqual((await loadCheckpoint(path)).state, initial);
+  const baseline = await readFile(path);
+  await assert.rejects(saveCheckpoint(path, {weights: 'x'.repeat(200)}, {maxBytes: 100}), /state_too_large/);
+  assert.deepEqual(await readFile(path), baseline, 'failed save preserves previous checkpoint');
+  assert.deepEqual((await readdir(dir)).filter(x => x.endsWith('.tmp')), []);
+  await assert.rejects(saveCheckpoint(path, {bad: 1n}), /invalid_state/);
+  await assert.rejects(saveCheckpoint(path, {bad: undefined}), /invalid_state/);
+  const cycle = {}; cycle.self = cycle;
+  await assert.rejects(saveCheckpoint(path, cycle), /invalid_state/);
+  assert.deepEqual(await readFile(path), baseline);
+  await saveCheckpoint(path, {tick: 8, weights: [0.1, 0.3]});
+  assert.equal((await loadCheckpoint(path)).state.tick, 8);
+  const corrupted = JSON.parse(await readFile(path, 'utf8'));
+  corrupted.payload = corrupted.payload.replace('8', '9');
+  await writeFile(path, JSON.stringify(corrupted));
+  await assert.rejects(loadCheckpoint(path), /checkpoint_integrity_failed/);
+  corrupted.schema = 'dante.genesis.checkpoint.v2';
+  await writeFile(path, JSON.stringify(corrupted));
+  await assert.rejects(loadCheckpoint(path), /unsupported_checkpoint_schema/);
+  await writeFile(path, 'not-json');
+  await assert.rejects(loadCheckpoint(path), /checkpoint_corrupt/);
+  await writeFile(path, Buffer.alloc(1024));
+  await assert.rejects(loadCheckpoint(path, {maxBytes: 128}), /checkpoint_too_large/);
+  console.log('DANTE_CHECKPOINT_CONTRACT_OK');
+} finally { await rm(dir, {recursive: true, force: true}); }
