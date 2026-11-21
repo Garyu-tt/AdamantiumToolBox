@@ -1,5 +1,5 @@
 import http from 'node:http';
-import {readDiagnostics,summarize} from './reader.mjs';
+import {readDiagnostics} from './reader.mjs';
 const secret=process.env.ADA_INTERNAL_KEY||'';
 if(secret.length<24)throw Error('Missing internal key');
 const source=process.env.ADA_FACTORY_DIAGNOSTICS_FILE||'';
@@ -23,7 +23,7 @@ const server=http.createServer((req,res)=>{
    if(request.action===app+'.events')return send(res,200,{result:await readDiagnostics(source,params)});
    if(request.action===app+'.sessions'){
     const raw=await readDiagnostics(source,{limit:100});
-    return send(res,200,{result:{...raw,events:undefined,sessions:summarize(raw.events)}});
+    return send(res,200,{result:{...raw,events:undefined}});
    }
    return send(res,403,{error:'forbidden'});
   }catch{return send(res,400,{error:'bad_request'});}
