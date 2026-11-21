@@ -1,0 +1,61 @@
+{
+  "id": "development",
+  "name": "Progressive Neurogenesis",
+  "capability": "genesis.development.progressive/v1",
+  "actions": [
+    {
+      "id": "genesis.brains.grow",
+      "title": "Вырастить теневые нейроны",
+      "permission": "genesis.write",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        },
+        {
+          "name": "count",
+          "label": "Количество",
+          "type": "number",
+          "default": 4
+        }
+      ]
+    },
+    {
+      "id": "genesis.brains.integrate",
+      "title": "Интегрировать нейроны",
+      "permission": "genesis.write",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        },
+        {
+          "name": "count",
+          "label": "Количество",
+          "type": "number",
+          "default": 4
+        }
+      ]
+    },
+    {
+      "id": "genesis.brains.retarget",
+      "title": "Обновить целевую ёмкость",
+      "permission": "genesis.write",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        },
+        {
+          "name": "target_neurons",
+          "label": "Новая цель",
+          "type": "number",
+          "default": 64
+        }
+      ]
+    }
+  ]
+}

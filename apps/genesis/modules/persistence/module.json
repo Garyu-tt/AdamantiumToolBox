@@ -1,0 +1,36 @@
+{
+  "id": "persistence",
+  "name": "Brain Continuity",
+  "capability": "genesis.brain.persistence/v1",
+  "actions": [
+    {
+      "id": "genesis.brains.snapshot",
+      "title": "Сохранить снимок",
+      "permission": "genesis.write",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "genesis.brains.fork",
+      "title": "Ответвить мозг",
+      "permission": "genesis.write",
+      "inputs": [
+        {
+          "name": "id",
+          "label": "Brain UUID",
+          "type": "text"
+        },
+        {
+          "name": "snapshotId",
+          "label": "Snapshot UUID (необязательно)",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
