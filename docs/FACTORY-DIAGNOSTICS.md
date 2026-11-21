@@ -52,3 +52,35 @@ is not yet wired, the Telegram button is not deployed, and the model bills
 are not reconciled. These are separate acceptance tasks in Issue #170.
 When no source is connected the UI explicitly shows unconfigured/missing;
 it never invents an assistant message or reports spending as zero.
+
+
+## Existing Claude Code transcripts: offline import
+
+The actual Claude Code CLI can keep full owner-private session transcripts in
+its private home under a .claude/projects hierarchy, even if a separate
+run output contains only a final JSON result.
+
+To export selected, redacted, verifiable observations for this viewer:
+
+    python tools/factory_transcript_export.py \
+      --root /private/factory-home --project PROJECT_ID \
+      --out /private/diagnostics/events.jsonl --max-runs 100
+
+The destination directory must be private (mode 0700). The exporter writes
+a mode 0600 atomic snapshot. It correlates the final CLI result's exact
+session UUID with a transcript filename; no fuzzy session guessing.
+It drops Claude thinking, raw user prompts, API-request payloads, tool inputs,
+and raw tool result bodies. Only assistant text, tool names, observed tool
+result presence, and terminal usage are included. Missing cost is null rather
+than 0. A tool invocation is not evidence of successful GitHub mutation.
+
+This is a manual offline migration helper, not a live log producer.
+Its output must remain owner-only. No transcript is uploaded to GitHub;
+only the code and synthetic tests belong in this repository. To connect the
+MAS viewer, point ADA_FACTORY_DIAGNOSTICS_FILE at that owner-private file
+on the same authorized host or through an approved private adapter. Never
+publish that file or place it in the source tree.
+
+Before enabling automatic refresh or spending more model credits, audit
+and reconcile this snapshot against GitHub PRs and the provider's own
+billing statement. The exporter does not claim billing accuracy or successful PRs.
