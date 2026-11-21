@@ -28,6 +28,8 @@ jobs:
           python tests/architecture.test.py
           python tools/check-size.py
           node tools/mas-check.mjs
+      - name: Private-data-free Factory transcript contract
+        run: python tests/test_factory_transcript_export.py
       - name: Isolated runtime and contract tests
         run: |
           set -eu
