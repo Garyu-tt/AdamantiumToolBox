@@ -1,0 +1,36 @@
+name: Mechanicus QA Fleet R0 read-only public scan
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: qa-fleet-r0-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Offline safety tests
+        run: python3 -m unittest discover -s tests -p 'test_qa_fleet.py' -v
+      - name: Scan permitted public repositories
+        env:
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/qa_fleet.py --owner "${GITHUB_REPOSITORY_OWNER}" --threads 8 > qa-fleet.json
+          python3 - <<'PY'
+          import json, os
+          r=json.load(open('qa-fleet.json'))
+          summary=(f"## Public GitHub PR triage (read-only)\n\n"
+                   f"Scanned: {r['scanned']} PRs; errors: {len(r['errors'])}; "
+                   f"parallel inspection cap: {r['parallel_limit']}.\n\n"
+                   "All outcomes are provisional, **not accepted/merged**.\n")
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write(summary)
+          PY
