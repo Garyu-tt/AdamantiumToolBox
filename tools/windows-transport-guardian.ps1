@@ -1,14 +1,16 @@
 param(
  [Parameter(Mandatory=$true)][string]$ConfigPath,
- [switch]$Run
+ [switch]$Run,[switch]$Monitor,[int]$MaxChecks=0
 )
 $ErrorActionPreference='Stop'
+if($Run -and $Monitor){throw 'Exclusive recovery and observer mode cannot be combined'}
+if($MaxChecks -lt 0 -or $MaxChecks -gt 1000){throw 'Invalid check limit'}
 $c=Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
 if($c.schema -ne 'mas-transport-guardian-1'){throw 'Unsupported guardian config'}
 $ssh=[string]$c.sshExecutable; $sshConfig=[string]$c.sshConfig; $target=[string]$c.sshTarget
-if(!$ssh -or !(Test-Path -LiteralPath $ssh -PathType Leaf) -or
+if($Run -and (!$ssh -or !(Test-Path -LiteralPath $ssh -PathType Leaf) -or
  !$sshConfig -or !(Test-Path -LiteralPath $sshConfig -PathType Leaf) -or
- $sshConfig.Contains('"') -or $target -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$'){
+ $sshConfig.Contains('"') -or $target -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$')){
  throw 'Invalid local SSH executable, config or alias'
 }
 $uri=$null
@@ -86,6 +88,7 @@ function StartOwned(){
  $script:child=[Diagnostics.Process]::Start($p)
  $script:started=[DateTime]::UtcNow
 }
+$checks=0
 try{
  while($true){
   $now=[DateTime]::UtcNow;$paused=($pauseFile -and (Test-Path -LiteralPath $pauseFile))
@@ -110,7 +113,8 @@ try{
     elseif($Run){'backoff'}else{'observe_only'}
   }
   Persist $mode ([bool]$probeOk) ([bool]($child -and !$child.HasExited))
-  if(!$Run){break}
+  $checks++
+  if((!$Run -and !$Monitor) -or ($MaxChecks -gt 0 -and $checks -ge $MaxChecks)){break}
   Start-Sleep -Seconds $poll
  }
 }finally{StopOwned;if($held){$mutex.ReleaseMutex()};$mutex.Dispose()}
