@@ -57,7 +57,9 @@ That fails closed by suppressing a new launch, never by killing anything.
    reports a read-only plan. It accepts exact local profile, exact
    `windows-session-companion.ps1` file and a caller-defined task name.
    `-Approve` creates a least-privileged interactive user-logon task
-   without starting it immediately. It will refuse existing names,
+   in continuous `-Monitor` mode, **without launching the agent or starting
+   the task immediately**. `-Active -Approve` is a separate, higher-impact
+   option that also requires private `exclusiveOwnership:true` and pause. It will refuse existing names,
    non-interactive Session 0, or an unapproved/pause-less profile.
    `-Remove -Approve` only removes a task whose action exactly matches
    the requested script/config. **No registration is performed by this PR.**
