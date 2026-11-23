@@ -61,9 +61,13 @@ $settings=New-ScheduledTaskSettingsSet @argsSettings
 $argsTask=@{TaskName=$TaskName;Principal=$principal;Action=$action;Trigger=$trigger;Settings=$settings;Description='Owner-approved MAS user-session agent companion'}
 Register-ScheduledTask @argsTask | Out-Null
 $installed=Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
-if($installed.Principal.UserId -ine $identity.Name -or
- $installed.Principal.RunLevel -ne 'Limited'){
- throw 'Task installed but ownership check failed: operator review required'
+$principalSid=(New-Object Security.Principal.NTAccount($installed.Principal.UserId)).Translate([Security.Principal.SecurityIdentifier]).Value
+if($principalSid -ne $identity.User.Value -or
+ [string]$installed.Principal.RunLevel -ne 'Limited' -or
+ [string]$installed.Principal.LogonType -ne 'Interactive' -or
+ @($installed.Actions).Count -ne 1 -or
+ $installed.Actions[0].Arguments -ne $expected){
+ throw 'Task installed but identity or action verification failed: operator review required'
 }
 [pscustomobject]@{taskName=$TaskName;operation='install';verified=$true;
  startedImmediately=$false;mode=$mode}|ConvertTo-Json -Compress
