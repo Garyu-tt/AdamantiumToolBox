@@ -1,8 +1,12 @@
 param(
  [Parameter(Mandatory=$true)][string]$ConfigPath,
- [switch]$Run
+ [switch]$Run,
+ [switch]$Monitor,
+ [int]$MaxChecks=0
 )
 $ErrorActionPreference='Stop'
+if($Run -and $Monitor){throw 'Active and observer modes are mutually exclusive'}
+if($MaxChecks -lt 0 -or $MaxChecks -gt 1000){throw 'Invalid check limit'}
 $c=Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
 if($c.schema -ne 'mas-session-companion-1'){throw 'Invalid session config'}
 $launcher=[string]$c.launchScript;$agent=[string]$c.agentScript
@@ -76,6 +80,7 @@ function LaunchOwned(){
  if(!$child){throw 'Launch failed'}
  $child.Dispose()
 }
+$checks=0
 try{
  while($true){
   $now=[DateTime]::UtcNow
@@ -99,7 +104,8 @@ try{
    }
   }
   Persist $mode $reason $count
-  if(!$Run){break}
+  $checks++
+  if((!$Run -and !$Monitor) -or ($MaxChecks -gt 0 -and $checks -ge $MaxChecks)){break}
   Start-Sleep -Seconds $poll
  }
 }finally{if($held){$mutex.ReleaseMutex()};$mutex.Dispose()}
