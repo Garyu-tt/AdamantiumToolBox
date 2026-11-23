@@ -59,7 +59,7 @@ try{
   if(app.exitCode!==null||core.exitCode!==null)throw Error('process_exited');
   await sleep(100);
  }
- assert.deepEqual(nodes.map(n=>n.id),['client_watchdog.status','client_watchdog.transport']);
+ assert.deepEqual(nodes.map(n=>n.id),['client_watchdog.status','client_watchdog.transport','client_watchdog.session']);
  assert.equal((await fetch('http://127.0.0.1:'+port+'/graph')).status,401);
  async function status(){
   const r=await fetch(base+'/api/invoke',{method:'POST',headers:{...header,
