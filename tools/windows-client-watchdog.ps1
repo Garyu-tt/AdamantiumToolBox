@@ -11,7 +11,10 @@ if(@($config.targets).Count -gt 32){throw 'Too many targets'}
 $poll=[int]$config.pollIntervalSec
 if($poll -lt 5 -or $poll -gt 300){throw 'Invalid poll interval'}
 $lock=New-Object System.Threading.Mutex($false,'Local\AdamantiumClientDeviceWatchdog')
-if(!$lock.WaitOne(0)){throw 'Watchdog already running'}
+$acquired=$false
+try{$acquired=$lock.WaitOne(0)}
+catch [System.Threading.AbandonedMutexException]{$acquired=$true}
+if(!$acquired){$lock.Dispose();throw 'Watchdog already running'}
 $stateFile=Join-Path $dir 'status.json'
 $previous=@{}
 if(Test-Path -LiteralPath $stateFile -PathType Leaf){
@@ -47,12 +50,14 @@ try{
   $rows=@()
   foreach($target in @($config.targets)){
    $id=[string]$target.id;$name=[string]$target.taskName
+   $taskPath=if($target.taskPath){[string]$target.taskPath}else{'\'}
+   if($taskPath -notmatch '^\\(?:[A-Za-z0-9_ .-]+\\)*$'){throw 'Invalid task path'}
    if($id -notmatch '^[a-z][a-z0-9_-]{1,39}$' -or !$name -or $name.Length -gt 100){
     throw 'Invalid task identity'
    }
    $old=Previous $id
    $now=[DateTime]::UtcNow
-   $task=Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue | Select-Object -First 1
+   $task=Get-ScheduledTask -TaskName $name -TaskPath $taskPath -ErrorAction SilentlyContinue | Select-Object -First 1
    $running=($null -ne $task -and [string]$task.State -eq 'Running')
    $probe=Probe $target.healthUrl
    $healthy=if($null -ne $probe){$probe}else{$running}
@@ -75,7 +80,7 @@ try{
     elseif($elapsed -lt $cooldown){$reason='cooldown'}
     else{
      $lastAttempt=$now.ToString('o')
-     try{Start-ScheduledTask -TaskName $name -ErrorAction Stop;$reason='restart_requested'}
+     try{Start-ScheduledTask -TaskName $name -TaskPath $taskPath -ErrorAction Stop;$reason='restart_requested'}
      catch{$reason='restart_failed'}
     }
    }
