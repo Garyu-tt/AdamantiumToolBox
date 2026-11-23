@@ -49,6 +49,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validate client watchdog PowerShell syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'tools/windows-client-watchdog.ps1'),[ref]$tokens,[ref]$errors) | Out-Null
+          if($errors.Count -gt 0){throw ($errors | Out-String)}
       - name: Run real Chromium CDP tests
         env:
           MAS_BROWSER_REQUIRE_ENGINE: '1'
