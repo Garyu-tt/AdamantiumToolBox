@@ -77,3 +77,14 @@ The existing JediControl Hub's broker, MCP and Caddy services returned
 This is evidence of a client/transport-side outage, not proof of its cause.
 The changes in this branch only enable backend-only MAS apps. They do **not**
 repair the Windows endpoint, deploy an agent or establish remote MCP access.
+
+## Backend runtime profile (opt-in)
+
+Set `"runtimeProfile":"backend"` in the owner-private
+`%LOCALAPPDATA%\Adamantium Toolbox\policy.json` and restart the
+supervisor through the normal reviewed operator procedure. The mode is
+validated on startup, inherits no extra permissions, and makes MAS discover
+only explicit `ui.mode: "headless"` applications; no GUI window launches.
+`"full"` remains the default, preserving existing clients. This profile
+does not change optional system-service manifests or install a remote
+transport. Apply it only after verifying the required headless apps exist.
