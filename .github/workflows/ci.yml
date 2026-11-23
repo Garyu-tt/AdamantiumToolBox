@@ -71,6 +71,32 @@ jobs:
           & powershell.exe -NoProfile -File 'tools/windows-client-watchdog.ps1' -ConfigPath (Join-Path $dir 'config.json') -Once
           $state = Get-Content (Join-Path $dir 'status.json') -Raw | ConvertFrom-Json
           if($state.targets[0].failures -ne 2){throw 'Persisted failure counter was not restored'}
+      - name: Syntax and safe observer mode for transport guardian
+        shell: pwsh
+        run: |
+          $t=$null; $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'tools/windows-transport-guardian.ps1'),[ref]$t,[ref]$errors) | Out-Null
+          if($errors.Count -gt 0){throw ($errors | Out-String)}
+          $dir=Join-Path $env:RUNNER_TEMP 'transport-guardian-fixture'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          $sshConfig=Join-Path $dir 'ssh_config'
+          Set-Content -Path $sshConfig -Value '# safe fixture; never used for remote access'
+          $config=@{schema='mas-transport-guardian-1';sshExecutable=(Get-Command powershell.exe).Source;
+            sshConfig=$sshConfig;sshTarget='fixture';probeUrl='https://localhost:1/healthz';
+            pollSec=3;startGraceSec=3;failuresBeforeRestart=2;backoffBaseSec=5;backoffCapSec=30;
+            exclusiveOwnership=$false;conflictingTasks=@('fixture');pauseFile=(Join-Path $dir 'pause')}
+          $configPath=Join-Path $dir 'transport.json'
+          $config | ConvertTo-Json -Depth 5 | Set-Content $configPath
+          & powershell.exe -NoProfile -File 'tools/windows-transport-guardian.ps1' -ConfigPath $configPath
+          if($LASTEXITCODE -ne 0){throw 'Read-only transport observation failed'}
+          $s=Get-Content (Join-Path $dir 'telemetry/transport-status.json') -Raw | ConvertFrom-Json
+          if($s.mode -ne 'observe_only' -or $s.probeOk -ne $false -or $s.ownsSshProcess){
+            throw 'Transport observer was not fail-closed'
+          }
+          $denyLog=Join-Path $dir 'denied.stderr'
+          $ps=Join-Path $env:WINDIR 'System32/WindowsPowerShell/v1.0/powershell.exe'
+          $denied=Start-Process -FilePath $ps -ArgumentList @('-NoProfile','-File','tools/windows-transport-guardian.ps1','-ConfigPath',('"' + $configPath + '"'),'-Run') -Wait -PassThru -NoNewWindow -RedirectStandardError $denyLog
+          if($denied.ExitCode -eq 0){throw 'Transport started without explicit exclusive ownership'}
       - name: Run real Chromium CDP tests
         env:
           MAS_BROWSER_REQUIRE_ENGINE: '1'
