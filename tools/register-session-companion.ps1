@@ -22,7 +22,7 @@ if($c.schema -ne 'mas-session-companion-1'){throw 'Invalid private profile'}
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 $exe=Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $mode=if($Active){'-Run'}else{'-Monitor'}
-$expected='-NoProfile -File "'+$GuardianPath+'" -ConfigPath "'+$ConfigPath+'" '+$mode
+$expected='-NoProfile -WindowStyle Hidden -File "'+$GuardianPath+'" -ConfigPath "'+$ConfigPath+'" '+$mode
 $existing=Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 $operation=if($Remove){'remove'}else{'install'}
 if(!$Approve){
