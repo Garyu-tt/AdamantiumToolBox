@@ -3,7 +3,8 @@ param(
  [Parameter(Mandatory=$true)][string]$GuardianPath,
  [Parameter(Mandatory=$true)][string]$TaskName,
  [switch]$Approve,
- [switch]$Remove
+ [switch]$Remove,
+ [switch]$Active
 )
 $ErrorActionPreference='Stop'
 if($TaskName -notmatch '^[A-Za-z][A-Za-z0-9_ .-]{1,79}$'){
@@ -20,13 +21,14 @@ $c=Get-Content -LiteralPath $ConfigPath -Raw|ConvertFrom-Json
 if($c.schema -ne 'mas-session-companion-1'){throw 'Invalid private profile'}
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 $exe=Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$expected='-NoProfile -File "'+$GuardianPath+'" -ConfigPath "'+$ConfigPath+'" -Run'
+$mode=if($Active){'-Run'}else{'-Monitor'}
+$expected='-NoProfile -File "'+$GuardianPath+'" -ConfigPath "'+$ConfigPath+'" '+$mode
 $existing=Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 $operation=if($Remove){'remove'}else{'install'}
 if(!$Approve){
  [pscustomobject]@{operation=$operation;taskName=$TaskName;
   currentUser=$identity.Name;alreadyExists=($null -ne $existing);
-  approved=$false;changesMade=$false}|ConvertTo-Json -Compress
+  approved=$false;changesMade=$false;mode=$mode}|ConvertTo-Json -Compress
  exit 0
 }
 if([Diagnostics.Process]::GetCurrentProcess().SessionId -eq 0){
@@ -47,8 +49,8 @@ if($Remove){
  exit 0
 }
 if($existing){throw 'Task already exists: refuse overwrite'}
-if($c.exclusiveOwnership -ne $true -or !$c.pauseFile -or
- ![IO.Path]::IsPathRooted([string]$c.pauseFile)){
+if($Active -and ($c.exclusiveOwnership -ne $true -or !$c.pauseFile -or
+ ![IO.Path]::IsPathRooted([string]$c.pauseFile))){
  throw 'Active mode requires owner-approved exclusiveOwnership and pause marker'
 }
 $principal=New-ScheduledTaskPrincipal -UserId $identity.Name -LogonType Interactive -RunLevel Limited
@@ -64,4 +66,4 @@ if($installed.Principal.UserId -ine $identity.Name -or
  throw 'Task installed but ownership check failed: operator review required'
 }
 [pscustomobject]@{taskName=$TaskName;operation='install';verified=$true;
- startedImmediately=$false}|ConvertTo-Json -Compress
+ startedImmediately=$false;mode=$mode}|ConvertTo-Json -Compress
