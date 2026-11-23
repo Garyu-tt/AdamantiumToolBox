@@ -1,0 +1,42 @@
+name: Client transport observer validation
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse observer, simulate HTTPS outage, verify no SSH launch
+        shell: pwsh
+        run: |
+          $tok=$null;$errs=$null
+          [Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'tools/windows-transport-guardian.ps1'),[ref]$tok,[ref]$errs)|Out-Null
+          if($errs.Count -gt 0){throw ($errs|Out-String)}
+          $dir=Join-Path $env:RUNNER_TEMP 'transport-observer-r04'
+          New-Item -ItemType Directory -Force -Path $dir|Out-Null
+          $config=@{schema='mas-transport-guardian-1';probeUrl='https://localhost:1/healthz';
+            pollSec=3;startGraceSec=3;failuresBeforeRestart=2;backoffBaseSec=5;
+            backoffCapSec=30;exclusiveOwnership=$false;conflictingTasks=@()}
+          $profile=Join-Path $dir 'transport.json'
+          $config|ConvertTo-Json -Depth 5|Set-Content $profile
+          & powershell.exe -NoProfile -File 'tools/windows-transport-guardian.ps1' -ConfigPath $profile -Monitor -MaxChecks 2
+          if($LASTEXITCODE -ne 0){throw 'Read-only monitoring failed'}
+          $s=Get-Content (Join-Path $dir 'telemetry/transport-status.json') -Raw|ConvertFrom-Json
+          if($s.mode -ne 'observe_only' -or $s.probeOk -ne $false -or
+             $s.ownsSshProcess -ne $false -or $s.restarts -ne 0 -or $s.failures -ne 2){
+             throw 'Observer started SSH or did not persist failures'
+          }
+          $tok=$null;$errs=$null
+          [Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'tools/register-session-companion.ps1'),[ref]$tok,[ref]$errs)|Out-Null
+          if($errs.Count -gt 0){throw ($errs|Out-String)}
+          $guard=(Resolve-Path 'tools/windows-transport-guardian.ps1').Path
+          $plan=& powershell.exe -NoProfile -File 'tools/register-session-companion.ps1' -ConfigPath $profile -GuardianPath $guard -TaskName 'TransportObserverFixture' -Observer transport
+          if($LASTEXITCODE -ne 0){throw 'Transport observer task planning failed'}
+          $p=$plan|Out-String|ConvertFrom-Json
+          if($p.observer -ne 'transport' -or $p.mode -ne '-Monitor' -or $p.changesMade -ne $false){
+            throw 'Observer registrar did not fail closed'
+          }
