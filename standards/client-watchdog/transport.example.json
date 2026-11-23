@@ -1,0 +1,17 @@
+{
+  "schema": "mas-transport-guardian-1",
+  "sshExecutable": "ABSOLUTE_PATH_TO_SSH_EXE",
+  "sshConfig": "ABSOLUTE_PATH_TO_APPROVED_SSH_CONFIG",
+  "sshTarget": "approved-hub-alias",
+  "probeUrl": "https://localhost:8449/healthz",
+  "pollSec": 10,
+  "startGraceSec": 10,
+  "failuresBeforeRestart": 3,
+  "backoffBaseSec": 5,
+  "backoffCapSec": 300,
+  "exclusiveOwnership": false,
+  "conflictingTasks": [
+    "APPROVED_CURRENT_TRANSPORT_TASK"
+  ],
+  "pauseFile": "ABSOLUTE_PATH_TO_USER_PAUSE_MARKER"
+}
