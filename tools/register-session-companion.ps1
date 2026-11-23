@@ -4,7 +4,8 @@ param(
  [Parameter(Mandatory=$true)][string]$TaskName,
  [switch]$Approve,
  [switch]$Remove,
- [switch]$Active
+ [switch]$Active,
+ [ValidateSet('session','transport')][string]$Observer='session'
 )
 $ErrorActionPreference='Stop'
 if($TaskName -notmatch '^[A-Za-z][A-Za-z0-9_ .-]{1,79}$'){
@@ -18,7 +19,8 @@ foreach($path in @($ConfigPath,$GuardianPath)){
 }
 if([IO.Path]::GetExtension($GuardianPath) -ne '.ps1'){throw 'Guardian must be PowerShell'}
 $c=Get-Content -LiteralPath $ConfigPath -Raw|ConvertFrom-Json
-if($c.schema -ne 'mas-session-companion-1'){throw 'Invalid private profile'}
+$schema=if($Observer -eq 'session'){'mas-session-companion-1'}else{'mas-transport-guardian-1'}
+if($c.schema -ne $schema){throw 'Invalid private profile'}
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 $exe=Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $mode=if($Active){'-Run'}else{'-Monitor'}
@@ -28,7 +30,7 @@ $operation=if($Remove){'remove'}else{'install'}
 if(!$Approve){
  [pscustomobject]@{operation=$operation;taskName=$TaskName;
   currentUser=$identity.Name;alreadyExists=($null -ne $existing);
-  approved=$false;changesMade=$false;mode=$mode}|ConvertTo-Json -Compress
+  approved=$false;changesMade=$false;mode=$mode;observer=$Observer}|ConvertTo-Json -Compress
  exit 0
 }
 if([Diagnostics.Process]::GetCurrentProcess().SessionId -eq 0){
@@ -50,7 +52,8 @@ if($Remove){
 }
 if($existing){throw 'Task already exists: refuse overwrite'}
 if($Active -and ($c.exclusiveOwnership -ne $true -or !$c.pauseFile -or
- ![IO.Path]::IsPathRooted([string]$c.pauseFile))){
+ ![IO.Path]::IsPathRooted([string]$c.pauseFile) -or
+ ($Observer -eq 'transport' -and @($c.conflictingTasks).Count -eq 0))){
  throw 'Active mode requires owner-approved exclusiveOwnership and pause marker'
 }
 $principal=New-ScheduledTaskPrincipal -UserId $identity.Name -LogonType Interactive -RunLevel Limited
@@ -58,7 +61,7 @@ $trigger=New-ScheduledTaskTrigger -AtLogOn -User $identity.Name
 $action=New-ScheduledTaskAction -Execute $exe -Argument $expected
 $argsSettings=@{MultipleInstances='IgnoreNew';RestartCount=3;RestartInterval=(New-TimeSpan -Minutes 1);ExecutionTimeLimit=[TimeSpan]::Zero;AllowStartIfOnBatteries=$true;DontStopIfGoingOnBatteries=$true;StartWhenAvailable=$true}
 $settings=New-ScheduledTaskSettingsSet @argsSettings
-$argsTask=@{TaskName=$TaskName;Principal=$principal;Action=$action;Trigger=$trigger;Settings=$settings;Description='Owner-approved MAS user-session agent companion'}
+$argsTask=@{TaskName=$TaskName;Principal=$principal;Action=$action;Trigger=$trigger;Settings=$settings;Description=('Owner-approved MAS '+$Observer+' observer')}
 Register-ScheduledTask @argsTask | Out-Null
 $installed=Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
 $principalSid=(New-Object Security.Principal.NTAccount($installed.Principal.UserId)).Translate([Security.Principal.SecurityIdentifier]).Value
@@ -70,4 +73,4 @@ if($principalSid -ne $identity.User.Value -or
  throw 'Task installed but identity or action verification failed: operator review required'
 }
 [pscustomobject]@{taskName=$TaskName;operation='install';verified=$true;
- startedImmediately=$false;mode=$mode}|ConvertTo-Json -Compress
+ startedImmediately=$false;mode=$mode;observer=$Observer}|ConvertTo-Json -Compress
