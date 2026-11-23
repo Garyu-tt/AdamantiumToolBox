@@ -42,8 +42,11 @@ function WriteState($items){
  $tmp=Join-Path $dir ('status.'+[guid]::NewGuid().ToString('N')+'.tmp')
  $body=$doc | ConvertTo-Json -Depth 6 -Compress
  [IO.File]::WriteAllText($tmp,$body,(New-Object System.Text.UTF8Encoding($false)))
- if(Test-Path -LiteralPath $stateFile){[IO.File]::Replace($tmp,$stateFile,$null)}
- else{[IO.File]::Move($tmp,$stateFile)}
+ if(Test-Path -LiteralPath $stateFile){
+  $backup=Join-Path $dir ('status.'+[guid]::NewGuid().ToString('N')+'.bak')
+  [IO.File]::Replace($tmp,$stateFile,$backup)
+  if(Test-Path -LiteralPath $backup){Remove-Item -LiteralPath $backup -Force}
+ }else{[IO.File]::Move($tmp,$stateFile)}
 }
 try{
  while($true){
