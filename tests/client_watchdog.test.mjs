@@ -9,6 +9,7 @@ import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {summarize,currentStatus} from '../apps/client_watchdog/status.mjs';
 import {catalog} from '../core/catalog.mjs';
+import {sanitizeTransport,currentTransport} from '../apps/client_watchdog/transport.mjs';
 const source=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const auth='client-watchdog-integration-owner-token';
 const key='client-watchdog-integration-internal-key';
@@ -23,6 +24,13 @@ assert.equal(summarize(sample,now+600000).mode,'stale');
 assert.equal(summarize({...sample,schema:'other'},now).mode,'invalid');
 assert.equal(summarize({...sample,updatedAt:new Date(now+900000).toISOString()},now).mode,'invalid');
 assert.equal((await currentStatus(null)).mode,'not_configured');
+assert.equal((await currentTransport(null)).mode,'not_configured');
+const sampleTransport={schema:'mas-transport-guardian-status-1',updatedAt:stamp,
+ mode:'transport_healthy',probeOk:true,ownsSshProcess:false,failures:0,restarts:2,
+ reason:'healthy',lastGoodUtc:stamp,nextAttemptUtc:null,secret:'not_for_remote'};
+assert.equal(sanitizeTransport(sampleTransport,now).mode,'transport_healthy');
+assert.equal(sanitizeTransport(sampleTransport,now+200000).mode,'stale');
+assert(!JSON.stringify(sanitizeTransport(sampleTransport,now)).includes('secret'));
 const free=()=>new Promise(ok=>{const s=createServer();s.listen(0,'127.0.0.1',()=>{
  const port=s.address().port;s.close(()=>ok(port));});});
 const sleep=n=>new Promise(ok=>setTimeout(ok,n));
@@ -51,7 +59,7 @@ try{
   if(app.exitCode!==null||core.exitCode!==null)throw Error('process_exited');
   await sleep(100);
  }
- assert.deepEqual(nodes.map(n=>n.id),['client_watchdog.status']);
+ assert.deepEqual(nodes.map(n=>n.id),['client_watchdog.status','client_watchdog.transport']);
  assert.equal((await fetch('http://127.0.0.1:'+port+'/graph')).status,401);
  async function status(){
   const r=await fetch(base+'/api/invoke',{method:'POST',headers:{...header,
@@ -68,7 +76,18 @@ try{
  const external=join(root,'external.json');await writeFile(external,JSON.stringify(sample));
  await symlink(external,join(stateDir,'status.json'));
  assert.equal((await status()).mode,'invalid');
- console.log('CLIENT_WATCHDOG_OK headless, permission, status sanitization, missing, malformed, symlink');
+ const transportFile=join(stateDir,'telemetry','transport-status.json');
+ await mkdir(join(stateDir,'telemetry'));
+ await writeFile(transportFile,JSON.stringify(sampleTransport));
+ const transport=await fetch(base+'/api/invoke',{method:'POST',
+  headers:{...header,'Content-Type':'application/json'},
+  body:JSON.stringify({action:'client_watchdog.transport'})});
+ const tr=(await transport.json()).result;
+ assert.equal(tr.mode,'transport_healthy');assert(!JSON.stringify(tr).includes('not_for_remote'));
+ await rm(transportFile);
+ await symlink(external,transportFile);
+ assert.equal((await currentTransport(home)).mode,'invalid');
+ console.log('CLIENT_WATCHDOG_OK headless, transport, permission, redaction, malformed, symlink');
 }finally{
  for(const child of [app,core])if(child&&child.exitCode===null){
   child.kill();await Promise.race([once(child,'exit'),sleep(3000)]);
