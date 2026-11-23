@@ -1,0 +1,43 @@
+name: Windows client fallback status
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read-only snapshot and freshness tests
+        shell: pwsh
+        run: |
+          $tok=$null;$errors=$null
+          [Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'tools/windows-client-status.ps1'),[ref]$tok,[ref]$errors)|Out-Null
+          if($errors.Count -gt 0){throw ($errors|Out-String)}
+          $root=Join-Path $env:RUNNER_TEMP 'mas-status-fixture'
+          $dir=Join-Path $root 'telemetry'
+          New-Item -ItemType Directory -Force -Path $dir|Out-Null
+          $now=[DateTimeOffset]::UtcNow.ToString('o')
+          $session=@{schema='mas-session-companion-status-1';updatedAt=$now;
+            mode='agent_present';agentCount=2;privateToken='never-output'}
+          $transport=@{schema='mas-transport-guardian-status-1';updatedAt=$now;
+            mode='transport_healthy';probeOk=$true;privateKey='never-output'}
+          $session|ConvertTo-Json|Set-Content (Join-Path $dir 'session-status.json')
+          $transport|ConvertTo-Json|Set-Content (Join-Path $dir 'transport-status.json')
+          $lines=& powershell.exe -NoProfile -File 'tools/windows-client-status.ps1' -Root $root
+          if($LASTEXITCODE -ne 0){throw 'Status fixture failed'}
+          $obj=($lines|Out-String|ConvertFrom-Json)
+          if($obj.overall -ne 'local_signals_healthy' -or $obj.session.agentCount -ne 2 -or
+             $obj.controllerAuthorization -ne 'not_verified' -or
+             ($lines|Out-String) -match 'never-output'){throw 'Unsafe status output'}
+          $transport.updatedAt=[DateTimeOffset]::UtcNow.AddMinutes(-10).ToString('o')
+          $transport|ConvertTo-Json|Set-Content (Join-Path $dir 'transport-status.json')
+          $stale=& powershell.exe -NoProfile -File 'tools/windows-client-status.ps1' -Root $root
+          $s=($stale|Out-String|ConvertFrom-Json)
+          if($s.overall -ne 'degraded' -or $s.transport.mode -ne 'stale'){
+            throw 'Status did not fail closed on stale transport'
+          }
+          $null=& powershell.exe -NoProfile -File 'tools/windows-client-status.ps1' -Root $root -Strict
+          if($LASTEXITCODE -ne 2){throw 'Strict degraded status wrong exit code'}
