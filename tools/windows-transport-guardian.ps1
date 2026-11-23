@@ -1,8 +1,6 @@
 param(
  [Parameter(Mandatory=$true)][string]$ConfigPath,
- [switch]$Run,
- [switch]$Monitor,
- [int]$MaxChecks=0
+ [switch]$Run,[switch]$Monitor,[int]$MaxChecks=0
 )
 $ErrorActionPreference='Stop'
 if($Run -and $Monitor){throw 'Exclusive recovery and observer mode cannot be combined'}
