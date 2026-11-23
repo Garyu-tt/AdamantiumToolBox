@@ -1,0 +1,14 @@
+{
+  "schema": "mas-client-watchdog-config-1",
+  "pollIntervalSec": 30,
+  "targets": [
+    {
+      "id": "sample_transport",
+      "taskName": "Replace-With-Approved-Transport-Task",
+      "healthUrl": "http://127.0.0.1:9999/health",
+      "autoStart": false,
+      "failuresBeforeStart": 3,
+      "cooldownSec": 120
+    }
+  ]
+}

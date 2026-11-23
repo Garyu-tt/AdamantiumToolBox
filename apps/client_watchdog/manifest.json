@@ -1,0 +1,18 @@
+{
+  "mas": "1.0",
+  "id": "client_watchdog",
+  "name": "Client Device Watchdog",
+  "version": "0.1.0",
+  "lifecycle": "independent",
+  "service": {
+    "protocol": "mas-http-1",
+    "port": 8942,
+    "invokeTimeoutMs": 2500
+  },
+  "ui": {"standard": "mas-ui-1", "mode": "headless"},
+  "auth": {"mode": "host-delegated"},
+  "permissions": ["client_watchdog.read"],
+  "events": {"schema": "mas-event-1"},
+  "data": {"refs": "mas-ref-1"},
+  "updates": {"strategy": "semver", "migrations": []}
+}

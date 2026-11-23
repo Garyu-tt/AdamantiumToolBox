@@ -16,6 +16,9 @@ const owner=JSON.parse(readFileSync(join(runtime,'policy.json'),'utf8').replace(
 if(owner.schema!=='mas-owner-policy-1'||!Array.isArray(owner.capabilities)||
  !owner.capabilities.every(p=>typeof p==='string'&&/^[a-z0-9_-]+\.[a-z0-9_-]+$/.test(p)))
  throw Error('Invalid owner policy');
+if(owner.runtimeProfile!==undefined&&!['full','backend'].includes(owner.runtimeProfile))
+ throw Error('Invalid runtime profile');
+process.env.ADA_RUNTIME_PROFILE=owner.runtimeProfile||'full';
 process.env.ADA_CAPS=[...new Set(owner.capabilities)].join(',');
 process.env.ADA_CORE_URL=process.env.ADA_CORE_URL||'http://127.0.0.1:'+(process.env.ADA_PORT||8880);
 const policy=await loadRuntimePolicy(root,runtime);

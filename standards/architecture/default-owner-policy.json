@@ -16,5 +16,6 @@
     "browser.read",
     "browser.navigate",
     "browser.interact"
-  ]
+  ],
+  "runtimeProfile": "full"
 }

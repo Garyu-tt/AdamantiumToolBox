@@ -21,6 +21,8 @@ if(!(Test-Path $policyPath)){
 }
 $policy=Get-Content -Raw -LiteralPath $policyPath | ConvertFrom-Json
 if($policy.schema -ne 'mas-owner-policy-1'){throw 'Invalid owner policy'}
+$env:ADA_RUNTIME_PROFILE=if($policy.runtimeProfile){[string]$policy.runtimeProfile}else{'full'}
+if($env:ADA_RUNTIME_PROFILE -notin @('full','backend')){throw 'Invalid runtime profile'}
 $env:ADA_CAPS=(@($policy.capabilities) -join ',')
 $env:ADA_CORE_URL='http://127.0.0.1:'+$(if($env:ADA_PORT){$env:ADA_PORT}else{'8880'})
 
@@ -41,7 +43,7 @@ for($i=0;$i -lt 30;$i++){
  Start-Sleep -Milliseconds 250
 }
 if(!$ready){throw 'Workbench server failed to start'}
-if($NoWindow){Write-Output 'READY';exit 0}
+if($NoWindow -or $env:ADA_RUNTIME_PROFILE -eq 'backend'){Write-Output 'READY';exit 0}
 try{& (Join-Path $root 'tools\sync-shortcuts.ps1')|Out-Null}catch{}
 $edge='C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
 if(!(Test-Path $edge)){$edge='C:\Program Files\Google\Chrome\Application\chrome.exe'}
