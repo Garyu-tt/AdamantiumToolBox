@@ -39,5 +39,6 @@ jobs:
           if($s.overall -ne 'degraded' -or $s.transport.mode -ne 'stale'){
             throw 'Status did not fail closed on stale transport'
           }
-          $null=& powershell.exe -NoProfile -File 'tools/windows-client-status.ps1' -Root $root -Strict
-          if($LASTEXITCODE -ne 2){throw 'Strict degraded status wrong exit code'}
+          $exe=Join-Path $env:WINDIR 'System32/WindowsPowerShell/v1.0/powershell.exe'
+          $strict=Start-Process -FilePath $exe -ArgumentList @('-NoProfile','-File','tools/windows-client-status.ps1','-Root',('"' + $root + '"'),'-Strict') -Wait -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'strict.out')
+          if($strict.ExitCode -ne 2){throw 'Strict degraded status wrong exit code'}
