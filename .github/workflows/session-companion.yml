@@ -33,6 +33,10 @@ jobs:
           if($state.launches -ne 0 -or $state.mode -notin @('observe_only','agent_present')){
             throw 'Companion unexpectedly launched a process'
           }
+          & powershell.exe -NoProfile -File 'tools/windows-session-companion.ps1' -ConfigPath $profile -Monitor -MaxChecks 2
+          if($LASTEXITCODE -ne 0){throw 'Continuous observer failed'}
+          $state=Get-Content (Join-Path $dir 'telemetry/session-status.json') -Raw|ConvertFrom-Json
+          if($state.launches -ne 0 -or $state.failures -ne 3){throw 'Monitor loop launched or lost failures'}
           $ps=Join-Path $env:WINDIR 'System32/WindowsPowerShell/v1.0/powershell.exe'
           $denied=Start-Process -FilePath $ps -ArgumentList @('-NoProfile','-File','tools/windows-session-companion.ps1','-ConfigPath',('"' + $profile + '"'),'-Run') -Wait -PassThru -NoNewWindow -RedirectStandardError (Join-Path $dir 'denied.txt')
           if($denied.ExitCode -eq 0){throw 'Companion bypassed owner approval'}
@@ -43,4 +47,6 @@ jobs:
           $plan=& powershell.exe -NoProfile -File 'tools/register-session-companion.ps1' -ConfigPath $profile -GuardianPath $guardian -TaskName 'FixtureSessionGuardian'
           if($LASTEXITCODE -ne 0){throw 'Session registration dry-run failed'}
           $parsed=($plan|Out-String|ConvertFrom-Json)
-          if($parsed.changesMade -ne $false -or $parsed.approved -ne $false){throw 'Dry-run mutated task'}
+          if($parsed.changesMade -ne $false -or $parsed.approved -ne $false -or $parsed.mode -ne '-Monitor'){throw 'Dry-run mutated task'}
+          $activePlan=& powershell.exe -NoProfile -File 'tools/register-session-companion.ps1' -ConfigPath $profile -GuardianPath $guardian -TaskName 'FixtureSessionGuardian' -Active
+          if((($activePlan|Out-String|ConvertFrom-Json).mode) -ne '-Run'){throw 'Explicit active mode not reflected'}
