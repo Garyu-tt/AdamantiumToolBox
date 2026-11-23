@@ -12,6 +12,13 @@ Experimental local prototype, not a production-ready cluster.
 - standards/mesh: experimental signed package transport primitives (not full auto-sync)
 - standards/ui: plain Windows-like UI Kit; optional themes later
 
+## Headless backend rails
+MAS applications can declare `ui.mode: "headless"` to run without a window,
+`view.js`, or icon. Core still discovers their typed actions/resources, delegates
+permissions, and supervises their health. The UI is an optional separate client.
+See [headless integration](docs/HEADLESS-RAILS.md). This does not make a local
+service remotely accessible by itself.
+
 ## Applications
 Apps/editor and apps/studio are optional examples, not mandatory runtime modules.
 Shell shows only real, accessible capabilities. No placeholder modules.
