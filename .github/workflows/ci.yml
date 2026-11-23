@@ -93,8 +93,10 @@ jobs:
           if($s.mode -ne 'observe_only' -or $s.probeOk -ne $false -or $s.ownsSshProcess){
             throw 'Transport observer was not fail-closed'
           }
-          & powershell.exe -NoProfile -File 'tools/windows-transport-guardian.ps1' -ConfigPath $configPath -Run 2>$null
-          if($LASTEXITCODE -eq 0){throw 'Transport started without explicit exclusive ownership'}
+          $denyLog=Join-Path $dir 'denied.stderr'
+          $ps=Join-Path $env:WINDIR 'System32/WindowsPowerShell/v1.0/powershell.exe'
+          $denied=Start-Process -FilePath $ps -ArgumentList @('-NoProfile','-File','tools/windows-transport-guardian.ps1','-ConfigPath',('"' + $configPath + '"'),'-Run') -Wait -PassThru -NoNewWindow -RedirectStandardError $denyLog
+          if($denied.ExitCode -eq 0){throw 'Transport started without explicit exclusive ownership'}
       - name: Run real Chromium CDP tests
         env:
           MAS_BROWSER_REQUIRE_ENGINE: '1'
