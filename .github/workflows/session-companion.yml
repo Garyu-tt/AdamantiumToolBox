@@ -1,0 +1,38 @@
+name: Client session companion validation
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse and test safe observer mode
+        shell: pwsh
+        run: |
+          $tokens=$null;$errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'tools/windows-session-companion.ps1'),[ref]$tokens,[ref]$errors)|Out-Null
+          if($errors.Count -gt 0){throw ($errors|Out-String)}
+          $dir=Join-Path $env:RUNNER_TEMP 'session-companion-fixture'
+          New-Item -ItemType Directory -Force -Path $dir|Out-Null
+          $launcher=Join-Path $dir 'fixture-launch.ps1'
+          $agent=Join-Path $dir 'fixture-launch.py'
+          Set-Content -LiteralPath $launcher -Value '# fixture not executed'
+          Set-Content -LiteralPath $agent -Value '# fixture not executed'
+          $config=@{schema='mas-session-companion-1';launchScript=$launcher;agentScript=$agent;
+            pollSec=5;failuresBeforeLaunch=2;backoffBaseSec=10;backoffCapSec=30;
+            exclusiveOwnership=$false;pauseFile=(Join-Path $dir 'pause')}
+          $profile=Join-Path $dir 'config.json'
+          $config|ConvertTo-Json -Depth 5|Set-Content $profile
+          & powershell.exe -NoProfile -File 'tools/windows-session-companion.ps1' -ConfigPath $profile
+          if($LASTEXITCODE -ne 0){throw 'Observer mode failed'}
+          $state=Get-Content (Join-Path $dir 'telemetry/session-status.json') -Raw|ConvertFrom-Json
+          if($state.launches -ne 0 -or $state.mode -notin @('observe_only','agent_present')){
+            throw 'Companion unexpectedly launched a process'
+          }
+          $ps=Join-Path $env:WINDIR 'System32/WindowsPowerShell/v1.0/powershell.exe'
+          $denied=Start-Process -FilePath $ps -ArgumentList @('-NoProfile','-File','tools/windows-session-companion.ps1','-ConfigPath',('"' + $profile + '"'),'-Run') -Wait -PassThru -NoNewWindow -RedirectStandardError (Join-Path $dir 'denied.txt')
+          if($denied.ExitCode -eq 0){throw 'Companion bypassed owner approval'}
