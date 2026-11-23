@@ -52,9 +52,15 @@ That fails closed by suppressing a new launch, never by killing anything.
    emergency pause marker, and ensure the task runs as the **signed-in
    user**, not SYSTEM or a headless Session 0 service. Running/duplicate
    agents must not be restarted or terminated.
-4. Register a user-logon scheduled task only in a separately authorized
-   release change. This PR **does not** create a task or write registry
-   autostart keys. It is a source-only supervised worker.
+4. An opt-in task registrar is included:
+   `tools/register-session-companion.ps1`. Without `-Approve` it only
+   reports a read-only plan. It accepts exact local profile, exact
+   `windows-session-companion.ps1` file and a caller-defined task name.
+   `-Approve` creates a least-privileged interactive user-logon task
+   without starting it immediately. It will refuse existing names,
+   non-interactive Session 0, or an unapproved/pause-less profile.
+   `-Remove -Approve` only removes a task whose action exactly matches
+   the requested script/config. **No registration is performed by this PR.**
 5. Keep the existing tunnel watchdog while session recovery is tested;
    eventually both are independent plugins underneath the Adamantium
    lifecycle. The current agent's local emergency stop and UAC prompts
