@@ -1,0 +1,11 @@
+{
+  "schema": "mas-session-companion-1",
+  "launchScript": "ABSOLUTE_PATH_TO_APPROVED_USER_LAUNCHER_PS1",
+  "agentScript": "ABSOLUTE_PATH_TO_LAUNCH_PY",
+  "pollSec": 10,
+  "failuresBeforeLaunch": 3,
+  "backoffBaseSec": 15,
+  "backoffCapSec": 300,
+  "exclusiveOwnership": false,
+  "pauseFile": "ABSOLUTE_PATH_TO_OWNER_EMERGENCY_PAUSE_MARKER"
+}
