@@ -6,9 +6,10 @@ export function validateManifest(m){
  if(!Number.isInteger(m.service?.port)||m.service.port<1024||m.service.port>65535)return false;
  if(m.service.protocol!=='mas-http-1'||m.lifecycle!=='independent')return false;
  if(m.service.invokeTimeoutMs!==undefined&&(!Number.isInteger(m.service.invokeTimeoutMs)||m.service.invokeTimeoutMs<1000||m.service.invokeTimeoutMs>20000))return false;
- if(!m.icon||!id.test(m.icon)||!Array.isArray(m.permissions))return false;
+ const headless=m.ui?.mode==='headless';
+ if((!headless&&(!m.icon||!id.test(m.icon)))||(headless&&m.icon!==undefined&&!id.test(m.icon))||!Array.isArray(m.permissions))return false;
  if(!m.permissions.every(x=>typeof x==='string'&&/^[a-z0-9_-]+\.[a-z0-9_-]+$/.test(x)))return false;
- if(!m.ui||m.ui.standard!=='mas-ui-1'||!['embedded-and-standalone'].includes(m.ui.mode))return false;
+ if(!m.ui||m.ui.standard!=='mas-ui-1'||!['embedded-and-standalone','headless'].includes(m.ui.mode))return false;
  if(!m.auth||m.auth.mode!=='host-delegated')return false;
  if(!m.events||m.events.schema!=='mas-event-1')return false;
  if(!m.data||m.data.refs!=='mas-ref-1')return false;
@@ -30,7 +31,7 @@ export function validateGraph(spec,manifest){
   if(typeof n.id!=='string'||!n.id.startsWith(manifest.id+'.')||ids.has(n.id))return false;
   if(!['view','action','resource','event'].includes(n.type)||!Array.isArray(n.requires))return false;
   if(!n.requires.every(c=>manifest.permissions.includes(c)))return false;
-  if(n.type==='view'&&(!n.title||n.icon!==manifest.icon))return false;
+  if(n.type==='view'&&(manifest.ui?.mode==='headless'||!n.title||n.icon!==manifest.icon))return false;
   ids.add(n.id);
  }
  return spec.edges.every(e=>ids.has(e.from)&&ids.has(e.to)&&typeof e.type==='string');

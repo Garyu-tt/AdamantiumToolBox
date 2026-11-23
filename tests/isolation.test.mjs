@@ -42,7 +42,9 @@ async function isolated(id){
    if(app.exitCode!==null||core.exitCode!==null)throw Error(id+'_failed_to_start');
    await pause(100);
   }
-  assert(graph?.nodes?.some(n=>n.id===id+'.view'),id+' has no own view');
+  assert(graph?.nodes?.length,id+' has no capabilities');
+  if(m.ui?.mode==='headless')assert(!graph.nodes.some(n=>n.type==='view'),id+' exposes a view');
+  else assert(graph.nodes.some(n=>n.id===id+'.view'),id+' has no own view');
   assert(graph.nodes.every(n=>n.id.startsWith(id+'.')),'cross_app_dependency');
   const response=await fetch('http://127.0.0.1:'+appPort+'/health');
   assert.equal((await response.json()).app,id);

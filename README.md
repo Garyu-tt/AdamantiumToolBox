@@ -12,6 +12,9 @@ Experimental local prototype, not a production-ready cluster.
 - standards/mesh: experimental signed package transport primitives (not full auto-sync)
 - standards/ui: plain Windows-like UI Kit; optional themes later
 
+## Headless
+Backend-only MAS plugins are supported without UI assets; see [headless rails](docs/HEADLESS-RAILS.md).
+
 ## Applications
 Apps/editor and apps/studio are optional examples, not mandatory runtime modules.
 Shell shows only real, accessible capabilities. No placeholder modules.
